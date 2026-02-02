@@ -32,6 +32,23 @@ Run the helper script to build and deploy to Firebase:
 > - Building the Next.js project (Static Export)
 > - Uploading to Firebase Hosting
 
+## 🤖 AI Chatbot Maintenance
+
+The AI Chatbot uses a "Long Context" approach, meaning all knowledge (Resume, Career, Blog) is stored directly in the code.
+
+### 1. Updating Chatbot Memory
+To add new blog posts, update your resume, or change career details, edit the following file:
+- **File**: `functions/src/index.ts`
+- **What to edit**: Update the `RESUME_TEXT`, `CAREER_DATA`, or `BLOG_DATA` constants at the top of the file.
+
+### 2. Deploying Chatbot Changes
+After updating the data, you must redeploy the Cloud Functions for the changes to take effect:
+```bash
+node deploy-functions.js
+```
+> **Note**: This process usually takes about 1-2 minutes.
+
+
 ---
 
 ## 🔗 Links

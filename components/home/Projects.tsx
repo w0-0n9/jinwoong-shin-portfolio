@@ -10,7 +10,7 @@ const projects = [
         tags: ["LLM", "Embeddings", "Batch Processing", "Python", "Data Science"],
         image: "/projects/lg-return-analysis.png",
         imageClassName: "bg-white p-4", // Add white background and padding for the logo
-        imageFit: "contain" as "contain",
+        imageFit: "contain" as const,
         links: {
             demo: "#", // Add if available
             github: "#",

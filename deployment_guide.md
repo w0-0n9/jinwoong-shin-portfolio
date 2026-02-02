@@ -1,66 +1,49 @@
 # Deployment Guide
 
-This project is built with [Next.js](https://nextjs.org/). The recommended way to deploy it is using **Vercel** for the easiest setup and best performance, or **AWS Amplify** as a robust alternative.
+This project is deployed to **Firebase Hosting** as a static site.
+Because of the network environment (SSL interception), we use a custom script for deployment.
 
-## Option 1: Deploy to Vercel (Recommended)
+## 🚀 Standard Workflow
 
-1.  **Push to GitHub**: Ensure your latest code is pushed to your GitHub repository.
-2.  **Create Vercel Account**: Go to [vercel.com](https://vercel.com) and sign up/login.
-3.  **Import Project**:
-    *   Click "Add New..." > "Project".
-    *   Select your GitHub repository (`Portfolio_Jinwoong Shin`).
-    *   Click "Import".
-4.  **Configure**:
-    *   Vercel will automatically detect that this is a Next.js project.
-    *   The build settings should be pre-filled correctly:
-        *   **Framework Preset**: Next.js
-        *   **Build Command**: `next build`
-        *   **Install Command**: `npm install`
-    *   Click "Deploy".
-5.  **Done!**: Your site will be live in a few minutes. Vercel will automatically redeploy whenever you push to `main`.
+Follow these steps whenever you make changes to the code:
 
-## Option 2: Deploy to AWS Amplify
+### 1. Code & Test
+Make your changes and verify them locally:
+```bash
+npm run dev
+```
 
-1.  **Push to GitHub**: Ensure your latest code is pushed to your GitHub repository.
-2.  **Go to AWS Console**: specific search for "Amplify".
-3.  **Create App**:
-    *   Click "Create new app".
-    *   Select "GitHub" as the source code provider.
-    *   Authorize AWS to access your GitHub repositories.
-4.  **Configure Build**:
-    *   Select your repository and the `main` branch.
-    *   Amplify should auto-detect the build settings. Ensure the **Build command** includes `npm run build`.
-    *   (Important) If you are using Next.js versions that require Node.js >= 18.17, you may need to edit the build settings to use a newer Node version image (e.g., standard: 7).
-5.  **Deploy**: Click "Save and Deploy".
+### 2. Save to GitHub (Version Control)
+Upload your changes to the GitHub repository:
+```bash
+git add .
+git commit -m "Describe your changes here"
+git push
+```
 
-## Option 3: Deploy to Google Firebase (Requested)
+### 3. Deploy to Live Site
+Run the helper script to build and deploy to Firebase:
+```bash
+./deploy.sh
+```
+> This script handles:
+> - Enabling system TLS certs (fixes Google Fonts build error)
+> - Disabling strict SSL (fixes Firebase CLI network error)
+> - Building the Next.js project (Static Export)
+> - Uploading to Firebase Hosting
 
-Google Firebase now has built-in support for Next.js Web Frameworks, making deployment seamless.
+---
 
-1.  **Install Firebase CLI**:
-    ```bash
-    npm install -g firebase-tools
-    ```
-2.  **Login**:
-    ```bash
-    firebase login
-    ```
-3.  **Initialize Project**:
-    Run the following command in your project root:
-    ```bash
-    firebase init hosting
-    ```
-    *   **Detected an existing Next.js codebase. Does this look correct?** -> Yes
-    *   **Which server would you like to use?** -> (Select a region close to your users, e.g., `us-central1`)
-    *   **Set up automatic builds and deploys with GitHub?** -> (Optional, recommended for CI/CD)
-4.  **Deploy**:
-    ```bash
-    firebase deploy
-    ```
-    Firebase will automatically build your Next.js app and deploy it to a global CDN.
+## 🔗 Links
+- **Live Website**: [https://jinwoong-shin-portfolio.web.app](https://jinwoong-shin-portfolio.web.app)
+- **GitHub Repository**: [https://github.com/w0-0n9/jinwoong-shin-portfolio](https://github.com/w0-0n9/jinwoong-shin-portfolio)
+- **Firebase Console**: [https://console.firebase.google.com/project/jinwoong-shin-portfolio/overview](https://console.firebase.google.com/project/jinwoong-shin-portfolio/overview)
 
-## CI/CD Pipeline
+## 🛠 Troubleshooting
 
-A **GitHub Actions** workflow has been set up in `.github/workflows/ci.yml`.
-*   **What it does**: Every time you push to `main` or open a Pull Request, it runs `lint` and `build` to ensure the code is error-free.
-*   **Benefits**: Prevents broken code from being merged or deployed.
+**Error: `SELF_SIGNED_CERT_IN_CHAIN`**
+- If you see this error, ensure you are using `./deploy.sh` instead of standard commands.
+- If manually running npm, use `npm config set strict-ssl false`.
+
+**Error: GitHub Push Rejected (Large Files)**
+- We have excluded `.firebase/` from git. If you accidentally add large files, remove them from the staging area with `git rm -r --cached .firebase/`.

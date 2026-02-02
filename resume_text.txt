@@ -1,0 +1,57 @@
+JINWOONG SHIN
++1 (608) 556-0771 ⋄ Little Ferry, NJ
+jinwoong7116@gmail.com ⋄ linkedin.com/in/w0-0n9
+SUMMARY
+Software Engineer specializing in LLM-powered data pipelines with 1.5+ years of experience at LG CNS America,
+building and operating scalable GenAI systems for enterprise analytics, including production-deployed summarization
+and classification workflows.
+SKILLS
+Languages
+ML / LLM
+Cloud / Data
+
+Python, Java, SQL, JavaScript
+LLM-based Summarization & Classification, Embeddings, Prompt Engineering, RAG
+Google Cloud Platform (Vertex AI, BigQuery), Production ML Pipelines, Batch Processing
+
+EXPERIENCE
+LLM Engineer
+LG CNS America, Inc.
+
+Jun 2024 – Present
+New Jersey, United States
+
+Return Reason Classification AI (The Home Depot)
+LLM Engineer / Data Scientist
+• Designed and owned an LLM-powered pipeline to summarize and classify 200K+ annual return records
+for LG Electronics products sold through The Home Depot, replacing manual analysis with automated
+GenAI workflows.
+• Built batch inference pipelines using LLM-based summarization and embedding-driven classification to structure
+unstructured customer return data at scale.
+• Enabled CX and operations teams with actionable analytics, contributing to a ˜2% reduction in overall
+return rate in 2025 vs. 2024.
+Contact Center AI (Enterprise Customer Service)
+Project Lead
+• Led and owned the architecture and delivery of an enterprise contact center AI system, integrating real-time
+call transcription (AWS Connect STT) with Salesforce Agentforce.
+• Designed a RAG-based, multi-agent architecture for call and email assistants, enabling retrieval of troubleshooting knowledge and generation of structured summaries and reply recommendations.
+• Established relevance and quality controls through semantic retrieval with reranking, ensuring reliable AI-assisted
+workflows in production.
+Software Engineer (Intern)
+Samsung SDS
+
+Jun 2023 – Aug 2023
+Seoul, South Korea
+
+• Developed Salesforce CRM automations using Flow Builder to streamline customer management workflows for
+Sales Cloud administrators.
+• Built custom UI components and prototyped an AI-assisted CRM feature using Apex and Lightning Web
+Components (LWC), improving administrator productivity.
+EDUCATION
+University of Wisconsin–Madison
+Bachelor of Science in Computer Science
+
+2024
+GPA: 3.55 / 4.00
+
+

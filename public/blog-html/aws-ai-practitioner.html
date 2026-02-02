@@ -1,0 +1,713 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>AWS Certified AI Practitioner AIF-C01 Concept Summary</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2fa28cc3-269e-8059-9256-e508cc378d0d" class="page sans"><header><h1 class="page-title" dir="auto">AWS Certified AI Practitioner AIF-C01 Concept Summary</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="auto"><h2 id="2fa28cc3-269e-8084-b32d-c35f165365cb" class="">1) SageMaker Service</h2></div><div style="display:contents" dir="auto"><hr id="2fa28cc3-269e-80c2-8d42-fd6a6090e235"/></div><div style="display:contents" dir="auto"><h3 id="2fa28cc3-269e-80d0-90a3-c2d3811c7924" class="">✅ One-line Mapping Table (Must Memorize)</h3></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8099-8d11-d412fd275840" class="bulleted-list"><li style="list-style-type:disc"><strong>SageMaker Model Dashboard</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-801f-abcd-feedba4c79ca" class="">: Centralized <strong>monitoring and management of deployed models/endpoints (at a glance)</strong></p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80b4-83cf-f789d4c59e9f" class="bulleted-list"><li style="list-style-type:disc"><strong>SageMaker Model Monitor</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-807b-9c87-fddbecbabc48" class="">: <strong>Detects data drift / performance degradation</strong> after deployment</p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80a5-a93c-ea537e6312b3" class="bulleted-list"><li style="list-style-type:disc"><strong>SageMaker Clarify</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8073-adc6-cd4b0f97d3d6" class="">: <strong>Bias detection + Explainability</strong></p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8003-afe9-ccbc07673bb4" class="bulleted-list"><li style="list-style-type:disc"><strong>SageMaker JumpStart</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8051-91d6-cc81c178251e" class="">: Rapid <strong>selection, deployment, and customization</strong> of pre-trained / foundation models</p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80ab-b8d1-d7b18314816d" class="bulleted-list"><li style="list-style-type:disc"><strong>SageMaker Ground Truth</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8044-8be4-fb36e0106e2a" class="">: <strong>Data labeling (Human-in-the-loop)</strong></p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80c9-a31e-ee7e19b88f4f" class="bulleted-list"><li style="list-style-type:disc"><strong>SageMaker Feature Store</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-80fb-b54c-dff3b7b578bb" class="">: Central repository to <strong>consistently reuse the same features</strong> for training and inference</p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8004-a0ba-db00d87a6c29" class="bulleted-list"><li style="list-style-type:disc"><strong>SageMaker Data Wrangler</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8090-9c0a-d964d62c0a43" class="">: Visual <strong>data preprocessing (ingestion / cleaning / transformation)</strong></p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80f8-8643-e31607bb219f" class="bulleted-list"><li style="list-style-type:disc"><strong>SageMaker A2I (Augmented AI)</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-80ce-b3c3-cc545a2ae067" class="">: Workflow where <strong>humans review, correct, and approve</strong> model predictions</p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8082-a453-f27aa19c722a" class="bulleted-list"><li style="list-style-type:disc"><strong>SageMaker Canvas</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-80fa-b9c0-c7bd6305cbf2" class="">: <strong>No-code / low-code AutoML</strong> — non-developers can upload data → train models → generate predictions</p></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2fa28cc3-269e-8032-9a78-e16a49c7cb49" class="">✅ If You’re Confused in the Exam, Use This Rule to Guess</h3></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80e7-a1d9-e08d48b02101" class="bulleted-list"><li style="list-style-type:disc">“Manage model/endpoint status from a single screen” → <strong>Dashboard</strong></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80f1-aa77-eccd2ee0f8cf" class="bulleted-list"><li style="list-style-type:disc">“Monitor drift / performance degradation” → <strong>Model Monitor</strong></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8069-9dfb-da18e6a3b23a" class="bulleted-list"><li style="list-style-type:disc">“Bias / explainability” → <strong>Clarify</strong></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8037-940e-cba3047fa7e3" class="bulleted-list"><li style="list-style-type:disc">“Labeling” → <strong>Ground Truth</strong></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8070-8a0a-e72dab8544b9" class="bulleted-list"><li style="list-style-type:disc">“Preprocessing UI tool” → <strong>Data Wrangler</strong></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8037-ac1d-fd54552be037" class="bulleted-list"><li style="list-style-type:disc">“Feature reuse / consistency” → <strong>Feature Store</strong></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-804c-bcb3-e76f072673b4" class="bulleted-list"><li style="list-style-type:disc">“Insert human review” → <strong>A2I</strong></li></ul></div><div style="display:contents" dir="auto"><h2 id="2fa28cc3-269e-8031-8271-c6c36c005ed0" class="">2) SageMaker Inference: 4 Deployment Types</h2></div><div style="display:contents" dir="auto"><hr id="2fa28cc3-269e-80ee-a4c8-d9bf9c16ba67"/></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8029-a0f5-ddb3e122f83f" class="">Exam questions usually present <strong>latency tolerance / data size / traffic patterns</strong>.</p></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8096-a3b2-f52bd450a784" class="bulleted-list"><li style="list-style-type:disc"><strong>Real-time inference</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-80bb-94e8-cbb16f9fa92c" class="">: “Immediate response / low latency”</p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8049-aa46-fe76838fc857" class="bulleted-list"><li style="list-style-type:disc"><strong>Asynchronous inference</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8024-915c-d80a0fc20338" class="">: “Immediate response not required (latency acceptable) + relatively small payload (typically <strong>under 1GB</strong>)”</p></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-803a-bc8e-ede10d92b699" class="">→ Submit request now, retrieve results later</p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8060-98d6-f7107a397a72" class="bulleted-list"><li style="list-style-type:disc"><strong>Batch inference</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8058-b59c-f204063806aa" class="">: “Run inference on large volumes of data at once using S3 (batch processing)”</p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8078-b248-f803ccabd0e3" class="bulleted-list"><li style="list-style-type:disc"><strong>Serverless inference</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-80ca-8c6f-c714645b8909" class="">: “Spiky / intermittent traffic + automatic scaling”</p></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2fa28cc3-269e-8082-8236-fcf52ab6078e" class="">✅ Key Characteristics and Cost Structure</h3></div><div style="display:contents" dir="ltr"><table id="2fa28cc3-269e-8022-9c45-e409ce164820" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-807c-b982-e0784045b429"><th id="Am{w" class="simple-table-header-color simple-table-header">Inference Type</th><th id="Qabv" class="simple-table-header-color simple-table-header">Latency</th><th id="ts?d" class="simple-table-header-color simple-table-header">Data / Payload</th><th id="`{Hq" class="simple-table-header-color simple-table-header">Traffic Pattern</th><th id="y=Xc" class="simple-table-header-color simple-table-header">Cost Structure</th><th id="GH|r" class="simple-table-header-color simple-table-header">When to Choose</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-8081-b436-cf62425a2cf9"><td id="Am{w" class=""><strong>Real-time inference</strong></td><td id="Qabv" class="">Very low (immediate)</td><td id="ts?d" class="">Small</td><td id="`{Hq" class="">Continuous &amp; predictable</td><td id="y=Xc" class="">Always-on endpoint (idle cost exists)</td><td id="GH|r" class="">Real-time APIs, instant response required</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-8041-ac60-e881c27e4dc7"><td id="Am{w" class=""><strong>Asynchronous inference</strong></td><td id="Qabv" class="">High (latency allowed)</td><td id="ts?d" class=""><strong>&lt; ~1GB</strong></td><td id="`{Hq" class="">Single, irregular</td><td id="y=Xc" class="">Pay per execution (no idle cost)</td><td id="GH|r" class="">Non-urgent single inference, cost optimization</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-806a-8ef4-cfb5af2ac397"><td id="Am{w" class=""><strong>Batch inference</strong></td><td id="Qabv" class="">Very high (batch)</td><td id="ts?d" class="">Large (S3-based)</td><td id="`{Hq" class="">Periodic / scheduled</td><td id="y=Xc" class="">Pay per job runtime (lowest cost)</td><td id="GH|r" class="">Large-scale logs or historical processing</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80a3-b99a-cab226178520"><td id="Am{w" class=""><strong>Serverless inference</strong></td><td id="Qabv" class="">Low–medium</td><td id="ts?d" class="">Small</td><td id="`{Hq" class="">Intermittent / spiky</td><td id="y=Xc" class="">Pay per request + runtime (no idle cost)</td><td id="GH|r" class="">Unpredictable traffic, minimal management</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><h2 id="2fa28cc3-269e-80e7-bebc-c606db88fbac" class="">3) Bedrock Customization: Continued Pre-training vs Fine-tuning</h2></div><div style="display:contents" dir="auto"><hr id="2fa28cc3-269e-80de-b9fa-e8ee25320e46"/></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8082-abbc-cd6029c8cfc4" class="bulleted-list"><li style="list-style-type:disc"><strong>Continued Pre-training</strong><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-800c-9b4d-e1abe7dc1e0e" class="bulleted-list"><li style="list-style-type:circle">Additional exposure to <strong>unlabeled data</strong> to adapt domain knowledge or writing style</li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8046-a99d-f65192341290" class="bulleted-list"><li style="list-style-type:circle">Keywords: <em>domain adaptation, unlabeled data, continued learning</em></li></ul></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80c6-9576-db2114503a94" class="bulleted-list"><li style="list-style-type:disc"><strong>Fine-tuning</strong><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8072-9c21-e2f8aadf163f" class="bulleted-list"><li style="list-style-type:circle">Uses <strong>labeled data (with ground truth)</strong> to precisely optimize performance for a specific task</li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8053-aa0e-d2d118d2e963" class="bulleted-list"><li style="list-style-type:circle">Keywords: <em>supervised learning, labeled data, task-specific</em></li></ul></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2fa28cc3-269e-8012-916c-dd8cf04ddb41" class="">✅ Common Correct Answer Pattern</h3></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-80b4-b17f-e1531e773f59" class="">“Strengthen expertise in a specialized domain (e.g., genomics)”</p></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8006-acf7-dc998738dfcc" class="">→ Often appears as a <strong>combination of continued pre-training (domain adaptation) + fine-tuning (task optimization)</strong></p></div><div style="display:contents" dir="auto"><h2 id="2fa28cc3-269e-8073-aa2b-ed31a4b7ca6c" class="">4) Bedrock Pricing &amp; Operations: On-Demand vs Provisioned Throughput</h2></div><div style="display:contents" dir="auto"><hr id="2fa28cc3-269e-8087-a1c7-de3221d1d9be"/></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8008-b4d1-fe9c601ca55b" class="bulleted-list"><li style="list-style-type:disc"><strong>On-Demand</strong><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-804d-8c2c-c332ff7e8096" class="bulleted-list"><li style="list-style-type:circle">Suitable for uncertain usage, experiments, and PoC</li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8022-bea0-ea840270eaf5" class="bulleted-list"><li style="list-style-type:circle">“Pay only for what you use”</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-804f-aabf-f81e6bc08624" class="bulleted-list"><li style="list-style-type:disc"><strong>Provisioned Throughput</strong><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80ad-944d-efc1badcd732" class="bulleted-list"><li style="list-style-type:circle">Reserve capacity to ensure <strong>stable throughput and predictable latency</strong></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8066-99c9-eb8353262387" class="bulleted-list"><li style="list-style-type:circle">Frequently appears when operating <strong>custom (fine-tuned) models</strong> in production</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2fa28cc3-269e-80f6-885a-c90aadc2adc3" class="">✅ Decision Rule</h3></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8082-a62e-ce6999478074" class="bulleted-list"><li style="list-style-type:disc">“Usage is unpredictable / need flexibility” → <strong>On-Demand</strong></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8032-9b49-d49fef415044" class="bulleted-list"><li style="list-style-type:disc">“Stable operation / reserved capacity / SLA-like guarantees” → <strong>Provisioned Throughput</strong></li></ul></div><div style="display:contents" dir="auto"><h2 id="2fa28cc3-269e-8091-a20b-ee5317ce5ebf" class="">5) RAG: Standard RAG vs Fully Managed Bedrock RAG</h2></div><div style="display:contents" dir="auto"><hr id="2fa28cc3-269e-809a-8979-ecbb905943ed"/></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8067-b00d-dc4f6502b309" class="bulleted-list"><li style="list-style-type:disc">“Reflect the latest information from documents (PDFs, etc.) without retraining”<div style="display:contents" dir="auto"><p id="2fa28cc3-269e-80d4-a5fb-f3e1a2b98595" class="">→ <strong>RAG is cost-efficient</strong></p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8048-a578-cc7e440bbe5c" class="bulleted-list"><li style="list-style-type:disc">“End-to-end managed RAG in Bedrock”<div style="display:contents" dir="auto"><p id="2fa28cc3-269e-80c5-bea9-e804ccf5e5e6" class="">→ <strong>Knowledge Bases for Amazon Bedrock</strong></p></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-804d-83f9-d289a566abc7" class="bulleted-list"><li style="list-style-type:circle">Fully managed pipeline: documents → embeddings → vector store</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2fa28cc3-269e-80db-8ac6-e035e6282c46" class="">✅ Typical Exam Wording</h3></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8056-9cd6-de17a66e4162" class="bulleted-list"><li style="list-style-type:disc">“Fully managed RAG / build a knowledge base” → <strong>Knowledge Bases for Bedrock</strong></li></ul></div><div style="display:contents" dir="auto"><h2 id="2fa28cc3-269e-8075-b2d1-c49f257d7bba" class="">6) Prompt: The 4 Essential Elements</h2></div><div style="display:contents" dir="auto"><hr id="2fa28cc3-269e-8081-b8bb-c59debafbba4"/></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-805a-a71b-c48e238850a0" class="">A high-quality prompt consists of the following four components:</p></div><div style="display:contents" dir="auto"><ol type="1" id="2fa28cc3-269e-807c-849d-f88bc18efe9b" class="numbered-list" start="1"><li><strong>Instructions</strong> — What the model should do</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2fa28cc3-269e-8008-add7-d2c345e3c395" class="numbered-list" start="2"><li><strong>Context</strong> — Background, role, constraints</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2fa28cc3-269e-8022-afda-d4fb29773cfa" class="numbered-list" start="3"><li><strong>Input data</strong> — The data the model should process</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2fa28cc3-269e-8010-9455-fbd0d43afec5" class="numbered-list" start="4"><li><strong>Output indicator</strong> — Output format, tone, or structure</li></ol></div><div style="display:contents" dir="auto"><h3 id="2fa28cc3-269e-8065-bce0-ed68fa2c8f79" class="">✅ Exam Question as-is</h3></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8098-b440-e6d73fb16e55" class="">“Which elements make a good prompt?” → The four above</p></div><div style="display:contents" dir="auto"><h2 id="2fa28cc3-269e-8084-8c4a-e8cdb6f7725c" class="">7) Generation Parameters: Top-K / Top-P / Temperature / Stop</h2></div><div style="display:contents" dir="auto"><hr id="2fa28cc3-269e-80d8-b02e-ed79d6a5823d"/></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8026-be48-d8740c320ec4" class="bulleted-list"><li style="list-style-type:disc"><strong>Top-K</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8003-af20-e8c32e925124" class="">: Limits next-token candidates to the <strong>top K tokens</strong></p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80bc-8f20-f2f6b81f4753" class="bulleted-list"><li style="list-style-type:disc"><strong>Top-P</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8066-b135-e0442735015e" class="">: Includes tokens until cumulative probability <strong>P</strong> is reached (nucleus sampling)</p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80ea-8fb3-cd45aeaa2ff6" class="bulleted-list"><li style="list-style-type:disc"><strong>Temperature</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8016-a312-c97132ee1f80" class="">: Controls randomness by flattening or sharpening the probability distribution</p></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8024-be11-c2ae11161a50" class="">→ Affects <strong>creativity / diversity</strong></p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80f9-99fb-da9213d4a4fd" class="bulleted-list"><li style="list-style-type:disc"><strong>Stop sequences</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-80ae-8b3f-c25363ba99ae" class="">: Stops generation when specific strings appear</p></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2fa28cc3-269e-808a-a2e9-c4918f41e8c1" class="">✅ Exam Intuition Rules</h3></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8069-8218-e4debe0bac10" class="bulleted-list"><li style="list-style-type:disc"><strong>Accurate / conservative output</strong> → Lower Top-P, Top-K, Temperature</li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8048-8104-dd3ffab76fd4" class="bulleted-list"><li style="list-style-type:disc"><strong>Diverse / creative output</strong> → Higher Top-P, Top-K, Temperature</li></ul></div><div style="display:contents" dir="auto"><h2 id="2fa28cc3-269e-8086-a5fd-cce4baafdf3a" class="">8) Context Window = Token Limit</h2></div><div style="display:contents" dir="auto"><hr id="2fa28cc3-269e-80eb-a462-e5489d8f34ad"/></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8091-99bc-ca55d48805fc" class="bulleted-list"><li style="list-style-type:disc"><strong>Context window</strong>: The maximum amount of input or conversation a model can consider at once</li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8051-bdd4-ce4103948cb3" class="bulleted-list"><li style="list-style-type:disc">Measured in <strong>tokens</strong></li></ul></div><div style="display:contents" dir="auto"><h3 id="2fa28cc3-269e-804f-99ea-f737715823f0" class="">✅ Reason for Long-Text Limitations</h3></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8020-bc5f-fb076ce1e3f0" class="">“Why can’t long conversations or documents be processed in one request?”</p></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-80dd-8f20-fdef3b028ce0" class="">→ <strong>Context window limit</strong></p></div><div style="display:contents" dir="auto"><h2 id="2fa28cc3-269e-8015-ad6a-f7428a3c8940" class="">9) Security Favorite: “Access S3 from an Internet-Isolated VPC”</h2></div><div style="display:contents" dir="auto"><hr id="2fa28cc3-269e-80d1-a33e-d8686171c1c4"/></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80a6-987a-ff52e88bc7b9" class="bulleted-list"><li style="list-style-type:disc">SageMaker inside a VPC without internet access must securely access S3<br/>→ <strong>VPC Endpoint for S3</strong></li></ul></div><div style="display:contents" dir="auto"><h3 id="2fa28cc3-269e-8025-8ecb-f77cfa266294" class="">✅ Core Logic</h3></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80de-bff5-d8effa40315e" class="bulleted-list"><li style="list-style-type:disc">Enables S3 access through the <strong>AWS internal network</strong> without NAT or Internet Gateway</li></ul></div><div style="display:contents" dir="auto"><h2 id="2fa28cc3-269e-8068-ad94-d74035e5fa91" class="">10) Attack &amp; Risk Scenarios: Poisoning vs Prompt Leaking vs Hijacking vs Jailbreaking</h2></div><div style="display:contents" dir="auto"><hr id="2fa28cc3-269e-80fd-94e5-e08085fb3252"/></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8086-9a1a-c0329748b6ad" class="bulleted-list"><li style="list-style-type:disc"><strong>Poisoning</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8093-9225-e353e077949f" class="">: Outputs or training data become <strong>contaminated with malicious content</strong> (e.g., spam links)</p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80f9-af1d-da1c384cb32d" class="bulleted-list"><li style="list-style-type:disc"><strong>Prompt leaking</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-808d-a0c6-d744c5f899c3" class="">: <strong>Exposure of system prompts, prior conversations, or internal context</strong></p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80ba-aeb6-d5ffe77c792c" class="bulleted-list"><li style="list-style-type:disc"><strong>Prompt Hijacking</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-80da-bf47-e8f68a61bfdd" class="">: An attack where a user attempts to <strong>divert the model from its original purpose</strong></p></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8019-a96c-e2a76e81efc2" class="">by overriding instructions to change the topic or intent</p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80e8-a9d0-cd360f1f13cc" class="bulleted-list"><li style="list-style-type:disc"><strong>Jailbreaking</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-80e0-b0d8-d6ec224cd356" class="">: Techniques that <strong>bypass safety policies or guardrails</strong>, forcing the model to respond</p></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-808f-99c8-e8b7df1d337d" class="">to requests it should normally refuse</p></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2fa28cc3-269e-802a-b2b2-cb9a9a5aa3ce" class="">✅ Common Exam Phrases</h3></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8076-807e-f838c75dc902" class="bulleted-list"><li style="list-style-type:disc">“Response contains malicious content/links”<br/>→ <strong>Poisoning</strong></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80b5-a372-d04430a13244" class="bulleted-list"><li style="list-style-type:disc">“Model reveals hidden instructions / previous conversation”<br/>→ <strong>Prompt leaking</strong></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-803a-9d27-e7dceffb70e5" class="bulleted-list"><li style="list-style-type:disc">“Ignore the previous instructions and do X instead”<br/>→ <strong>Hijacking</strong></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8050-a29e-c5e8d3180c04" class="bulleted-list"><li style="list-style-type:disc">“As an exception, you may break the rules / pretend restrictions don’t exist”<br/>→ <strong>Jailbreaking</strong></li></ul></div><div style="display:contents" dir="auto"><h2 id="2fa28cc3-269e-8049-9772-c117820d6da6" class="">11) Evaluation Metrics: Identify the Problem Type First</h2></div><div style="display:contents" dir="auto"><hr id="2fa28cc3-269e-80a3-9708-c1eddff1714e"/></div><div style="display:contents" dir="auto"><h3 id="2fa28cc3-269e-80a2-b786-c59a390b025c" class="">1️⃣ Classification</h3></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-804f-9f17-c2b1670b772d" class="">→ Assigns input data to one of predefined categories (labels)</p></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8029-8ba8-d6865bf8f17f" class="">Examples: spam vs not spam, disease vs no disease</p></div><div style="display:contents" dir="ltr"><table id="2fa28cc3-269e-80f9-a2f7-e11f897b2d59" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-8095-9941-ea0fe20198d8"><th id="@jEB" class="simple-table-header-color simple-table-header">Scenario / Intent</th><th id="KmW&lt;" class="simple-table-header-color simple-table-header">Recommended Metric</th><th id="UMtv" class="simple-table-header-color simple-table-header">Why This Metric</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80aa-8ef9-e55d3a66fb05"><td id="@jEB" class="">General classification</td><td id="KmW&lt;" class=""><strong>Accuracy</strong></td><td id="UMtv" class="">Intuitive when classes are balanced</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-801c-a4f7-e6cd638453bc"><td id="@jEB" class="">Critical positive detection (medical, fraud)</td><td id="KmW&lt;" class=""><strong>Recall (Sensitivity)</strong></td><td id="UMtv" class="">Focuses on minimizing false negatives</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80db-a68a-cbd2aa7178ac"><td id="@jEB" class="">False positives are costly</td><td id="KmW&lt;" class=""><strong>Precision</strong></td><td id="UMtv" class="">Measures correctness of positive predictions</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-8064-a440-cc40c0d5c8b0"><td id="@jEB" class="">Precision &amp; Recall both important</td><td id="KmW&lt;" class=""><strong>F1-Score</strong></td><td id="UMtv" class="">Balances precision and recall</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-801f-8159-c0e2f65061d7"><td id="@jEB" class="">Class imbalance</td><td id="KmW&lt;" class=""><strong>Precision, Recall, F1, AUC</strong></td><td id="UMtv" class="">Accuracy may be misleading</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8041-8b49-c175c2ffdc5c" class="">👉 Keywords like <strong>medical / disease / risk / critical</strong></p></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-80a1-b8fc-c8fa0b5943e9" class="">→ Think <strong>Precision / Recall / F1</strong></p></div><div style="display:contents" dir="auto"><h3 id="2fa28cc3-269e-80fd-b80d-d411e45b87f9" class="">2️⃣ Regression</h3></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8036-8e48-dd8bada5916b" class="">→ Predicts continuous numerical values</p></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8048-9235-e220c48ac9de" class="">Examples: house prices, temperature, sales</p></div><div style="display:contents" dir="ltr"><table id="2fa28cc3-269e-8045-b50e-d6ea78ab86ba" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-8002-ae63-d2caf1dafc10"><th id="nizb" class="simple-table-header-color simple-table-header">Problem Type</th><th id="[v|t" class="simple-table-header-color simple-table-header">Metric</th><th id="nFoM" class="simple-table-header-color simple-table-header">Why</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80d8-8f75-f3916f1d8fd4"><td id="nizb" class="">Continuous value prediction</td><td id="[v|t" class=""><strong>MAE</strong></td><td id="nFoM" class="">Easy-to-interpret average error</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-8000-8484-eadfaf6c36b4"><td id="nizb" class="">Sensitive to large errors</td><td id="[v|t" class=""><strong>RMSE</strong></td><td id="nFoM" class="">Penalizes large errors more heavily</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-8025-8545-d91c95791c56"><td id="nizb" class="">Model explanatory power</td><td id="[v|t" class=""><strong>R²</strong></td><td id="nFoM" class="">Measures how much variance the model explains</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-800a-a902-e26cf955285a" class="">👉 Numeric prediction</p></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-80f6-a2a8-d48b1e708106" class="">→ <strong>MAE / RMSE</strong></p></div><div style="display:contents" dir="auto"><h3 id="2fa28cc3-269e-8014-8028-f7810dce9857" class="">3️⃣ NLP – Generation / Translation</h3></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-80b8-a2b9-f5d1b4b175e6" class="">→ Tasks involving understanding and generating human language</p></div><div style="display:contents" dir="ltr"><table id="2fa28cc3-269e-80ed-95ad-cdcc503d643f" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80f1-a0a9-ce748f5328fa"><th id="tweU" class="simple-table-header-color simple-table-header">Task</th><th id="=j`w" class="simple-table-header-color simple-table-header">Metric</th><th id="I`&lt;@" class="simple-table-header-color simple-table-header">Why</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80de-99d7-ecb2cfd95273"><td id="tweU" class="">Translation</td><td id="=j`w" class=""><strong>BLEU</strong></td><td id="I`&lt;@" class="">Measures n-gram similarity to reference translation</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-8075-bc29-fd6c093c3ed5"><td id="tweU" class="">Summarization</td><td id="=j`w" class=""><strong>ROUGE</strong></td><td id="I`&lt;@" class="">Measures overlap with reference summaries</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80ac-96e8-c2615d40fe29"><td id="tweU" class="">Text generation</td><td id="=j`w" class=""><strong>Perplexity</strong></td><td id="I`&lt;@" class="">Measures fluency of next-token prediction</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><h2 id="2fa28cc3-269e-80dc-b512-ede64801a100" class="">12) Train / Validation / Test (Validation Optional Trap)</h2></div><div style="display:contents" dir="auto"><hr id="2fa28cc3-269e-8099-8529-ebc87eed2a60"/></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8080-98d7-f25a8106ec9c" class="bulleted-list"><li style="list-style-type:disc"><strong>Training set</strong>: Used for model learning</li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8064-8b48-f81c41c4d354" class="bulleted-list"><li style="list-style-type:disc"><strong>Validation set</strong>: Used for hyperparameter tuning and intermediate selection (<strong>optional</strong>)</li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-805b-a5b5-e1d17d9067e0" class="bulleted-list"><li style="list-style-type:disc"><strong>Test set</strong>: Used for final generalization evaluation (<strong>not optional</strong>)</li></ul></div><div style="display:contents" dir="auto"><h3 id="2fa28cc3-269e-8012-9d32-c468e506ba64" class="">✅ Exam Favorite</h3></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-807b-b740-d3d3b77b3ff4" class="">“Validation sets are optional” → <strong>Correct</strong></p></div><div style="display:contents" dir="auto"><h2 id="2fa28cc3-269e-80aa-acdb-d32a2e6fedd2" class="">13) AWS AI Services: One-Line Distinction</h2></div><div style="display:contents" dir="auto"><hr id="2fa28cc3-269e-8000-9df2-d12068811121"/></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80b6-8535-edf19e7102cd" class="bulleted-list"><li style="list-style-type:disc"><strong>Amazon Polly</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-80ec-a6d4-e030e0cd67ce" class="">: Text → Speech (<strong>TTS</strong>)</p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80fc-b104-db446027a5d4" class="bulleted-list"><li style="list-style-type:disc"><strong>Amazon Transcribe</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-80b0-aa3e-d33dbcd0d93a" class="">: Speech → Text (<strong>STT</strong>)</p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-803f-8a58-e2c02f322f05" class="bulleted-list"><li style="list-style-type:disc"><strong>Amazon Comprehend</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8079-bea3-def3070389aa" class="">: <strong>Text NLP</strong> (sentiment, entity recognition, key phrases, classification)</p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80e1-9322-e617738b9ead" class="bulleted-list"><li style="list-style-type:disc"><strong>Amazon Lex</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-800d-a15e-f575bb353e85" class="">: <strong>Conversational chatbot</strong> (intent recognition, dialogue flow)</p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80c5-b653-f1ce205c9b20" class="bulleted-list"><li style="list-style-type:disc"><strong>Amazon Rekognition</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8059-b726-fcf124d47a2a" class="">: <strong>Image / video analysis</strong> (objects, faces, scenes)</p></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2fa28cc3-269e-80b4-be85-d19718d604e2" class="">✅ Selection Shortcut</h3></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80e9-ae69-f7a40c6f70dd" class="bulleted-list"><li style="list-style-type:disc">“Text to speech” → Polly</li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80e3-a3dd-ebc1a9205dbf" class="bulleted-list"><li style="list-style-type:disc">“Speech to text” → Transcribe</li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-809a-a76f-f0ae7960df9f" class="bulleted-list"><li style="list-style-type:disc">“Text meaning analysis” → Comprehend</li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8012-90c6-e33cd79d6d20" class="bulleted-list"><li style="list-style-type:disc">“Conversational chatbot” → Lex</li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-8026-89ec-c695661a5dde" class="bulleted-list"><li style="list-style-type:disc">“Image / video recognition” → Rekognition</li></ul></div><div style="display:contents" dir="auto"><h2 id="2fa28cc3-269e-80ed-8031-e7a4928d49a9" class="">14) Foundation Models vs LLMs</h2></div><div style="display:contents" dir="auto"><hr id="2fa28cc3-269e-806c-b463-dc7c2bc5f2d7"/></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80e5-b857-dd331c712c29" class="bulleted-list"><li style="list-style-type:disc"><strong>Foundation Model (FM)</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-80c6-aa4e-ea92521f08f2" class="">: A general-purpose base model usable across many tasks (may be multimodal)</p></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80a8-9a44-f510dec57a1b" class="bulleted-list"><li style="list-style-type:disc"><strong>LLM (Large Language Model)</strong><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-806b-95e1-c13eeef38326" class="">: A subset of foundation models specialized in <strong>language understanding and generation</strong></p></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2fa28cc3-269e-8037-b7c3-dd21c102fcc4" class="">✅ Safe Exam Framing</h3></div><div style="display:contents" dir="auto"><ul id="2fa28cc3-269e-80db-90b6-ecac190f096c" class="bulleted-list"><li style="list-style-type:disc">“LLMs are a subset of FMs”</li></ul></div><div style="display:contents" dir="auto"><h2 id="2fa28cc3-269e-808b-977b-d6538e2a79fb" class="">15) Supervised / Unsupervised / Semi-supervised / Reinforcement / Transfer / Incremental Learning</h2></div><div style="display:contents" dir="ltr"><table id="2fa28cc3-269e-803f-9649-f1c731aac97b" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-800c-acfe-eff42d90dd18"><th id="WpOs" class="simple-table-header-color simple-table-header">Category</th><th id="ZVz&lt;" class="simple-table-header-color simple-table-header">Core Idea</th><th id="eV~L" class="simple-table-header-color simple-table-header">When to Use</th><th id="dj`B" class="simple-table-header-color simple-table-header">Representative Techniques</th><th id="dX=:" class="simple-table-header-color simple-table-header">Technique Description</th><th id="jVm`" class="simple-table-header-color simple-table-header">Simple Example</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80e8-9c0e-eb6ff2f8142f"><td id="WpOs" class=""><strong>Supervised Learning</strong></td><td id="ZVz&lt;" class="">Learn from labeled data</td><td id="eV~L" class="">When prediction accuracy matters</td><td id="dj`B" class="">Decision Tree</td><td id="dX=:" class="">Rule-based branching</td><td id="jVm`" class="">Customer churn prediction</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-809a-bf7b-ce31a027f921"><td id="WpOs" class=""></td><td id="ZVz&lt;" class=""></td><td id="eV~L" class=""></td><td id="dj`B" class="">Neural Network</td><td id="dX=:" class="">Learns complex relationships</td><td id="jVm`" class="">Image / speech recognition</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80b7-a2fd-d9a6b57b6bdf"><td id="WpOs" class=""></td><td id="ZVz&lt;" class=""></td><td id="eV~L" class=""></td><td id="dj`B" class="">Linear / Logistic Regression</td><td id="dX=:" class="">Estimates input-output relationship</td><td id="jVm`" class="">Price prediction, binary classification</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-806b-85b2-f8c57bf3f4a4"><td id="WpOs" class=""><strong>Unsupervised Learning</strong></td><td id="ZVz&lt;" class="">Discover structure without labels</td><td id="eV~L" class="">Pattern / group discovery</td><td id="dj`B" class="">Clustering</td><td id="dX=:" class="">Groups similar data</td><td id="jVm`" class="">Customer segmentation</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80b3-9a8d-d15c9c122aa5"><td id="WpOs" class=""></td><td id="ZVz&lt;" class=""></td><td id="eV~L" class=""></td><td id="dj`B" class="">Dimensionality Reduction</td><td id="dX=:" class="">Reduces feature dimensions</td><td id="jVm`" class="">PCA, visualization</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80f9-b958-de7d01b05554"><td id="WpOs" class=""></td><td id="ZVz&lt;" class=""></td><td id="eV~L" class=""></td><td id="dj`B" class="">Association Rules</td><td id="dX=:" class="">Finds item relationships</td><td id="jVm`" class="">Market basket analysis</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-804f-889a-c67b77abb6ac"><td id="WpOs" class=""><strong>Semi-supervised Learning</strong></td><td id="ZVz&lt;" class="">Partially labeled data</td><td id="eV~L" class="">When labeling cost is high</td><td id="dj`B" class="">Self-training</td><td id="dX=:" class="">Reuses predicted labels</td><td id="jVm`" class="">Document classification</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-8093-9386-f4c7fabf7f1f"><td id="WpOs" class=""></td><td id="ZVz&lt;" class=""></td><td id="eV~L" class=""></td><td id="dj`B" class="">Label Propagation</td><td id="dX=:" class="">Spreads labels to neighbors</td><td id="jVm`" class="">Graph-based classification</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80b8-bc63-dae4f13d45c5"><td id="WpOs" class=""><strong>Reinforcement Learning</strong></td><td id="ZVz&lt;" class="">Learn actions via rewards</td><td id="eV~L" class="">Optimal decision strategy</td><td id="dj`B" class="">Q-learning</td><td id="dX=:" class="">Learns state-action values</td><td id="jVm`" class="">Game AI</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80a2-8c7f-d99eb72d49cc"><td id="WpOs" class=""></td><td id="ZVz&lt;" class=""></td><td id="eV~L" class=""></td><td id="dj`B" class="">Policy Gradient</td><td id="dX=:" class="">Direct policy optimization</td><td id="jVm`" class="">Robot control</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-806f-bfb1-eb5bf7392c35"><td id="WpOs" class=""><strong>Incremental Learning</strong></td><td id="ZVz&lt;" class="">Learn continuously</td><td id="eV~L" class="">Streaming data</td><td id="dj`B" class="">Online Gradient Descent</td><td id="dX=:" class="">Incremental updates</td><td id="jVm`" class="">Real-time log learning</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-8078-a074-f5f1a1d1abbb"><td id="WpOs" class=""></td><td id="ZVz&lt;" class=""></td><td id="eV~L" class=""></td><td id="dj`B" class="">Hoeffding Tree</td><td id="dX=:" class="">Stream-based decision tree</td><td id="jVm`" class="">Real-time classification</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80be-a2e0-d0436cfe8507"><td id="WpOs" class=""><strong>Transfer Learning</strong></td><td id="ZVz&lt;" class="">Reuse prior knowledge</td><td id="eV~L" class="">Limited data</td><td id="dj`B" class="">Fine-tuning</td><td id="dX=:" class="">Retrain part of pre-trained model</td><td id="jVm`" class="">Medical image classification</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80a4-9e4d-d936719e71b1"><td id="WpOs" class=""></td><td id="ZVz&lt;" class=""></td><td id="eV~L" class=""></td><td id="dj`B" class="">Feature Extraction</td><td id="dX=:" class="">Use model as feature extractor</td><td id="jVm`" class="">Image classification</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><h2 id="2fa28cc3-269e-8033-8d71-fae8ff8031e7" class="">16) Underfitting / Overfitting</h2></div><div style="display:contents" dir="auto"><h3 id="2fa28cc3-269e-80ea-8198-cd76053e4ec3" class="">1️⃣ Underfitting</h3></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-800c-ba1b-e4ee8b635ba0" class="">→ The model fails to learn patterns sufficiently</p></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-808e-8783-ef868a675e17" class="">→ <strong>High bias</strong></p></div><div style="display:contents" dir="auto"><h3 id="2fa28cc3-269e-8043-8c6f-e1683485e37e" class="">How to Adjust</h3></div><div style="display:contents" dir="ltr"><table id="2fa28cc3-269e-8010-9a00-c1799f9db2b7" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80d5-af08-deacd6e7acde"><th id="YEj\" class="simple-table-header-color simple-table-header">Adjustment</th><th id="r@z=" class="simple-table-header-color simple-table-header">Direction</th><th id="beNY" class="simple-table-header-color simple-table-header">Reason</th><th id="y=Jq" class="simple-table-header-color simple-table-header">Hyperparameter?</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-8063-8012-f661082ecb31"><td id="YEj\" class="">Epochs</td><td id="r@z=" class="">Increase</td><td id="beNY" class="">More learning iterations</td><td id="y=Jq" class="">✔</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80f0-8a97-cf9154c4efa1"><td id="YEj\" class="">Learning Rate</td><td id="r@z=" class="">Slightly increase</td><td id="beNY" class="">Too small slows learning</td><td id="y=Jq" class="">✔</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-8021-9891-f365b112bb4d"><td id="YEj\" class="">Model Complexity</td><td id="r@z=" class="">Increase</td><td id="beNY" class="">Insufficient expressive power</td><td id="y=Jq" class="">✔</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80e0-9bdf-f9a31eb00b35"><td id="YEj\" class="">Regularization Strength</td><td id="r@z=" class="">Decrease</td><td id="beNY" class="">Over-constraint blocks learning</td><td id="y=Jq" class="">✔</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80d8-a121-c9bc74b765db"><td id="YEj\" class="">Dropout Rate</td><td id="r@z=" class="">Decrease</td><td id="beNY" class="">Excessive dropout removes information</td><td id="y=Jq" class="">✔</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80b2-885e-dee0ca3ff129"><td id="YEj\" class="">Batch Size</td><td id="r@z=" class="">Decrease</td><td id="beNY" class="">More frequent weight updates</td><td id="y=Jq" class="">✔</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8058-9b21-db2b28d077a5" class=""><strong>→ The model hasn’t learned enough, so let it learn more.</strong></p></div><div style="display:contents" dir="auto"><h3 id="2fa28cc3-269e-80b8-851d-c6aa6b5de494" class="">2️⃣ Overfitting</h3></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-80c3-b7a6-f7638b219d33" class="">→ Fits training data well but fails to generalize</p></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-808c-b397-ca6b09a9b0dd" class="">→ <strong>High variance</strong></p></div><div style="display:contents" dir="auto"><h3 id="2fa28cc3-269e-80b0-91dd-f9df0d97b698" class="">How to Adjust</h3></div><div style="display:contents" dir="ltr"><table id="2fa28cc3-269e-8003-8ef0-e00902afca1b" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-8061-8ce5-d6ee9b6eb5fa"><th id="ZjG@" class="simple-table-header-color simple-table-header">Adjustment</th><th id="N&gt;Wt" class="simple-table-header-color simple-table-header">Direction</th><th id="oeV_" class="simple-table-header-color simple-table-header">Reason</th><th id="gHNY" class="simple-table-header-color simple-table-header">Hyperparameter?</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-8078-90a9-ea27b39b2a92"><td id="ZjG@" class="">Epochs</td><td id="N&gt;Wt" class="">Decrease</td><td id="oeV_" class="">Prevent memorization</td><td id="gHNY" class="">✔</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-8070-9607-fc44dc0669b6"><td id="ZjG@" class="">Learning Rate</td><td id="N&gt;Wt" class="">Slightly decrease</td><td id="oeV_" class="">Avoid fitting noise</td><td id="gHNY" class="">✔</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-8073-a626-e69fdb0789f4"><td id="ZjG@" class="">Model Complexity</td><td id="N&gt;Wt" class="">Decrease</td><td id="oeV_" class="">Model is too complex</td><td id="gHNY" class="">✔</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80db-940f-d9e482e7a110"><td id="ZjG@" class="">Regularization Strength</td><td id="N&gt;Wt" class="">Increase</td><td id="oeV_" class="">Penalize overfitting</td><td id="gHNY" class="">✔</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-80ed-879a-f885489633e6"><td id="ZjG@" class="">Dropout Rate</td><td id="N&gt;Wt" class="">Increase</td><td id="oeV_" class="">Encourage generalization</td><td id="gHNY" class="">✔</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-8023-9204-fc999e200897"><td id="ZjG@" class="">Batch Size</td><td id="N&gt;Wt" class="">Increase</td><td id="oeV_" class="">Reduce noise impact</td><td id="gHNY" class="">✔</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-807d-87f9-d9e0eec355c3"><td id="ZjG@" class="">Data Augmentation</td><td id="N&gt;Wt" class="">Apply</td><td id="oeV_" class="">Increase data diversity</td><td id="gHNY" class="">✘</td></tr></div><div style="display:contents" dir="ltr"><tr id="2fa28cc3-269e-8097-aab8-f8564aa00a8c"><td id="ZjG@" class=""><strong>Early Stopping</strong></td><td id="N&gt;Wt" class="">Apply</td><td id="oeV_" class="">Stop when validation degrades</td><td id="gHNY" class="">✘</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><p id="2fa28cc3-269e-8074-afbc-f6226d581863" class=""><strong>→ The model is memorizing, so restrict memorization.</strong></p></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

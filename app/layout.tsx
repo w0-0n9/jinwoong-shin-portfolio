@@ -20,10 +20,10 @@ export const metadata: Metadata = {
     default: "Jinwoong Shin - Portfolio",
     template: "%s | Jinwoong Shin",
   },
-  description: "Software Engineer specializing in Full Stack Development, AI/ML, and Cloud Computing.",
+  description: "Software Engineer specializing in Full Stack Development, AI/ML, and Cloud Computing. Passionate about building scalable web applications and intelligent systems using Next.js, Python, and AWS.",
   openGraph: {
     title: "Jinwoong Shin - Portfolio",
-    description: "Software Engineer specializing in Full Stack Development, AI/ML, and Cloud Computing.",
+    description: "Software Engineer specializing in Full Stack Development, AI/ML, and Cloud Computing. Passionate about building scalable web applications and intelligent systems using Next.js, Python, and AWS.",
     url: "https://jinwoong-shin-portfolio.web.app",
     siteName: "Jinwoong Shin Portfolio",
     locale: "en_US",
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Jinwoong Shin - Portfolio",
-    description: "Software Engineer specializing in Full Stack Development, AI/ML, and Cloud Computing.",
+    description: "Software Engineer specializing in Full Stack Development, AI/ML, and Cloud Computing. Passionate about building scalable web applications and intelligent systems using Next.js, Python, and AWS.",
     images: ["/profile.jpg"],
   },
   robots: {

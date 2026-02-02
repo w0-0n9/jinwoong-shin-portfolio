@@ -15,8 +15,38 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Jinwoong Shin - Portfolio", // [MODIFY]
-  description: "Software Engineer Portfolio", // [MODIFY]
+  metadataBase: new URL("https://jinwoong-shin-portfolio.web.app"),
+  title: {
+    default: "Jinwoong Shin - Portfolio",
+    template: "%s | Jinwoong Shin",
+  },
+  description: "Software Engineer specializing in Full Stack Development, AI/ML, and Cloud Computing.",
+  openGraph: {
+    title: "Jinwoong Shin - Portfolio",
+    description: "Software Engineer specializing in Full Stack Development, AI/ML, and Cloud Computing.",
+    url: "https://jinwoong-shin-portfolio.web.app",
+    siteName: "Jinwoong Shin Portfolio",
+    locale: "en_US",
+    type: "website",
+    images: [
+      {
+        url: "/profile.jpg",
+        width: 800,
+        height: 800,
+        alt: "Jinwoong Shin",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Jinwoong Shin - Portfolio",
+    description: "Software Engineer specializing in Full Stack Development, AI/ML, and Cloud Computing.",
+    images: ["/profile.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

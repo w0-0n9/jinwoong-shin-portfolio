@@ -4,19 +4,20 @@
   /* [NEW] Custom Color Palette (Devin-inspired) */
   --background: #0a0a0a;
   --foreground: #ededed;
-  
+
   --color-midnight: #0a0a0a;
   --color-terminal-bg: #121212;
   --color-terminal-header: #1e1e1e;
   --color-border-dim: rgba(255, 255, 255, 0.08);
-  --color-accent: #3b82f6; /* Blue accent */
+  --color-accent: #3b82f6;
+  /* Blue accent */
   --color-accent-glow: rgba(59, 130, 246, 0.15);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  
+
   /* [NEW] Map custom variables to Tailwind utilities */
   --color-midnight: var(--color-midnight);
   --color-terminal-bg: var(--color-terminal-bg);
@@ -30,13 +31,7 @@
 }
 
 /* Force dark mode by default if preferred, or just stick to vars */
-@media (prefers-color-scheme: light) {
-  :root {
-    /* Optional: Light mode overrides if needed, keeping dark for now as requested aesthetic is dark */
-    --background: #ffffff;
-    --foreground: #171717;
-  }
-}
+/* Light mode overrides removed to enforce dark theme */
 
 body {
   background: var(--background);

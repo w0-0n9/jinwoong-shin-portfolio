@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google"; // [MODIFY]
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import AIChatBot from "@/components/AIChatBot";
 
-// [MODIFY] Initialize Inter
+// Initialize Inter
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
 });
 
-// [MODIFY] Initialize JetBrains Mono
+// Initialize JetBrains Mono
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
   subsets: ["latin"],
@@ -57,9 +58,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} antialiased`} // [MODIFY]
+        className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
         {children}
+        <AIChatBot />
       </body>
     </html>
   );

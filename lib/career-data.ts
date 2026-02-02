@@ -43,5 +43,20 @@ export const careerData: CareerItem[] = [
             "Built custom UI components and prototyped an AI-assisted CRM feature using Apex and Lightning Web Components (LWC), improving administrator productivity."
         ],
         techStack: ["Java", "Salesforce", "Apex", "LWC", "Flow Builder"]
+    },
+    {
+        id: "nice-payments",
+        logo: "/companies/nice-payments.png",
+        role: "Software Engineer (Intern)",
+        company: "NICE PAYMENTS",
+        period: "Jan 2022 – Jun 2022",
+        location: "Seoul, South Korea",
+        description: "Developed AR features for \"Hwahae,\" a beauty app subsidiary of Nice Payments, introducing cosmetic ingredients, reviews, and sales.",
+        achievements: [
+            "Utilized Unity and programmed using languages and tools such as C++, C#, JSON, Blender.",
+            "Implemented Image Tracking technology to recognize actual cosmetic products, enabling users to view reviews and ingredient details for the recognized item in AR environment.",
+            "Adapted Nice Payments' payment API (originally Java-based) to fit the Unity environment, enabling actual transactions within the AR environment."
+        ],
+        techStack: ["Unity", "C#", "C++", "RestSharp", "JSON", "AR Image Tracking", "Payment API Integration"]
     }
 ];

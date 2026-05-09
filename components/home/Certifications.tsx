@@ -3,88 +3,96 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import { Carousel } from "@/components/ui/Carousel";
 
 const certifications = [
     {
         title: "AWS Certified AI Practitioner",
         issuer: "Amazon Web Services (AWS)",
         date: "Feb 2026",
-        image: "/certifications/aws-ai-practitioner-v3.png",
-        link: "/blog/aws-ai-practitioner"
+        image: "/certifications/aws-ai-practitioner.png",
+        link: "/blog/aws-ai-practitioner",
     },
     {
         title: "Foundry & AIP Builder Foundations",
         issuer: "Palantir Technologies",
         date: "Dec 2025",
-        image: "/certifications/palantir-v2.png",
-        link: "https://www.linkedin.com/in/w0-0n9/details/certifications/"
+        image: "/certifications/palantir.png",
+        link: "https://www.linkedin.com/in/w0-0n9/details/certifications/",
     },
     {
         title: "Speedrun: Your First AIP Workflow",
         issuer: "Palantir Technologies",
         date: "Dec 2025",
-        image: "/certifications/palantir-v2.png",
-        link: "https://www.linkedin.com/in/w0-0n9/details/certifications/"
-    }
+        image: "/certifications/palantir.png",
+        link: "https://www.linkedin.com/in/w0-0n9/details/certifications/",
+    },
 ];
+
+interface Cert {
+    title: string;
+    issuer: string;
+    date: string;
+    image: string;
+    link: string;
+}
+
+function CertCard({ cert }: { cert: Cert }) {
+    const isPalantir = cert.issuer.includes("Palantir");
+    return (
+        <Link href={cert.link || "#"} className="block h-full">
+            <div className="group h-full rounded-2xl border border-[#e8e8ed] bg-white p-6 flex flex-col items-start hover:border-[#d2d2d7] hover:shadow-[0_8px_30px_-10px_rgba(0,0,0,0.08)] transition-all">
+                <div className="relative w-20 h-20 mb-5 bg-[#f5f5f7] border border-[#e8e8ed] rounded-2xl flex items-center justify-center overflow-hidden">
+                    <Image
+                        src={cert.image}
+                        alt={cert.title}
+                        fill
+                        className={`object-contain ${isPalantir ? "p-0 scale-[2.0]" : "p-2"}`}
+                    />
+                </div>
+
+                <h3 className="text-base font-semibold text-[#1d1d1f] mb-1.5 group-hover:text-[#0071e3] transition-colors tracking-tight leading-snug">
+                    {cert.title}
+                </h3>
+                <p className="text-[#6e6e73] text-sm">
+                    {cert.issuer}
+                </p>
+                <p className="text-[#86868b] text-xs mt-1">
+                    Issued {cert.date}
+                </p>
+            </div>
+        </Link>
+    );
+}
 
 export function Certifications() {
     return (
-        <section id="certifications" className="py-24 relative bg-black/50 overflow-hidden">
-            <div className="container mx-auto px-6 relative z-10">
+        <section id="certifications" className="py-32 bg-[#f5f5f7] overflow-hidden">
+            <div className="container mx-auto px-6 mb-12">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
-                    className="max-w-4xl mx-auto"
+                    className="max-w-2xl"
                 >
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-12 text-center">
-                        Certifications
+                    <p className="text-sm font-semibold text-[#0071e3] uppercase tracking-[0.12em] mb-4">Certifications</p>
+                    <h2 className="text-4xl md:text-5xl font-semibold tracking-[-0.03em] text-[#1d1d1f] leading-[1.1]">
+                        Continuously learning.
                     </h2>
-
-                    <div className="grid md:grid-cols-2 gap-8 justify-center">
-                        {certifications.map((cert, index) => (
-                            <Link href={cert.link || "#"} key={index} className="block w-full max-w-lg mx-auto md:max-w-none">
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                                    className="group relative rounded-xl border border-white/10 bg-[#121212] overflow-hidden hover:border-blue-500/30 transition-colors flex items-center p-4 gap-6"
-                                >
-                                    {/* Glow Effect */}
-                                    <div className="absolute inset-0 bg-blue-500/0 group-hover:bg-blue-500/5 transition-colors pointer-events-none" />
-
-                                    {/* Logo Left */}
-                                    <div className="relative w-32 h-32 flex-shrink-0 bg-white rounded-lg flex items-center justify-center overflow-hidden">
-                                        <div className="absolute inset-0 group-hover:bg-blue-500/10 transition-colors" />
-                                        <Image
-                                            src={cert.image}
-                                            alt={cert.title}
-                                            fill
-                                            className={`object-contain ${cert.issuer.includes("Palantir") ? "p-0 scale-[2.0]" : "p-2"}`}
-                                        />
-                                    </div>
-
-                                    {/* Text Right */}
-                                    <div className="flex flex-col z-10">
-                                        <h3 className="text-lg font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">
-                                            {cert.title}
-                                        </h3>
-                                        <p className="text-gray-400 text-sm">
-                                            {cert.issuer}
-                                        </p>
-                                        <p className="text-gray-500 text-xs mt-1">
-                                            Issued {cert.date}
-                                        </p>
-                                    </div>
-                                </motion.div>
-                            </Link>
-                        ))}
-                    </div>
                 </motion.div>
             </div>
+
+            <Carousel
+                layoutIdPrefix="certifications"
+                snapAlign="start"
+                cardWidthClassName="w-[clamp(280px,32vw,400px)]"
+                items={certifications.map((cert, idx) => ({
+                    id: `cert-${idx}`,
+                    tabLabel: cert.title,
+                    node: <CertCard cert={cert} />,
+                }))}
+            />
         </section>
     );
 }

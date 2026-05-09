@@ -217,7 +217,7 @@ Passing the AIF-C01 requires a solid understanding of "which service fits this s
       title: "AWS Certified AI Practitioner",
       issuer: "Amazon Web Services (AWS)",
       date: "Feb 2026",
-      image: "/certifications/aws-ai-practitioner-v3.png",
+      image: "/certifications/aws-ai-practitioner.png",
       link: "https://www.linkedin.com/in/w0-0n9/details/certifications/" // Fallback or specific link
     }
   }

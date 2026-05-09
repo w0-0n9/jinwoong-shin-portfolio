@@ -19,24 +19,24 @@ export function Button({
 }: ButtonProps) {
 
     const variants = {
-        primary: "bg-blue-600 text-white hover:bg-blue-700 shadow-[0_0_15px_rgba(37,99,235,0.4)] border border-transparent",
-        secondary: "bg-white/10 text-white hover:bg-white/20 border border-white/10",
-        ghost: "bg-transparent text-gray-400 hover:text-white hover:bg-white/5",
-        outline: "bg-transparent border border-white/20 text-gray-300 hover:border-white/50 hover:text-white"
+        primary: "bg-[#0071e3] text-white hover:bg-[#0077ed] border border-transparent",
+        secondary: "bg-[#f5f5f7] text-[#1d1d1f] hover:bg-[#ebebed] border border-[#e8e8ed]",
+        ghost: "bg-transparent text-[#1d1d1f] hover:bg-[#f5f5f7]",
+        outline: "bg-transparent border border-[#d2d2d7] text-[#1d1d1f] hover:bg-[#f5f5f7]"
     };
 
     const sizes = {
-        sm: "px-3 py-1.5 text-sm",
-        md: "px-6 py-2.5 text-base",
-        lg: "px-8 py-3.5 text-lg"
+        sm: "px-4 py-1.5 text-sm",
+        md: "px-5 py-2 text-sm",
+        lg: "px-6 py-3 text-base"
     };
 
     return (
         <motion.button
-            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            transition={{ duration: 0.15 }}
             className={cn(
-                "relative inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50 disabled:pointer-events-none",
+                "relative inline-flex items-center justify-center rounded-full font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0071e3]/50 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
                 variants[variant],
                 sizes[size],
                 className

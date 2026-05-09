@@ -3,68 +3,78 @@
 import { motion } from "framer-motion";
 
 const skills = {
-    "Languages": ["Python", "SQL", "Java"],
-    "AI / ML": ["RAG", "Multi-agent Systems", "Model Evaluation", "On-premises LLM Serving", "Prompt Engineering"],
-    "Platforms": ["Vertex AI", "BigQuery", "Cloud Composer", "AWS", "Apple Silicon", "Ollama", "MLX"]
+    "Languages": ["Python", "SQL", "Java", "TypeScript", "JavaScript", "C#", "C++"],
+    "AI / ML": ["RAG", "Adaptive RAG", "Multi-agent Systems", "Model Evaluation", "On-premises LLM Serving", "Prompt Engineering", "Embeddings"],
+    "LLMs & Serving": ["Gemini 2.5 Flash", "Gemma 4", "Qwen 3.5", "Apple Silicon", "Ollama", "MLX"],
+    "Cloud & Data": ["Vertex AI", "BigQuery", "Cloud Composer", "GCP", "AWS", "AWS Connect", "Firebase"],
+    "Salesforce": ["Agentforce", "Data Cloud", "Trust Layer", "Sales Cloud", "Apex", "Lightning Web Components", "Flow Builder"],
+    "Web": ["Next.js", "React", "Tailwind CSS", "Stripe", "Vercel", "next-intl"],
+    "AR / Game": ["Unity", "AR Image Tracking", "Blender"],
 };
 
 export function About() {
     return (
-        <section id="about" className="py-24 relative bg-[#0a0a0a] overflow-hidden">
-            <div className="container mx-auto px-6 grid md:grid-cols-2 gap-12 items-start">
+        <section id="about" className="py-32 bg-[#f5f5f7]">
+            <div className="container mx-auto px-6 grid md:grid-cols-2 gap-16 items-stretch">
                 {/* Left: Text */}
                 <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
+                    className="flex flex-col h-full"
                 >
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                        About <span className="text-blue-500">Me</span>
-                    </h2>
-                    <div className="space-y-4 text-gray-400 leading-relaxed">
+                    <div>
+                        <p className="text-sm font-semibold text-[#0071e3] uppercase tracking-[0.12em] mb-4">About</p>
+                        <h2 className="text-4xl md:text-5xl font-semibold tracking-[-0.03em] text-[#1d1d1f] mb-8 leading-[1.1]">
+                            End-to-end is
+                            <br />
+                            the only way I know.
+                        </h2>
+                    </div>
+                    <div className="flex-1 flex flex-col justify-between gap-6 text-[#424245] text-lg leading-[1.5]">
                         <p>
-                            I am an LLM Engineer with 1.5+ years at <strong>LG CNS America</strong>, shipping enterprise GenAI across cloud and on-premises stacks.
-                            I led a <strong>multi-agent contact center platform</strong> handling 11K+ monthly calls, and an end-to-end <strong>return analytics pipeline</strong> over 230K+ records that contributed to a ~2% return-rate reduction (~$1.6M estimated annual savings).
+                            I&apos;m an LLM Engineer who likes building production GenAI <span className="text-[#1d1d1f] font-medium">end-to-end</span> — from messy data plumbing through model selection to the surface where someone actually uses it. The work I&apos;m proudest of started as unstructured chaos and ended as something quiet that saved money or hours.
                         </p>
                         <p>
-                            My work spans <strong>production-grade RAG architectures</strong>, model evaluation across cloud and locally-served SLMs (Apple Silicon · Ollama · MLX), and pipeline orchestration on <strong>Cloud Composer + Vertex AI</strong>.
+                            At <span className="text-[#1d1d1f] font-medium">LG CNS America</span> I move between <span className="text-[#1d1d1f] font-medium">cloud and on-premises</span> stacks, picking the right tool for the actual constraint — data residency, latency, or cost. Lately I&apos;ve been deep in evaluating locally-served SLMs against frontier cloud models and shipping the ones that genuinely hold up.
                         </p>
                         <p>
-                            I hold a B.S. in Computer Science from the <strong>University of Wisconsin–Madison</strong> (May 2024, GPA 3.55 / 4.00).
+                            <span className="text-[#1d1d1f] font-medium">Next chapter:</span> I&apos;m an incoming Online MSCS student at <span className="text-[#1d1d1f] font-medium">Georgia Tech</span> (Fall 2026), specializing in <span className="text-[#1d1d1f] font-medium">AI and Robotics</span> — formalizing a long-standing interest in physical-world AI alongside the language-model work I do today.
+                        </p>
+                        <p>
+                            Outside of work I build things for fun. Most recently <a href="https://www.olin.bike/" target="_blank" rel="noopener noreferrer" className="text-[#0071e3] hover:underline font-medium">olin.bike</a> — a multi-language Stripe-backed booking site I shipped solo for a Tour de France 2026 cycling experience.
                         </p>
                     </div>
                 </motion.div>
 
-                {/* Right: Skills Grid */}
+                {/* Right: Skills */}
                 <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="bg-[#121212] p-6 md:p-8 rounded-2xl border border-white/5 hover:border-blue-500/20 transition-colors"
+                    transition={{ duration: 0.5, delay: 0.15 }}
+                    className="h-full bg-white rounded-2xl border border-[#e8e8ed] p-8 md:p-10 flex flex-col"
                 >
-                    <h3 className="text-2xl font-bold text-white mb-8">Tech Stack</h3>
+                    <h3 className="text-xl font-semibold text-[#1d1d1f] mb-8 tracking-tight">Tech Stack</h3>
 
-                    <div className="space-y-8">
-                        {Object.entries(skills).map(([category, items], categoryIndex) => (
-                            <div key={category} className="relative">
-                                {categoryIndex > 0 && (
-                                    <div className="absolute -top-4 left-0 right-0 h-px bg-white/10" />
-                                )}
-                                <h4 className="text-sm font-semibold text-blue-400 mb-3 uppercase tracking-wider">{category}</h4>
-                                <div className="flex flex-wrap gap-2">
-                                    {items.map((skill, index) => (
-                                        <motion.span
-                                            key={skill}
-                                            initial={{ opacity: 0, scale: 0.8 }}
-                                            whileInView={{ opacity: 1, scale: 1 }}
-                                            transition={{ delay: (categoryIndex * 0.1) + (index * 0.05) }}
-                                            className="px-2.5 py-1 text-xs md:text-sm font-mono text-gray-300 bg-white/5 border border-white/10 rounded hover:bg-blue-500/10 hover:border-blue-500/30 hover:text-blue-300 transition-colors cursor-default"
-                                        >
-                                            {skill}
-                                        </motion.span>
-                                    ))}
+                    <div className="flex-1 flex flex-col justify-between gap-6 -mx-8 md:-mx-10">
+                        {Object.entries(skills).map(([category, items]) => (
+                            <div key={category}>
+                                <h4 className="px-8 md:px-10 text-xs font-semibold text-[#86868b] uppercase tracking-[0.1em] mb-2.5">
+                                    {category}
+                                </h4>
+                                <div className="relative">
+                                    <div className="flex gap-2 overflow-x-auto hide-scrollbar px-8 md:px-10 mask-fade-x">
+                                        {items.map((skill) => (
+                                            <span
+                                                key={skill}
+                                                className="flex-shrink-0 px-3 py-1 text-sm text-[#1d1d1f] bg-[#f5f5f7] border border-[#e8e8ed] rounded-full whitespace-nowrap transition-colors hover:bg-[#ebebed]"
+                                            >
+                                                {skill}
+                                            </span>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         ))}

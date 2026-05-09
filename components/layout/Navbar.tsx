@@ -3,14 +3,18 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Terminal } from "lucide-react";
+import { Menu, X, Download, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
+import { useAIAssistant } from "@/lib/ai-assistant-context";
 
 const navLinks = [
     { name: "About", href: "/#about" },
     { name: "Experience", href: "/#experience" },
     { name: "Projects", href: "/#projects" },
+    { name: "Education", href: "/#education" },
+    { name: "Certifications", href: "/#certifications" },
+    { name: "Conferences", href: "/#conferences" },
     { name: "Blog", href: "/blog" },
     { name: "Contact", href: "/#contact" },
 ];
@@ -18,6 +22,7 @@ const navLinks = [
 export function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const { open: openAIAssistant } = useAIAssistant();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -29,51 +34,59 @@ export function Navbar() {
 
     return (
         <motion.nav
-            initial={{ y: -100 }}
+            initial={{ y: -40 }}
             animate={{ y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.4 }}
             className={cn(
-                "fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b border-transparent",
+                "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
                 isScrolled
-                    ? "bg-black/80 backdrop-blur-md border-white/10 py-3"
+                    ? "bg-white/80 backdrop-blur-xl border-b border-[#e8e8ed] py-3"
                     : "bg-transparent py-5"
             )}
         >
             <div className="container mx-auto px-6 flex items-center justify-between">
                 {/* Logo */}
-                <Link href="/" className="flex items-center gap-2 group">
-                    <div className="p-2 bg-white/5 rounded-lg group-hover:bg-blue-600/20 transition-colors">
-                        <Terminal className="w-5 h-5 text-blue-400 group-hover:text-blue-300 transition-colors" />
-                    </div>
-                    <span className="font-mono text-lg font-bold tracking-tight text-white">
-                        jinwoong<span className="text-blue-500">.ai</span>
+                <Link href="/" className="flex items-center group">
+                    <span className="font-mono text-base font-semibold tracking-tight text-[#1d1d1f]">
+                        jinwoong<span className="text-[#0071e3]">.ai</span>
                     </span>
                 </Link>
 
                 {/* Desktop Nav */}
-                <div className="hidden md:flex items-center gap-8">
+                <div className="hidden lg:flex items-center gap-5">
                     {navLinks.map((link) => (
                         <Link
                             key={link.name}
                             href={link.href}
-                            className="text-sm font-medium text-gray-400 hover:text-white transition-colors"
+                            className="text-sm font-medium text-[#424245] hover:text-[#1d1d1f] transition-colors"
                         >
                             {link.name}
                         </Link>
                     ))}
-                    <Link href="/resume.pdf" target="_blank" rel="noopener noreferrer">
-                        <Button variant="primary" size="sm">
-                            Resume
+                    <button
+                        type="button"
+                        onClick={openAIAssistant}
+                        className="text-sm font-medium text-[#424245] hover:text-[#1d1d1f] transition-colors flex items-center gap-1.5"
+                        aria-label="Open AI Assistant"
+                    >
+                        <Sparkles size={14} className="text-[#0071e3]" />
+                        AI Assistant
+                    </button>
+                    <Link href="/resume.pdf" target="_blank" rel="noopener noreferrer" download>
+                        <Button variant="primary" size="sm" className="gap-1.5">
+                            <Download size={14} />
+                            Download Resume
                         </Button>
                     </Link>
                 </div>
 
                 {/* Mobile Toggle */}
                 <button
-                    className="md:hidden p-2 text-gray-400 hover:text-white"
+                    className="lg:hidden p-2 text-[#424245] hover:text-[#1d1d1f]"
                     onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                    aria-label="Toggle menu"
                 >
-                    {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                    {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
                 </button>
             </div>
 
@@ -84,21 +97,35 @@ export function Navbar() {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="md:hidden bg-black/95 border-b border-white/10 backdrop-blur-xl overflow-hidden"
+                        className="lg:hidden bg-white border-b border-[#e8e8ed] overflow-hidden"
                     >
-                        <div className="px-6 py-8 flex flex-col gap-6">
+                        <div className="px-6 py-6 flex flex-col gap-5">
                             {navLinks.map((link) => (
                                 <Link
                                     key={link.name}
                                     href={link.href}
-                                    className="text-lg font-medium text-gray-300 hover:text-blue-400 transition-colors"
+                                    className="text-base font-medium text-[#1d1d1f] hover:text-[#0071e3] transition-colors"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     {link.name}
                                 </Link>
                             ))}
-                            <Link href="/resume.pdf" target="_blank" rel="noopener noreferrer" className="w-full">
-                                <Button className="w-full">Resume</Button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    openAIAssistant();
+                                    setIsMobileMenuOpen(false);
+                                }}
+                                className="text-left text-base font-medium text-[#1d1d1f] hover:text-[#0071e3] transition-colors flex items-center gap-2"
+                            >
+                                <Sparkles size={16} className="text-[#0071e3]" />
+                                AI Assistant
+                            </button>
+                            <Link href="/resume.pdf" target="_blank" rel="noopener noreferrer" download className="w-full">
+                                <Button className="w-full gap-2">
+                                    <Download size={16} />
+                                    Download Resume
+                                </Button>
                             </Link>
                         </div>
                     </motion.div>

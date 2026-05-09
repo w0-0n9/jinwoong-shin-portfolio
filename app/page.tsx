@@ -6,22 +6,20 @@ import { Projects } from "@/components/home/Projects";
 import { Contact } from "@/components/home/Contact";
 import { Education } from "@/components/home/Education";
 import { Certifications } from "@/components/home/Certifications";
-import { BackgroundGrid } from "@/components/ui/BackgroundGrid";
+import { Conferences } from "@/components/home/Conferences";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-black text-white selection:bg-blue-500/30 relative">
-      <BackgroundGrid />
-      <div className="relative z-10">
-        <Navbar />
-        <Hero />
-        <About />
-        <Career />
-        <Projects />
-        <Education />
-        <Certifications />
-        <Contact />
-      </div>
+    <main className="min-h-screen bg-white text-[#1d1d1f]">
+      <Navbar />
+      <Hero />
+      <About />
+      <Career />
+      <Projects />
+      <Education />
+      <Certifications />
+      <Conferences />
+      <Contact />
     </main>
   );
 }

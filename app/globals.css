@@ -1,40 +1,76 @@
 @import "tailwindcss";
 
 :root {
-  /* [NEW] Custom Color Palette (Devin-inspired) */
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  /* Apple-inspired light palette */
+  --background: #ffffff;
+  --foreground: #1d1d1f;
 
-  --color-midnight: #0a0a0a;
-  --color-terminal-bg: #121212;
-  --color-terminal-header: #1e1e1e;
-  --color-border-dim: rgba(255, 255, 255, 0.08);
-  --color-accent: #3b82f6;
-  /* Blue accent */
-  --color-accent-glow: rgba(59, 130, 246, 0.15);
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f5f5f7;
+  --color-text-primary: #1d1d1f;
+  --color-text-secondary: #424245;
+  --color-text-tertiary: #6e6e73;
+  --color-border: #d2d2d7;
+  --color-border-light: #e8e8ed;
+  --color-accent: #0071e3;
+  --color-accent-hover: #0077ed;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  /* [NEW] Map custom variables to Tailwind utilities */
-  --color-midnight: var(--color-midnight);
-  --color-terminal-bg: var(--color-terminal-bg);
-  --color-terminal-header: var(--color-terminal-header);
-  --color-border-dim: var(--color-border-dim);
+  --color-bg-secondary: var(--color-bg-secondary);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-tertiary: var(--color-text-tertiary);
+  --color-border: var(--color-border);
+  --color-border-light: var(--color-border-light);
   --color-accent: var(--color-accent);
-  --color-accent-glow: var(--color-accent-glow);
+  --color-accent-hover: var(--color-accent-hover);
 
   --font-sans: var(--font-inter);
   --font-mono: var(--font-jetbrains-mono);
 }
 
-/* Force dark mode by default if preferred, or just stick to vars */
-/* Light mode overrides removed to enforce dark theme */
+html {
+  scroll-behavior: smooth;
+}
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv11", "ss01";
+}
+
+::selection {
+  background-color: rgba(0, 113, 227, 0.18);
+  color: #1d1d1f;
+}
+
+/* Hide system cursor on devices that support hover (desktops, etc.) — custom cursor takes over */
+@media (hover: hover) and (pointer: fine) {
+  html,
+  body,
+  body * {
+    cursor: none;
+  }
+}
+
+/* Hide scrollbar utility (used in horizontal sliders) */
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
+/* Soft fade on horizontal scroll edges — hints "more content this way" without a hard cut */
+.mask-fade-x {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 32px, black calc(100% - 32px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, black 32px, black calc(100% - 32px), transparent 100%);
 }

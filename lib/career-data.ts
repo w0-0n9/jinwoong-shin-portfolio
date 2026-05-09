@@ -53,11 +53,14 @@ export const careerData: CareerItem[] = [
         company: "Samsung SDS",
         period: "Jun 2023 – Aug 2023",
         location: "Seoul, South Korea",
-        description: "Developed Salesforce CRM automations and AI-assisted features for Sales Cloud administrators.",
+        description: "Built Salesforce CRM automations and prototyped AI-assisted features for Sales Cloud, focusing on streamlining day-to-day workflows for CRM administrators.",
         achievements: [
-            "Developed Salesforce CRM automations with Flow Builder and prototyped an AI-assisted CRM feature using Apex and Lightning Web Components (LWC), streamlining workflows for Sales Cloud administrators."
+            "Designed and shipped Salesforce CRM automations using Flow Builder — automating lead routing, opportunity stage transitions, and approval flows — reducing repetitive manual steps for Sales Cloud administrators.",
+            "Built custom Lightning Web Components (LWC) backed by Apex controllers to extend the standard Sales Cloud UI with team-specific views and quick-action panels.",
+            "Prototyped an AI-assisted CRM feature that surfaced contextual customer insights and next-step recommendations directly inside record pages, validating the value of GenAI augmentation for admin productivity.",
+            "Collaborated cross-functionally with Salesforce administrators and business stakeholders in Korea to gather requirements, demo iterations, and incorporate feedback into the prototype."
         ],
-        techStack: ["Java", "Salesforce", "Apex", "LWC", "Flow Builder"]
+        techStack: ["Java", "Salesforce", "Apex", "Lightning Web Components", "Flow Builder", "Sales Cloud"]
     },
     {
         id: "nice-payments",

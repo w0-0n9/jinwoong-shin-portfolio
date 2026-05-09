@@ -1,239 +1,191 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * import {onCall} from "firebase-functions/v2/https";
- * import {onDocumentWritten} from "firebase-functions/v2/firestore";
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
-
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
-import { VertexAI } from "@google-cloud/vertexai";
+import { VertexAI, SchemaType } from "@google-cloud/vertexai";
 
-// --- CONTEXT DATA START ---
+import { nodes, edges, validNodeIds } from "./knowledge-graph";
 
-const RESUME_TEXT = `
-JINWOONG SHIN
-+1 (608) 556-0771 ⋄ Little Ferry, NJ
-jinwoong7116@gmail.com ⋄ linkedin.com/in/w0-0n9 ⋄ jinwoong-shin-portfolio.web.app
+// Build a compact JSON view of the graph for the LLM context.
+// Strip server-side fields (fileSrc/fileTitle/fileDownloadName) since the
+// LLM doesn't need to know paths — it only needs IDs to reference.
+const KNOWLEDGE_GRAPH_FOR_LLM = {
+    nodes: nodes.map((n) => ({
+        id: n.id,
+        type: n.type,
+        label: n.label,
+        ...(n.description ? { description: n.description } : {}),
+        ...(n.meta ? { meta: n.meta } : {}),
+    })),
+    edges: edges.map((e) => ({ source: e.source, target: e.target, relation: e.relation })),
+};
 
-SUMMARY
-LLM Engineer with 1.5+ years at LG CNS America, shipping enterprise GenAI across cloud and on-premises stacks — led a multi-agent contact center platform handling 11K+ monthly calls and an end-to-end return analytics pipeline over 230K+ records, achieving ~2% reduction (~$1.6M) in product return rate.
-
-SKILLS
-- Languages: Python, SQL, Java
-- AI / ML: RAG, Multi-agent Systems, Model Evaluation, On-premises LLM Serving, Prompt Engineering
-- Platforms: Vertex AI, BigQuery, Cloud Composer, AWS, Apple Silicon, Ollama, MLX
-
-EXPERIENCE
-
-LLM Engineer
-LG CNS America, Inc.
-Jun 2024 – Present | New Jersey, United States
-
-Return Reason Analysis AX Project
-- Owned end-to-end design and delivery of an LLM-powered pipeline summarizing and classifying 230K+ annual return records across LG Electronics' retail (The Home Depot) and direct-to-consumer (LG.com) channels in the U.S., replacing manual review with automated GenAI workflows that contributed to a ~2% reduction in overall return rate (~$1.6M estimated annual savings, 2025 vs. 2024).
-- Engineered an end-to-end pipeline orchestrated by Cloud Composer (managed Airflow on GKE), integrating heterogeneous sources (OLAP, enterprise data lake, retail partner crawler) via SQL into automated Vertex AI batch inference with LLM summarization and embedding-driven classification.
-- Led on-premises migration from Gemini 2.5 Flash to a locally-hosted SLM on Apple Silicon (Mac Studio), benchmarking Gemma 4 vs Qwen 3.5 across Ollama and MLX serving frameworks; selected Gemma 4 with 91% accuracy parity to the cloud baseline, reducing cloud spend and strengthening data residency.
-
-Contact Center AX Project
-- Led architecture and delivery of an enterprise contact center AI platform deployed across 23 agents handling 800+ daily customer interactions (~11K monthly calls), integrating real-time call transcription (AWS Connect STT) with Salesforce Agentforce; deployed in 2 months — 150% faster than industry baseline.
-- Designed an Adaptive RAG (ReAct-based modular) multi-agent architecture for call/email assistants, automating summarization, sentiment analysis, and reply recommendations across Web, iMessage, and WhatsApp.
-- Architected a knowledge ingestion pipeline (Bynder DAM → GCS → Salesforce Data Cloud) processing 2,082 documents (12.4GB) with chunking/embedding/vectorizing, secured by Salesforce Trust Layer.
-
-Software Engineer Intern
-Samsung SDS
-Jun 2023 – Aug 2023 | Seoul, South Korea
-- Developed Salesforce CRM automations with Flow Builder and prototyped an AI-assisted CRM feature using Apex and Lightning Web Components (LWC), streamlining workflows for Sales Cloud administrators.
-
-Software Engineer Intern
-NICE PAYMENTS
-Jan 2022 – Jun 2022 | Seoul, South Korea
-- Developed AR features for "Hwahae," a beauty app subsidiary of Nice Payments, introducing cosmetic ingredients, reviews, and sales.
-- Utilized Unity and programmed using languages and tools such as C++, C#, JSON, Blender.
-- Implemented Image Tracking technology to recognize actual cosmetic products, enabling users to view reviews and ingredient details for the recognized item in AR environment.
-- Adapted Nice Payments' payment API (originally Java-based) to fit the Unity environment, enabling actual transactions within the AR environment.
-
-EDUCATION & CERTIFICATIONS
-University of Wisconsin–Madison — Bachelor of Science in Computer Science (May 2024) — GPA: 3.55 / 4.00
-- AWS Certified AI Practitioner — Amazon Web Services (Feb 2026)
-- Foundry & AIP Builder Foundations — Palantir Technologies (Dec 2025)
-`;
-
-const CAREER_DATA = [
-    {
-        role: "LLM Engineer",
-        company: "LG CNS America, Inc.",
-        period: "Jun 2024 – Present",
-        location: "New Jersey, United States",
-        description: "Shipping enterprise GenAI across cloud and on-premises stacks — leading multi-agent platforms and large-scale analytics pipelines for LG Electronics in the U.S.",
-        projects: [
-            {
-                name: "Return Reason Analysis AX Project",
-                achievements: [
-                    "Owned end-to-end design and delivery of an LLM-powered pipeline summarizing and classifying 230K+ annual return records across LG Electronics' retail (The Home Depot) and direct-to-consumer (LG.com) channels in the U.S., replacing manual review with automated GenAI workflows that contributed to a ~2% reduction in overall return rate (~$1.6M estimated annual savings, 2025 vs. 2024).",
-                    "Engineered an end-to-end pipeline orchestrated by Cloud Composer (managed Airflow on GKE), integrating heterogeneous sources (OLAP, enterprise data lake, retail partner crawler) via SQL into automated Vertex AI batch inference with LLM summarization and embedding-driven classification.",
-                    "Led on-premises migration from Gemini 2.5 Flash to a locally-hosted SLM on Apple Silicon (Mac Studio), benchmarking Gemma 4 vs Qwen 3.5 across Ollama and MLX serving frameworks; selected Gemma 4 with 91% accuracy parity to the cloud baseline, reducing cloud spend and strengthening data residency."
-                ]
-            },
-            {
-                name: "Contact Center AX Project",
-                achievements: [
-                    "Led architecture and delivery of an enterprise contact center AI platform deployed across 23 agents handling 800+ daily customer interactions (~11K monthly calls), integrating real-time call transcription (AWS Connect STT) with Salesforce Agentforce; deployed in 2 months — 150% faster than industry baseline.",
-                    "Designed an Adaptive RAG (ReAct-based modular) multi-agent architecture for call/email assistants, automating summarization, sentiment analysis, and reply recommendations across Web, iMessage, and WhatsApp.",
-                    "Architected a knowledge ingestion pipeline (Bynder DAM → GCS → Salesforce Data Cloud) processing 2,082 documents (12.4GB) with chunking/embedding/vectorizing, secured by Salesforce Trust Layer."
-                ]
-            }
-        ],
-        techStack: ["Python", "SQL", "Vertex AI", "Cloud Composer", "BigQuery", "Apple Silicon", "Ollama", "MLX", "Gemma 4", "AWS Connect", "Salesforce Agentforce", "RAG", "Multi-agent"]
-    },
-    {
-        role: "Software Engineer Intern",
-        company: "Samsung SDS",
-        period: "Jun 2023 – Aug 2023",
-        location: "Seoul, South Korea",
-        description: "Developed Salesforce CRM automations and AI-assisted features for Sales Cloud administrators.",
-        achievements: [
-            "Developed Salesforce CRM automations with Flow Builder and prototyped an AI-assisted CRM feature using Apex and Lightning Web Components (LWC), streamlining workflows for Sales Cloud administrators."
-        ],
-        techStack: ["Java", "Salesforce", "Apex", "LWC", "Flow Builder"]
-    },
-    {
-        role: "Software Engineer Intern",
-        company: "NICE PAYMENTS",
-        period: "Jan 2022 – Jun 2022",
-        location: "Seoul, South Korea",
-        description: "Developed AR features for Hwahae, a beauty app subsidiary of Nice Payments.",
-        achievements: [
-            "Utilized Unity and programmed using languages and tools such as C++, C#, JSON, Blender.",
-            "Implemented Image Tracking technology to recognize actual cosmetic products, enabling users to view reviews and ingredient details for the recognized item in AR environment.",
-            "Adapted Nice Payments' payment API (originally Java-based) to fit the Unity environment, enabling actual transactions within the AR environment."
-        ],
-        techStack: ["Unity", "C#", "C++", "RestSharp", "JSON", "AR Image Tracking", "Payment API Integration"]
-    }
-];
-
-const BLOG_DATA = [
-    {
-        title: "Achieving AWS Certified AI Practitioner",
-        description: "My journey to understanding AI/ML fundamentals and passing the AWS AI Practitioner exam.",
-        content: `
-# AWS Certified AI Practitioner AIF-C01 Study Guide & Key Concepts
-
-I recently passed the **AWS Certified AI Practitioner (AIF-C01)** exam. During my preparation based on the new exam, I compiled a comprehensive set of notes covering key services, concepts, and decision-making patterns. Here is a summary of the essential topics you need to know.
-
-## 1. SageMaker Capabilities: Quick Identification
-- **SageMaker Model Dashboard**: Centralized monitoring.
-- **SageMaker Model Monitor**: Detects data drift via baseline.
-- **SageMaker Clarify**: Detects bias, provides explainability.
-- **SageMaker JumpStart**: Pre-trained/foundation models.
-- **SageMaker Ground Truth**: Data labeling service.
-- **SageMaker Feature Store**: Centralized repository for features.
-- **SageMaker Data Wrangler**: Visual tool for data preparation.
-- **SageMaker A2I**: Human review workflow.
-
-## 2. SageMaker Inference Options
-- **Real-time**: Low latency (ms), small payload.
-- **Asynchronous**: Moderate latency, large payload (<1GB).
-- **Batch**: High latency, massive payload (S3).
-- **Serverless**: Intermittent traffic, pay per request.
-
-## 3. Bedrock Customization
-- **Continued Pre-training**: Unlabeled data, domain adaptation.
-- **Fine-tuning**: Labeled data, specific task optimization.
-
-## 4. Bedrock Throughput
-- **On-Demand**: Pay-as-you-go, testing.
-- **Provisioned**: Reserved capacity, guaranteed performance (required for custom models).
-
-## 5. RAG
-- **RAG (Retrieval-Augmented Generation)**: Cost-effective, up-to-date info.
-- **Knowledge Bases**: Fully managed RAG solution.
-
-## 15. Machine Learning Paradigms
-- Supervised (Labeled, Predict outcomes)
-- Unsupervised (Unlabeled, Find patterns)
-- Semi-supervised (Mix)
-- Reinforcement (Rewards, Learn strategy)
-- Transfer Learning (Pre-trained)
-
-## 16. Overfitting vs Underfitting
-- Underfitting: Model too simple (Fix: Increase complexity/epochs)
-- Overfitting: Model memorized data (Fix: Early stopping, Data augmentation, Regularization)
-        `
-    }
-];
-
-// --- CONTEXT DATA END ---
+const DOCUMENT_NODE_IDS = new Set(nodes.filter((n) => n.type === "document").map((n) => n.id));
 
 const SYSTEM_INSTRUCTION = `
-You are an AI assistant for Jinwoong Shin's portfolio website. 
-Your role is to answer visitor's questions about Jinwoong's experience, skills, projects, and blog posts based strictly on the provided context.
+You are an AI assistant for Jinwoong Shin's portfolio website. Visitors ask you about Jinwoong's experience, skills, projects, education, and credentials. You answer based strictly on the knowledge graph below.
 
-**Tone & Style:**
-- Professional, helpful, and friendly.
-- Concise but informative.
-- If the answer is not in the context, politely say you don't have that information.
-- You can speak in both Korean and English. Adapt to the language of the user's question. If the user asks in Korean, answer in Korean.
+The graph contains typed nodes (person, company, project, skill, certification, school, document, location) and typed edges. Each node has a stable id, a human label, and an optional description / metadata. Treat the graph as the single source of truth — if something isn't in it, politely say you don't have that information rather than inventing details.
 
-**Context:**
+KNOWLEDGE GRAPH (JSON):
+${JSON.stringify(KNOWLEDGE_GRAPH_FOR_LLM, null, 2)}
 
-[RESUME]
-${RESUME_TEXT}
+RESPONSE FORMAT
+You MUST respond with valid JSON matching this shape:
+{
+  "answer": string,            // Markdown-friendly answer text. Concise but informative.
+  "relevantNodeIds": string[], // IDs of graph nodes most relevant to the question/answer. Order matters: most relevant first. Include 3–8 IDs typically.
+  "relevantFileIds": string[]  // Subset of relevantNodeIds where the node type is "document" (PDFs the user can open). Often empty.
+}
 
-[CAREER DETAILS]
-${JSON.stringify(CAREER_DATA, null, 2)}
+DOCUMENT HANDLING — CRITICAL
+The frontend automatically renders an interactive file card alongside your answer for every id you put in \`relevantFileIds\`. Each card opens the real PDF in an in-page viewer where the user can scroll, zoom, and download. You do NOT generate or display images yourself — the file card does it.
 
-[BLOG POSTS]
-${JSON.stringify(BLOG_DATA, null, 2)}
+Therefore:
+- Whenever the user asks to see, view, open, show, look at, or download a document (resume, diploma, degree, admission letter, etc.), ALWAYS include the matching id in \`relevantFileIds\` and confirm naturally in \`answer\`.
+- NEVER apologize for not being able to display images, scans, or PDFs. NEVER say "I don't have access to the image" or "I can't show you the file" — you can. Just surface the doc-* id and write a short helpful confirmation like "Here's the diploma — open the card below." Then the user clicks and views it.
+- Available document ids: doc-resume (Jinwoong's resume PDF), doc-diploma (his UW–Madison Bachelor's diploma PDF), doc-gt-admission (his Georgia Tech OMSCS Offer of Admission PDF).
+- Even when the question is about the school / experience / credential rather than the file directly, include the related document if it helps. Example: "Tell me about his Wisconsin years" → include doc-diploma if relevant.
+
+EXAMPLES (for guidance, do not echo literally)
+
+User: "Show me the diploma"
+Response:
+{
+  "answer": "Here's Jinwoong's diploma from the University of Wisconsin–Madison — open the card below to view it.",
+  "relevantNodeIds": ["doc-diploma", "uw-madison", "jinwoong"],
+  "relevantFileIds": ["doc-diploma"]
+}
+
+User: "Did he get into grad school?"
+Response:
+{
+  "answer": "Yes — Jinwoong is incoming to Georgia Tech's Online M.S. in Computer Science (OMSCS) program for Fall 2026 in the College of Computing. The admission letter is attached.",
+  "relevantNodeIds": ["georgia-tech", "doc-gt-admission", "jinwoong"],
+  "relevantFileIds": ["doc-gt-admission"]
+}
+
+User: "이력서 보여줘"
+Response:
+{
+  "answer": "네, 진웅님의 최신 이력서입니다. 아래 카드를 클릭하시면 바로 열립니다.",
+  "relevantNodeIds": ["doc-resume", "jinwoong"],
+  "relevantFileIds": ["doc-resume"]
+}
+
+RULES
+- Only use ids that exist in the graph above. Do not invent ids.
+- relevantFileIds must be a subset of document-type node ids: ${Array.from(DOCUMENT_NODE_IDS).join(", ")}.
+- Tone: professional, helpful, friendly, concise but informative.
+- Language: detect the user's language. If the user writes in Korean, answer in Korean. Otherwise English.
+- Do not surround the JSON with markdown code fences.
 `;
 
-export const onAskAI = onCall({
-    region: "us-central1",
-    cors: true,
-    maxInstances: 10,
-}, async (request) => {
-    // 1. Validate Input
-    const { question } = request.data;
-    if (!question || typeof question !== 'string') {
-        throw new HttpsError('invalid-argument', 'The function must be called with one argument "question" containing the message text to process.');
-    }
+const RESPONSE_SCHEMA = {
+    type: SchemaType.OBJECT,
+    properties: {
+        answer: {
+            type: SchemaType.STRING,
+            description: "Markdown-friendly answer text.",
+        },
+        relevantNodeIds: {
+            type: SchemaType.ARRAY,
+            description: "Graph node ids most relevant to the question/answer, ordered by relevance.",
+            items: { type: SchemaType.STRING },
+        },
+        relevantFileIds: {
+            type: SchemaType.ARRAY,
+            description: "Subset of relevantNodeIds where the node is a document (PDF).",
+            items: { type: SchemaType.STRING },
+        },
+    },
+    required: ["answer", "relevantNodeIds", "relevantFileIds"],
+};
 
-    // 2. Initialize Vertex AI
-    const project = process.env.GCLOUD_PROJECT;
-    const location = "us-central1"; // Or make this configurable
+interface ChatResponse {
+    answer: string;
+    relevantNodeIds: string[];
+    relevantFileIds: string[];
+}
 
-    if (!project) {
-        logger.error("GCLOUD_PROJECT environment variable not found.");
-        throw new HttpsError('internal', 'Server configuration error.');
-    }
+function safeFilterIds(ids: unknown): string[] {
+    if (!Array.isArray(ids)) return [];
+    return ids
+        .filter((x): x is string => typeof x === "string")
+        .filter((id) => validNodeIds.has(id));
+}
 
-    logger.info(`Initializing Vertex AI with Project: ${project}, Location: ${location}`);
-
-    try {
-        const vertex_ai = new VertexAI({ project: project, location: location });
-        const model = "gemini-2.5-flash"; // Updated to latest version for 2026
-
-        const generativeModel = vertex_ai.getGenerativeModel({
-            model: model,
-            systemInstruction: SYSTEM_INSTRUCTION
-        });
-
-        // 3. Generate Content
-        const result = await generativeModel.generateContent(question);
-        const response = result.response;
-        const answer = response.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (!answer) {
-            throw new Error("No response generated from the model.");
+export const onAskAI = onCall(
+    {
+        region: "us-central1",
+        cors: true,
+        maxInstances: 10,
+    },
+    async (request): Promise<ChatResponse> => {
+        const { question } = request.data;
+        if (!question || typeof question !== "string") {
+            throw new HttpsError(
+                "invalid-argument",
+                'The function must be called with one argument "question" containing the message text.'
+            );
         }
 
-        logger.info("Generated answer for question:", question);
-        return { answer };
+        const project = process.env.GCLOUD_PROJECT;
+        const location = "us-central1";
 
-    } catch (error) {
-        logger.error("Error calling Vertex AI:", error);
-        throw new HttpsError('internal', 'Failed to generate response.', error);
+        if (!project) {
+            logger.error("GCLOUD_PROJECT environment variable not found.");
+            throw new HttpsError("internal", "Server configuration error.");
+        }
+
+        try {
+            const vertex_ai = new VertexAI({ project: project, location: location });
+            const model = "gemini-2.5-flash";
+
+            const generativeModel = vertex_ai.getGenerativeModel({
+                model: model,
+                systemInstruction: SYSTEM_INSTRUCTION,
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: RESPONSE_SCHEMA,
+                    temperature: 0.25,
+                },
+            });
+
+            const result = await generativeModel.generateContent(question);
+            const response = result.response;
+            const rawText = response.candidates?.[0]?.content?.parts?.[0]?.text;
+
+            if (!rawText) {
+                throw new Error("No response generated from the model.");
+            }
+
+            let parsed: { answer?: unknown; relevantNodeIds?: unknown; relevantFileIds?: unknown };
+            try {
+                parsed = JSON.parse(rawText);
+            } catch (err) {
+                logger.error("Model returned non-JSON despite responseSchema. Raw:", rawText);
+                throw new Error("Model returned invalid JSON.");
+            }
+
+            const answer =
+                typeof parsed.answer === "string" && parsed.answer.length > 0
+                    ? parsed.answer
+                    : "Sorry, I couldn't generate a response.";
+
+            const relevantNodeIds = safeFilterIds(parsed.relevantNodeIds);
+            const relevantFileIds = safeFilterIds(parsed.relevantFileIds).filter((id) =>
+                DOCUMENT_NODE_IDS.has(id)
+            );
+
+            logger.info("Generated answer", {
+                question,
+                nodeCount: relevantNodeIds.length,
+                fileCount: relevantFileIds.length,
+            });
+
+            return { answer, relevantNodeIds, relevantFileIds };
+        } catch (error) {
+            logger.error("Error calling Vertex AI:", error);
+            throw new HttpsError("internal", "Failed to generate response.", error);
+        }
     }
-});
+);

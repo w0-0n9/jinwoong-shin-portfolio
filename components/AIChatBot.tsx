@@ -1,207 +1,270 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Loader2, Bot, User } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { MessageCircle, X, Network, MessageSquare, Sparkles } from "lucide-react";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "@/lib/firebase";
-import ReactMarkdown from "react-markdown";
+import { GraphNode, getDocumentNode, validNodeIds } from "@/lib/knowledge-graph";
+import { GraphView } from "@/components/chatbot/GraphView";
+import { ChatPanel, ChatMessage } from "@/components/chatbot/ChatPanel";
+import { PdfViewerModal, PdfViewerInfo } from "@/components/chatbot/PdfViewerModal";
+import { useAIAssistant } from "@/lib/ai-assistant-context";
 import { cn } from "@/lib/utils";
 
-interface Message {
-    id: string;
-    role: "user" | "ai";
-    content: string;
-    createdAt: number;
+interface ChatResponseShape {
+    answer: string;
+    relevantNodeIds: string[];
+    relevantFileIds: string[];
 }
 
+const SUGGESTIONS = [
+    "What is Jinwoong working on right now?",
+    "Tell me about the LG return analysis project.",
+    "Where did Jinwoong study?",
+    "Show me his resume.",
+];
+
+const WELCOME: ChatMessage = {
+    id: "welcome",
+    role: "ai",
+    content:
+        "Hi — I'm an AI assistant grounded in Jinwoong's knowledge graph. Ask me about his experience, projects, education, or credentials. I'll highlight relevant nodes on the left as I find them, and surface any documents you can open inline.",
+};
+
 export default function AIChatBot() {
-    const [isOpen, setIsOpen] = useState(false);
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            id: "welcome",
-            role: "ai",
-            content: "Hello! I'm an AI assistant for Jinwoong's portfolio. Ask me anything about his experience, skills, or projects!",
-            createdAt: Date.now(),
+    const { isOpen, open, close } = useAIAssistant();
+    const setOpen = useCallback(
+        (next: boolean) => {
+            if (next) open();
+            else close();
         },
-    ]);
+        [open, close]
+    );
+
+    const [messages, setMessages] = useState<ChatMessage[]>([WELCOME]);
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLTextAreaElement>(null);
+    const [activeNodeIds, setActiveNodeIds] = useState<string[]>([]);
+    const [pdf, setPdf] = useState<PdfViewerInfo | null>(null);
+    const [mobilePane, setMobilePane] = useState<"graph" | "chat">("chat");
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
+    const fadeTimeoutRef = useRef<number | null>(null);
 
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages, isOpen]);
-
-    useEffect(() => {
-        if (isOpen && inputRef.current) {
-            inputRef.current.focus();
-        }
-    }, [isOpen]);
-
-    const handleSendMessage = async () => {
+    const handleSend = useCallback(async () => {
         if (!input.trim() || isLoading) return;
 
-        const userMessage: Message = {
-            id: Date.now().toString(),
+        const userMsg: ChatMessage = {
+            id: `u-${Date.now()}`,
             role: "user",
             content: input.trim(),
-            createdAt: Date.now(),
         };
-
-        setMessages((prev) => [...prev, userMessage]);
+        setMessages((prev) => [...prev, userMsg]);
         setInput("");
         setIsLoading(true);
 
         try {
-            const askAI = httpsCallable(functions, "onAskAI");
-            const result = await askAI({ question: userMessage.content });
-            const data = result.data as { answer: string };
+            const askAI = httpsCallable<{ question: string }, ChatResponseShape>(functions, "onAskAI");
+            const result = await askAI({ question: userMsg.content });
+            const data = result.data;
 
-            const aiMessage: Message = {
-                id: (Date.now() + 1).toString(),
+            const validatedNodeIds = (data.relevantNodeIds ?? []).filter((id) => validNodeIds.has(id));
+            const validatedFileIds = (data.relevantFileIds ?? []).filter((id) => !!getDocumentNode(id));
+
+            const aiMsg: ChatMessage = {
+                id: `a-${Date.now()}`,
                 role: "ai",
                 content: data.answer,
-                createdAt: Date.now(),
+                fileIds: validatedFileIds,
+                nodeIds: validatedNodeIds,
             };
+            setMessages((prev) => [...prev, aiMsg]);
 
-            setMessages((prev) => [...prev, aiMessage]);
-        } catch (error) {
-            console.error("Failed to send message:", error);
-            const errorMessage: Message = {
-                id: (Date.now() + 1).toString(),
-                role: "ai",
-                content: "Sorry, I encountered an error while processing your request. Please try again later.",
-                createdAt: Date.now(),
-            };
-            setMessages((prev) => [...prev, errorMessage]);
+            // Activate relevant nodes in the graph
+            setActiveNodeIds(validatedNodeIds);
+
+            // Auto-fade after a few seconds so the next question starts clean
+            if (fadeTimeoutRef.current) window.clearTimeout(fadeTimeoutRef.current);
+            fadeTimeoutRef.current = window.setTimeout(() => {
+                setActiveNodeIds([]);
+            }, 12_000);
+        } catch (err) {
+            console.error("Chat send failed:", err);
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: `e-${Date.now()}`,
+                    role: "ai",
+                    content: "Sorry — I hit an error reaching the model. Please try again in a moment.",
+                },
+            ]);
         } finally {
             setIsLoading(false);
         }
+    }, [input, isLoading]);
+
+    // Lock body scroll when open
+    useEffect(() => {
+        if (!isOpen) return;
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        const handleKey = (e: KeyboardEvent) => {
+            if (e.key === "Escape" && !pdf) setOpen(false);
+        };
+        window.addEventListener("keydown", handleKey);
+        return () => {
+            document.body.style.overflow = previousOverflow;
+            window.removeEventListener("keydown", handleKey);
+        };
+    }, [isOpen, pdf, setOpen]);
+
+    const openFile = (node: GraphNode) => {
+        if (!node.fileSrc) return;
+        setPdf({
+            src: node.fileSrc,
+            title: node.fileTitle ?? node.label,
+            downloadName: node.fileDownloadName,
+        });
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            handleSendMessage();
+    const handleNodeClick = (node: GraphNode) => {
+        if (node.type === "document" && node.fileSrc) {
+            openFile(node);
+            return;
         }
+        // Otherwise pre-fill the input with a question about this node
+        setInput(`Tell me about ${node.label}.`);
     };
 
     return (
         <>
             {/* Floating Button */}
             <motion.button
-                onClick={() => setIsOpen(!isOpen)}
-                className="fixed bottom-6 right-6 z-50 p-4 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg transition-colors flex items-center justify-center"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                onClick={() => setOpen(!isOpen)}
+                className="fixed bottom-6 right-6 z-40 p-3.5 bg-[#0071e3] hover:bg-[#0077ed] text-white rounded-full shadow-[0_8px_24px_-8px_rgba(0,113,227,0.45)] transition-colors flex items-center justify-center"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                aria-label={isOpen ? "Close AI assistant" : "Open AI assistant"}
             >
-                {isOpen ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
+                {isOpen ? <X className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
             </motion.button>
 
-            {/* Chat Window */}
+            {/* Fullscreen Overlay */}
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="fixed bottom-24 right-6 z-50 w-[90vw] md:w-[400px] h-[500px] max-h-[80vh] bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+                        className="fixed inset-0 z-[90] bg-white"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="AI Assistant"
                     >
-                        {/* Header */}
-                        <div className="p-4 border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-blue-600/20 flex items-center justify-center">
-                                <Bot className="w-5 h-5 text-blue-400" />
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-slate-100">AI Assistant</h3>
-                                <p className="text-xs text-slate-400">Powered by Vertex AI</p>
-                            </div>
-                        </div>
+                        <div className="flex flex-col h-full">
+                            {/* Header */}
+                            <header className="flex items-center justify-between px-5 py-3 border-b border-[#e8e8ed] bg-white/90 backdrop-blur-sm flex-shrink-0">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-full bg-[#0071e3]/10 flex items-center justify-center">
+                                        <Sparkles className="w-4 h-4 text-[#0071e3]" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-sm font-semibold text-[#1d1d1f] tracking-tight">
+                                            AI Assistant
+                                        </h2>
+                                        <p className="text-xs text-[#86868b]">
+                                            Grounded in Jinwoong&apos;s knowledge graph · Vertex AI
+                                        </p>
+                                    </div>
+                                </div>
 
-                        {/* Messages */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-950/50">
-                            {messages.map((msg) => (
-                                <div
-                                    key={msg.id}
+                                <div className="flex items-center gap-2">
+                                    {/* Mobile pane toggle */}
+                                    <div className="md:hidden flex rounded-full bg-[#f5f5f7] p-0.5">
+                                        <button
+                                            type="button"
+                                            onClick={() => setMobilePane("graph")}
+                                            className={cn(
+                                                "px-3 py-1 text-xs rounded-full font-medium transition-colors flex items-center gap-1.5",
+                                                mobilePane === "graph"
+                                                    ? "bg-white text-[#1d1d1f] shadow-sm"
+                                                    : "text-[#6e6e73]"
+                                            )}
+                                        >
+                                            <Network size={12} /> Graph
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setMobilePane("chat")}
+                                            className={cn(
+                                                "px-3 py-1 text-xs rounded-full font-medium transition-colors flex items-center gap-1.5",
+                                                mobilePane === "chat"
+                                                    ? "bg-white text-[#1d1d1f] shadow-sm"
+                                                    : "text-[#6e6e73]"
+                                            )}
+                                        >
+                                            <MessageSquare size={12} /> Chat
+                                        </button>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setOpen(false)}
+                                        className="p-2 rounded-full text-[#424245] hover:bg-[#f5f5f7] hover:text-[#1d1d1f] transition-colors"
+                                        aria-label="Close"
+                                    >
+                                        <X size={16} />
+                                    </button>
+                                </div>
+                            </header>
+
+                            {/* Body: Graph + Chat */}
+                            <div className="flex-1 flex overflow-hidden">
+                                {/* Graph (left) */}
+                                <section
                                     className={cn(
-                                        "flex gap-3 max-w-[85%]",
-                                        msg.role === "user" ? "ml-auto flex-row-reverse" : ""
+                                        "border-r border-[#e8e8ed] bg-white relative overflow-hidden",
+                                        // mobile: full-width when active, hidden otherwise
+                                        mobilePane === "graph" ? "flex-1" : "hidden",
+                                        // desktop: always show, fixed proportion
+                                        "md:flex md:flex-[1.6_1_0%]"
                                     )}
                                 >
-                                    <div
-                                        className={cn(
-                                            "w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center",
-                                            msg.role === "user" ? "bg-blue-600" : "bg-slate-700"
-                                        )}
-                                    >
-                                        {msg.role === "user" ? (
-                                            <User className="w-5 h-5 text-white" />
-                                        ) : (
-                                            <Bot className="w-5 h-5 text-blue-300" />
-                                        )}
+                                    <GraphView activeIds={activeNodeIds} onNodeClick={handleNodeClick} />
+                                    <div className="pointer-events-none absolute bottom-3 left-4 text-xs text-[#86868b] tabular-nums">
+                                        {activeNodeIds.length > 0
+                                            ? `${activeNodeIds.length} node${activeNodeIds.length === 1 ? "" : "s"} highlighted`
+                                            : "Idle · ask a question to traverse"}
                                     </div>
-                                    <div
-                                        className={cn(
-                                            "p-3 rounded-2xl text-sm leading-relaxed",
-                                            msg.role === "user"
-                                                ? "bg-blue-600 text-white rounded-br-none"
-                                                : "bg-slate-800 text-slate-200 rounded-bl-none"
-                                        )}
-                                    >
-                                        {msg.role === 'ai' ? (
-                                            <div className="prose prose-invert prose-sm max-w-none">
-                                                <ReactMarkdown>{msg.content}</ReactMarkdown>
-                                            </div>
-                                        ) : (
-                                            msg.content
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                            {isLoading && (
-                                <div className="flex gap-3 max-w-[85%]">
-                                    <div className="w-8 h-8 rounded-full bg-slate-700 flex-shrink-0 flex items-center justify-center">
-                                        <Bot className="w-5 h-5 text-blue-300" />
-                                    </div>
-                                    <div className="bg-slate-800 p-3 rounded-2xl rounded-bl-none">
-                                        <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
-                                    </div>
-                                </div>
-                            )}
-                            <div ref={messagesEndRef} />
-                        </div>
+                                </section>
 
-                        {/* Input Area */}
-                        <div className="p-4 border-t border-slate-800 bg-slate-900">
-                            <div className="relative flex items-end gap-2 bg-slate-800/50 p-2 rounded-xl border border-slate-700 focus-within:border-blue-500/50 transition-colors">
-                                <textarea
-                                    ref={inputRef}
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    onKeyDown={handleKeyDown}
-                                    placeholder="Ask a question..."
-                                    className="w-full bg-transparent text-slate-200 placeholder:text-slate-500 text-sm resize-none focus:outline-none max-h-[80px] py-2 px-2"
-                                    rows={1}
-                                />
-                                <button
-                                    onClick={handleSendMessage}
-                                    disabled={!input.trim() || isLoading}
-                                    className="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                {/* Chat (right) */}
+                                <section
+                                    className={cn(
+                                        "bg-white flex flex-col overflow-hidden",
+                                        mobilePane === "chat" ? "flex-1" : "hidden",
+                                        "md:flex md:flex-[1_1_0%] md:max-w-[460px]"
+                                    )}
                                 >
-                                    <Send className="w-4 h-4" />
-                                </button>
+                                    <ChatPanel
+                                        messages={messages}
+                                        isLoading={isLoading}
+                                        input={input}
+                                        onInputChange={setInput}
+                                        onSend={handleSend}
+                                        onOpenFile={openFile}
+                                        suggestions={SUGGESTIONS}
+                                    />
+                                </section>
                             </div>
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* PDF Viewer (over everything) */}
+            <PdfViewerModal pdf={pdf} onClose={() => setPdf(null)} />
         </>
     );
 }

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import AIChatBot from "@/components/AIChatBot";
+import { CustomCursor } from "@/components/ui/CustomCursor";
+import { AIAssistantProvider } from "@/lib/ai-assistant-context";
 
 // Initialize Inter
 const inter = Inter({
@@ -60,8 +62,11 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
-        {children}
-        <AIChatBot />
+        <AIAssistantProvider>
+          {children}
+          <AIChatBot />
+        </AIAssistantProvider>
+        <CustomCursor />
       </body>
     </html>
   );

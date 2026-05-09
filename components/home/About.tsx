@@ -54,13 +54,13 @@ export function About() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: 0.15 }}
-                    className="h-full bg-white rounded-2xl border border-[#e8e8ed] p-6 md:p-10 flex flex-col"
+                    className="h-full bg-white rounded-2xl border border-[#e8e8ed] p-6 md:p-10 flex flex-col min-w-0 overflow-hidden"
                 >
                     <h3 className="text-xl font-semibold text-[#1d1d1f] mb-6 md:mb-8 tracking-tight">Tech Stack</h3>
 
-                    <div className="flex-1 flex flex-col justify-between gap-5 md:gap-6 -mx-6 md:-mx-10">
+                    <div className="flex-1 flex flex-col justify-between gap-5 md:gap-6 -mx-6 md:-mx-10 min-w-0">
                         {Object.entries(skills).map(([category, items]) => (
-                            <div key={category}>
+                            <div key={category} className="min-w-0 w-full">
                                 <h4 className="px-6 md:px-10 text-xs font-semibold text-[#86868b] uppercase tracking-[0.1em] mb-2.5">
                                     {category}
                                 </h4>

@@ -151,8 +151,9 @@ export function Carousel({
                     */}
                     <div
                         ref={scrollerRef}
-                        className="flex gap-6 overflow-x-auto snap-x snap-mandatory hide-scrollbar py-2 -mx-2 px-2"
+                        className="flex gap-6 overflow-x-auto snap-x snap-mandatory hide-scrollbar py-2 -mx-2"
                     >
+                        <div className="w-2 flex-shrink-0" aria-hidden="true" />
                         {items.map((item, idx) => (
                             <div
                                 key={item.id}
@@ -169,6 +170,7 @@ export function Carousel({
                                 {item.node}
                             </div>
                         ))}
+                        <div className="w-2 flex-shrink-0" aria-hidden="true" />
                     </div>
                 </div>
             ) : (

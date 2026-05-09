@@ -36,11 +36,16 @@ export function Navbar() {
             animate={{ y: 0 }}
             transition={{ duration: 0.4 }}
             className={cn(
-                "fixed top-0 left-0 right-0 z-50 transition-all duration-300 safe-pt",
+                "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
                 isScrolled
-                    ? "bg-white/80 backdrop-blur-xl border-b border-[#e8e8ed] py-3"
-                    : "bg-transparent py-5"
+                    ? "bg-white/80 backdrop-blur-xl border-b border-[#e8e8ed] pb-3"
+                    : "bg-transparent pb-5"
             )}
+            style={{
+                paddingTop: isScrolled
+                    ? "calc(0.75rem + env(safe-area-inset-top))"
+                    : "calc(1.25rem + env(safe-area-inset-top))",
+            }}
         >
             <div className="container mx-auto px-6 flex items-center justify-between">
                 {/* Logo */}

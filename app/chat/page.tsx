@@ -2,7 +2,8 @@
 
 import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
-import { Sparkles, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import Image from "next/image";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "@/lib/firebase";
 import { GraphNode, getDocumentNode, getImageNode, validNodeIds } from "@/lib/knowledge-graph";
@@ -136,8 +137,8 @@ export default function ChatPage() {
             {/* Header */}
             <header className="flex items-center justify-between px-5 py-3 border-b border-[#e8e8ed] bg-white/90 backdrop-blur-sm flex-shrink-0 safe-pt">
                 <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-[#0071e3]/10 flex items-center justify-center">
-                        <Sparkles className="w-4 h-4 text-[#0071e3]" />
+                    <div className="relative w-9 h-9 rounded-full bg-[#e8e8ed] overflow-hidden flex items-center justify-center flex-shrink-0">
+                        <Image src="/ai-avatar.png" alt="AI Consultant" fill className="object-cover" />
                     </div>
                     <div>
                         <h2 className="text-sm font-semibold text-[#1d1d1f] tracking-tight">

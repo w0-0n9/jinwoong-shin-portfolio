@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Bot, Loader2, Send, User, Sparkles } from "lucide-react";
+import { Loader2, Send, User, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { getDocumentNode, getImageNode, GraphNode } from "@/lib/knowledge-graph";
 import { FileCard } from "@/components/chatbot/FileCard";
@@ -77,7 +78,9 @@ export function ChatPanel({
                             {msg.role === "user" ? (
                                 <User className="w-4 h-4 text-white" />
                             ) : (
-                                <Bot className="w-4 h-4 text-[#0071e3]" />
+                                <div className="relative w-full h-full overflow-hidden rounded-full">
+                                    <Image src="/ai-avatar.png" alt="AI" fill className="object-cover" />
+                                </div>
                             )}
                         </div>
 
@@ -130,8 +133,8 @@ export function ChatPanel({
 
                 {isLoading && (
                     <div className="flex gap-3">
-                        <div className="w-8 h-8 rounded-full bg-[#e8e8ed] flex-shrink-0 flex items-center justify-center mt-0.5">
-                            <Bot className="w-4 h-4 text-[#0071e3]" />
+                        <div className="relative w-8 h-8 rounded-full bg-[#e8e8ed] flex-shrink-0 flex items-center justify-center mt-0.5 overflow-hidden">
+                            <Image src="/ai-avatar.png" alt="AI" fill className="object-cover" />
                         </div>
                         <div className="bg-white border border-[#e8e8ed] px-4 py-2.5 rounded-2xl rounded-bl-md flex items-center gap-2">
                             <Sparkles size={14} className="text-[#0071e3] animate-pulse" />

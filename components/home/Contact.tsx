@@ -16,9 +16,9 @@ export function Contact() {
                     className="max-w-2xl mx-auto"
                 >
                     <p className="text-sm font-semibold text-[#0071e3] uppercase tracking-[0.12em] mb-4">Contact</p>
-                    <h2 className="text-4xl md:text-6xl font-semibold tracking-[-0.04em] text-[#1d1d1f] mb-6 leading-[1.05]">
-                        Let&apos;s build
-                        <br />
+                    <h2 className="text-3xl sm:text-4xl md:text-6xl font-semibold tracking-[-0.04em] text-[#1d1d1f] mb-6 leading-[1.05]">
+                        Let&apos;s build{" "}
+                        <br className="hidden md:block" />
                         something together.
                     </h2>
                     <p className="text-lg text-[#6e6e73] mb-10 leading-[1.5]">

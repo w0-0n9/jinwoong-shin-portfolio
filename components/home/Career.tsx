@@ -18,9 +18,9 @@ export default function Career() {
                     className="mb-16 max-w-2xl"
                 >
                     <p className="text-sm font-semibold text-[#0071e3] uppercase tracking-[0.12em] mb-4">Experience</p>
-                    <h2 className="text-4xl md:text-5xl font-semibold tracking-[-0.03em] text-[#1d1d1f] leading-[1.1]">
-                        Building production GenAI,
-                        <br />
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-[-0.03em] text-[#1d1d1f] leading-[1.1]">
+                        Building production GenAI,{" "}
+                        <br className="hidden md:block" />
                         end-to-end.
                     </h2>
                 </motion.div>

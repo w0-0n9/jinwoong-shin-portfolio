@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Network, MessageSquare, Sparkles } from "lucide-react";
+import { MessageCircle, X, Sparkles } from "lucide-react";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "@/lib/firebase";
 import { GraphNode, getDocumentNode, validNodeIds } from "@/lib/knowledge-graph";
@@ -10,7 +10,6 @@ import { GraphView } from "@/components/chatbot/GraphView";
 import { ChatPanel, ChatMessage } from "@/components/chatbot/ChatPanel";
 import { PdfViewerModal, PdfViewerInfo } from "@/components/chatbot/PdfViewerModal";
 import { useAIAssistant } from "@/lib/ai-assistant-context";
-import { cn } from "@/lib/utils";
 
 interface ChatResponseShape {
     answer: string;
@@ -47,7 +46,6 @@ export default function AIChatBot() {
     const [isLoading, setIsLoading] = useState(false);
     const [activeNodeIds, setActiveNodeIds] = useState<string[]>([]);
     const [pdf, setPdf] = useState<PdfViewerInfo | null>(null);
-    const [mobilePane, setMobilePane] = useState<"graph" | "chat">("chat");
 
     const fadeTimeoutRef = useRef<number | null>(null);
 
@@ -179,58 +177,22 @@ export default function AIChatBot() {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-2">
-                                    {/* Mobile pane toggle */}
-                                    <div className="md:hidden flex rounded-full bg-[#f5f5f7] p-0.5">
-                                        <button
-                                            type="button"
-                                            onClick={() => setMobilePane("graph")}
-                                            className={cn(
-                                                "px-3 py-1 text-xs rounded-full font-medium transition-colors flex items-center gap-1.5",
-                                                mobilePane === "graph"
-                                                    ? "bg-white text-[#1d1d1f] shadow-sm"
-                                                    : "text-[#6e6e73]"
-                                            )}
-                                        >
-                                            <Network size={12} /> Graph
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setMobilePane("chat")}
-                                            className={cn(
-                                                "px-3 py-1 text-xs rounded-full font-medium transition-colors flex items-center gap-1.5",
-                                                mobilePane === "chat"
-                                                    ? "bg-white text-[#1d1d1f] shadow-sm"
-                                                    : "text-[#6e6e73]"
-                                            )}
-                                        >
-                                            <MessageSquare size={12} /> Chat
-                                        </button>
-                                    </div>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => setOpen(false)}
-                                        className="p-2 rounded-full text-[#424245] hover:bg-[#f5f5f7] hover:text-[#1d1d1f] transition-colors"
-                                        aria-label="Close"
-                                    >
-                                        <X size={16} />
-                                    </button>
-                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setOpen(false)}
+                                    className="p-2 rounded-full text-[#424245] hover:bg-[#f5f5f7] hover:text-[#1d1d1f] transition-colors"
+                                    aria-label="Close"
+                                >
+                                    <X size={16} />
+                                </button>
                             </header>
 
-                            {/* Body: Graph + Chat */}
+                            {/* Body: Graph (md+) + Chat (always) */}
                             <div className="flex-1 flex overflow-hidden">
-                                {/* Graph (left) */}
-                                <section
-                                    className={cn(
-                                        "border-r border-[#e8e8ed] bg-white relative overflow-hidden",
-                                        // mobile: full-width when active, hidden otherwise
-                                        mobilePane === "graph" ? "flex-1" : "hidden",
-                                        // desktop: always show, fixed proportion
-                                        "md:flex md:flex-[1.6_1_0%]"
-                                    )}
-                                >
+                                {/* Graph — desktop only. On mobile we keep the chat focused; the graph
+                                    is hard to interact with on small screens and the file cards inline
+                                    in the chat already convey the most important context. */}
+                                <section className="hidden md:flex md:flex-[1.6_1_0%] border-r border-[#e8e8ed] bg-white relative overflow-hidden">
                                     <GraphView activeIds={activeNodeIds} onNodeClick={handleNodeClick} />
                                     <div className="pointer-events-none absolute bottom-3 left-4 text-xs text-[#86868b] tabular-nums">
                                         {activeNodeIds.length > 0
@@ -239,14 +201,8 @@ export default function AIChatBot() {
                                     </div>
                                 </section>
 
-                                {/* Chat (right) */}
-                                <section
-                                    className={cn(
-                                        "bg-white flex flex-col overflow-hidden",
-                                        mobilePane === "chat" ? "flex-1" : "hidden",
-                                        "md:flex md:flex-[1_1_0%] md:max-w-[460px]"
-                                    )}
-                                >
+                                {/* Chat — always visible. Full width on mobile. */}
+                                <section className="flex-1 bg-white flex flex-col overflow-hidden md:max-w-[460px]">
                                     <ChatPanel
                                         messages={messages}
                                         isLoading={isLoading}

@@ -26,9 +26,9 @@ export function About() {
                 >
                     <div>
                         <p className="text-sm font-semibold text-[#0071e3] uppercase tracking-[0.12em] mb-4">About</p>
-                        <h2 className="text-4xl md:text-5xl font-semibold tracking-[-0.03em] text-[#1d1d1f] mb-8 leading-[1.1]">
-                            End-to-end is
-                            <br />
+                        <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-[-0.03em] text-[#1d1d1f] mb-8 leading-[1.1]">
+                            End-to-end is{" "}
+                            <br className="hidden md:block" />
                             the only way I know.
                         </h2>
                     </div>

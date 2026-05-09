@@ -12,8 +12,8 @@ export function Hero() {
     return (
         <section className="min-h-screen flex items-center justify-center pt-24 pb-12 md:pt-28 md:pb-20 bg-white">
             <div className="container mx-auto px-6 grid lg:grid-cols-[1.1fr_0.9fr] gap-12 lg:gap-16 items-center">
-                {/* Left: Content */}
-                <div className="flex flex-col gap-6 md:gap-8">
+                {/* Content */}
+                <div className="flex flex-col gap-6 md:gap-8 order-2 lg:order-1">
                     <motion.div
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -90,14 +90,14 @@ export function Hero() {
                     </motion.div>
                 </div>
 
-                {/* Right: Profile Visual */}
+                {/* Profile Visual */}
                 <motion.div
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.7, delay: 0.1 }}
-                    className="relative hidden lg:flex justify-center"
+                    className="relative flex justify-center order-1 lg:order-2"
                 >
-                    <div className="relative w-[420px] h-[520px] rounded-3xl overflow-hidden bg-[#f5f5f7] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.15)] ring-1 ring-black/5">
+                    <div className="relative w-56 h-56 sm:w-72 sm:h-72 lg:w-[420px] lg:h-[520px] rounded-full lg:rounded-3xl overflow-hidden bg-[#f5f5f7] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.15)] ring-1 ring-black/5">
                         <Image
                             src="/profile.jpg"
                             alt="Jinwoong Shin"

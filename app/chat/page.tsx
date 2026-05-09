@@ -5,15 +5,17 @@ import Link from "next/link";
 import { Sparkles, ArrowLeft } from "lucide-react";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "@/lib/firebase";
-import { GraphNode, getDocumentNode, validNodeIds } from "@/lib/knowledge-graph";
+import { GraphNode, getDocumentNode, getImageNode, validNodeIds } from "@/lib/knowledge-graph";
 import { GraphView } from "@/components/chatbot/GraphView";
 import { ChatPanel, ChatMessage } from "@/components/chatbot/ChatPanel";
 import { PdfViewerModal, PdfViewerInfo } from "@/components/chatbot/PdfViewerModal";
+import { ImageLightbox, LightboxImage } from "@/components/ui/ImageLightbox";
 
 interface ChatResponseShape {
     answer: string;
     relevantNodeIds: string[];
     relevantFileIds: string[];
+    relevantImageIds: string[];
 }
 
 const SUGGESTIONS = [
@@ -36,6 +38,7 @@ export default function ChatPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [activeNodeIds, setActiveNodeIds] = useState<string[]>([]);
     const [pdf, setPdf] = useState<PdfViewerInfo | null>(null);
+    const [lightbox, setLightbox] = useState<LightboxImage | null>(null);
 
     const fadeTimeoutRef = useRef<number | null>(null);
 
@@ -58,12 +61,14 @@ export default function ChatPage() {
 
             const validatedNodeIds = (data.relevantNodeIds ?? []).filter((id) => validNodeIds.has(id));
             const validatedFileIds = (data.relevantFileIds ?? []).filter((id) => !!getDocumentNode(id));
+            const validatedImageIds = (data.relevantImageIds ?? []).filter((id) => !!getImageNode(id));
 
             const aiMsg: ChatMessage = {
                 id: `a-${Date.now()}`,
                 role: "ai",
                 content: data.answer,
                 fileIds: validatedFileIds,
+                imageIds: validatedImageIds,
                 nodeIds: validatedNodeIds,
             };
             setMessages((prev) => [...prev, aiMsg]);
@@ -100,9 +105,26 @@ export default function ChatPage() {
         });
     };
 
+    const openImage = (node: GraphNode) => {
+        if (!node.imageSrc) return;
+        const meta = node.meta ?? {};
+        const sub: string[] = [];
+        if (typeof meta.date === "string") sub.push(meta.date);
+        if (typeof meta.location === "string") sub.push(meta.location);
+        setLightbox({
+            src: node.imageSrc,
+            alt: node.imageAlt ?? node.label,
+            caption: sub.length > 0 ? `${node.label} · ${sub.join(" · ")}` : node.label,
+        });
+    };
+
     const handleNodeClick = (node: GraphNode) => {
         if (node.type === "document" && node.fileSrc) {
             openFile(node);
+            return;
+        }
+        if (node.imageSrc) {
+            openImage(node);
             return;
         }
         // Otherwise pre-fill the input with a question about this node
@@ -157,6 +179,7 @@ export default function ChatPage() {
                         onInputChange={setInput}
                         onSend={handleSend}
                         onOpenFile={openFile}
+                        onOpenImage={openImage}
                         suggestions={SUGGESTIONS}
                     />
                 </section>
@@ -164,6 +187,9 @@ export default function ChatPage() {
 
             {/* PDF Viewer */}
             <PdfViewerModal pdf={pdf} onClose={() => setPdf(null)} />
+
+            {/* Image Lightbox (e.g., conference photos) */}
+            <ImageLightbox image={lightbox} onClose={() => setLightbox(null)} />
         </main>
     );
 }

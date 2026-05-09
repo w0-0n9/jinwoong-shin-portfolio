@@ -5,8 +5,9 @@ import { VertexAI, SchemaType } from "@google-cloud/vertexai";
 import { nodes, edges, validNodeIds } from "./knowledge-graph";
 
 // Build a compact JSON view of the graph for the LLM context.
-// Strip server-side fields (fileSrc/fileTitle/fileDownloadName) since the
-// LLM doesn't need to know paths — it only needs IDs to reference.
+// Server-side paths (fileSrc / imageSrc / etc.) are stripped — the LLM only
+// needs to know which nodes HAVE associated media via the `hasFile` / `hasImage`
+// flags so it can decide which ids to surface.
 const KNOWLEDGE_GRAPH_FOR_LLM = {
     nodes: nodes.map((n) => ({
         id: n.id,
@@ -14,11 +15,14 @@ const KNOWLEDGE_GRAPH_FOR_LLM = {
         label: n.label,
         ...(n.description ? { description: n.description } : {}),
         ...(n.meta ? { meta: n.meta } : {}),
+        ...(n.fileSrc ? { hasFile: true } : {}),
+        ...(n.imageSrc ? { hasImage: true } : {}),
     })),
     edges: edges.map((e) => ({ source: e.source, target: e.target, relation: e.relation })),
 };
 
 const DOCUMENT_NODE_IDS = new Set(nodes.filter((n) => n.type === "document").map((n) => n.id));
+const IMAGE_NODE_IDS = new Set(nodes.filter((n) => !!n.imageSrc).map((n) => n.id));
 
 const SYSTEM_INSTRUCTION = `
 You are an AI assistant for Jinwoong Shin's portfolio website. Visitors ask you about Jinwoong's experience, skills, projects, education, and credentials. You answer based strictly on the knowledge graph below.
@@ -33,7 +37,8 @@ You MUST respond with valid JSON matching this shape:
 {
   "answer": string,            // Markdown-friendly answer text. Concise but informative.
   "relevantNodeIds": string[], // IDs of graph nodes most relevant to the question/answer. Order matters: most relevant first. Include 3–8 IDs typically.
-  "relevantFileIds": string[]  // Subset of relevantNodeIds where the node type is "document" (PDFs the user can open). Often empty.
+  "relevantFileIds": string[], // Subset of relevantNodeIds where the node type is "document" (PDFs the user can open). Often empty.
+  "relevantImageIds": string[] // Subset of relevantNodeIds for nodes with hasImage:true (photos the user can open). Often empty.
 }
 
 DOCUMENT HANDLING — CRITICAL
@@ -44,6 +49,13 @@ Therefore:
 - NEVER apologize for not being able to display images, scans, or PDFs. NEVER say "I don't have access to the image" or "I can't show you the file" — you can. Just surface the doc-* id and write a short helpful confirmation like "Here's the diploma — open the card below." Then the user clicks and views it.
 - Available document ids: doc-resume (Jinwoong's resume PDF), doc-diploma (his UW–Madison Bachelor's diploma PDF), doc-gt-admission (his Georgia Tech OMSCS Offer of Admission PDF).
 - Even when the question is about the school / experience / credential rather than the file directly, include the related document if it helps. Example: "Tell me about his Wisconsin years" → include doc-diploma if relevant.
+
+IMAGE HANDLING — JUST AS IMPORTANT
+Some nodes have associated photos (any node with \`hasImage: true\` in the graph above). The frontend renders a tappable image card alongside your answer for every id in \`relevantImageIds\`. Click opens a fullscreen lightbox.
+
+- Currently the only image-bearing nodes are conferences (conf-aws-reinvent-2025, conf-google-cloud-next-2026). Each has a real photo of Jinwoong at the event in person.
+- Whenever the user asks for, mentions, or could benefit from a photo of a conference (e.g., "show me the pictures from the conferences he attended", "AWS re:Invent 사진 보여줘", "what does the Google Cloud Next venue look like"), include the matching conference id in \`relevantImageIds\` and confirm naturally in \`answer\`.
+- NEVER say "I don't have any pictures in the knowledge graph" if the relevant node has hasImage:true — surface it.
 
 EXAMPLES (for guidance, do not echo literally)
 
@@ -68,12 +80,32 @@ Response:
 {
   "answer": "네, 진웅님의 최신 이력서입니다. 아래 카드를 클릭하시면 바로 열립니다.",
   "relevantNodeIds": ["doc-resume", "jinwoong"],
-  "relevantFileIds": ["doc-resume"]
+  "relevantFileIds": ["doc-resume"],
+  "relevantImageIds": []
+}
+
+User: "Show me pictures from conferences he attended"
+Response:
+{
+  "answer": "Here are the conferences Jinwoong attended in person — AWS re:Invent 2025 in Las Vegas (Dec 2025) and Google Cloud Next 2026 in Las Vegas (Apr 2026). Tap a photo below to view it full-size.",
+  "relevantNodeIds": ["conf-aws-reinvent-2025", "conf-google-cloud-next-2026", "jinwoong"],
+  "relevantFileIds": [],
+  "relevantImageIds": ["conf-aws-reinvent-2025", "conf-google-cloud-next-2026"]
+}
+
+User: "AWS re:Invent 사진 보여줘"
+Response:
+{
+  "answer": "네, 2025년 12월 라스베가스 AWS re:Invent 2025에서 찍은 사진입니다.",
+  "relevantNodeIds": ["conf-aws-reinvent-2025", "jinwoong"],
+  "relevantFileIds": [],
+  "relevantImageIds": ["conf-aws-reinvent-2025"]
 }
 
 RULES
 - Only use ids that exist in the graph above. Do not invent ids.
 - relevantFileIds must be a subset of document-type node ids: ${Array.from(DOCUMENT_NODE_IDS).join(", ")}.
+- relevantImageIds must be a subset of nodes that have hasImage:true: ${Array.from(IMAGE_NODE_IDS).join(", ")}.
 - Tone: professional, helpful, friendly, concise but informative.
 - Language: detect the user's language. If the user writes in Korean, answer in Korean. Otherwise English.
 - Do not surround the JSON with markdown code fences.
@@ -96,14 +128,20 @@ const RESPONSE_SCHEMA = {
             description: "Subset of relevantNodeIds where the node is a document (PDF).",
             items: { type: SchemaType.STRING },
         },
+        relevantImageIds: {
+            type: SchemaType.ARRAY,
+            description: "Subset of relevantNodeIds for image-bearing nodes (e.g., conferences with photos).",
+            items: { type: SchemaType.STRING },
+        },
     },
-    required: ["answer", "relevantNodeIds", "relevantFileIds"],
+    required: ["answer", "relevantNodeIds", "relevantFileIds", "relevantImageIds"],
 };
 
 interface ChatResponse {
     answer: string;
     relevantNodeIds: string[];
     relevantFileIds: string[];
+    relevantImageIds: string[];
 }
 
 function safeFilterIds(ids: unknown): string[] {
@@ -158,7 +196,12 @@ export const onAskAI = onCall(
                 throw new Error("No response generated from the model.");
             }
 
-            let parsed: { answer?: unknown; relevantNodeIds?: unknown; relevantFileIds?: unknown };
+            let parsed: {
+                answer?: unknown;
+                relevantNodeIds?: unknown;
+                relevantFileIds?: unknown;
+                relevantImageIds?: unknown;
+            };
             try {
                 parsed = JSON.parse(rawText);
             } catch (err) {
@@ -175,14 +218,18 @@ export const onAskAI = onCall(
             const relevantFileIds = safeFilterIds(parsed.relevantFileIds).filter((id) =>
                 DOCUMENT_NODE_IDS.has(id)
             );
+            const relevantImageIds = safeFilterIds(parsed.relevantImageIds).filter((id) =>
+                IMAGE_NODE_IDS.has(id)
+            );
 
             logger.info("Generated answer", {
                 question,
                 nodeCount: relevantNodeIds.length,
                 fileCount: relevantFileIds.length,
+                imageCount: relevantImageIds.length,
             });
 
-            return { answer, relevantNodeIds, relevantFileIds };
+            return { answer, relevantNodeIds, relevantFileIds, relevantImageIds };
         } catch (error) {
             logger.error("Error calling Vertex AI:", error);
             throw new HttpsError("internal", "Failed to generate response.", error);

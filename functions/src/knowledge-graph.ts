@@ -23,6 +23,8 @@ export interface GraphNode {
     fileSrc?: string;
     fileTitle?: string;
     fileDownloadName?: string;
+    imageSrc?: string;
+    imageAlt?: string;
 }
 
 export interface GraphEdge {
@@ -103,8 +105,8 @@ export const nodes: GraphNode[] = [
 
     { id: "skill-unity", type: "skill", label: "Unity" },
 
-    { id: "conf-aws-reinvent-2025", type: "conference", label: "AWS re:Invent 2025", description: "Attended in person — AWS's flagship cloud + AI conference.", meta: { date: "Dec 2025", location: "Las Vegas, NV" } },
-    { id: "conf-google-cloud-next-2026", type: "conference", label: "Google Cloud Next 2026", description: "Attended in person — Google Cloud's flagship conference covering Vertex AI and the broader GCP stack Jinwoong uses daily.", meta: { date: "Apr 2026", location: "Las Vegas, NV" } },
+    { id: "conf-aws-reinvent-2025", type: "conference", label: "AWS re:Invent 2025", description: "Attended in person — AWS's flagship cloud + AI conference.", meta: { date: "Dec 2025", location: "Las Vegas, NV" }, imageSrc: "/conferences/aws-reinvent-2025.jpg", imageAlt: "Jinwoong at AWS re:Invent 2025 — Las Vegas, Dec 2025" },
+    { id: "conf-google-cloud-next-2026", type: "conference", label: "Google Cloud Next 2026", description: "Attended in person — Google Cloud's flagship conference covering Vertex AI and the broader GCP stack Jinwoong uses daily.", meta: { date: "Apr 2026", location: "Las Vegas, NV" }, imageSrc: "/conferences/google-cloud-next-2026.jpg", imageAlt: "Jinwoong at Google Cloud Next 2026 — Las Vegas, Apr 2026" },
 ];
 
 export const edges: GraphEdge[] = [

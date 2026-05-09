@@ -32,6 +32,10 @@ export interface GraphNode {
     fileTitle?: string;
     /** Document only: filename suggested when the user downloads. */
     fileDownloadName?: string;
+    /** Conference (and any image-bearing node): path to a photo served from /public. */
+    imageSrc?: string;
+    /** Conference: alt text / lightbox caption. */
+    imageAlt?: string;
 }
 
 export type EdgeRelation =
@@ -278,6 +282,8 @@ export const nodes: GraphNode[] = [
         label: "AWS re:Invent 2025",
         description: "Attended in person — AWS's flagship cloud + AI conference.",
         meta: { date: "Dec 2025", location: "Las Vegas, NV" },
+        imageSrc: "/conferences/aws-reinvent-2025.jpg",
+        imageAlt: "Jinwoong at AWS re:Invent 2025 — Las Vegas, Dec 2025",
     },
     {
         id: "conf-google-cloud-next-2026",
@@ -285,6 +291,8 @@ export const nodes: GraphNode[] = [
         label: "Google Cloud Next 2026",
         description: "Attended in person — Google Cloud's flagship conference covering Vertex AI and the broader GCP stack Jinwoong uses daily.",
         meta: { date: "Apr 2026", location: "Las Vegas, NV" },
+        imageSrc: "/conferences/google-cloud-next-2026.jpg",
+        imageAlt: "Jinwoong at Google Cloud Next 2026 — Las Vegas, Apr 2026",
     },
 ];
 
@@ -406,6 +414,12 @@ export function getNode(id: string): GraphNode | undefined {
 export function getDocumentNode(id: string): GraphNode | undefined {
     const n = getNode(id);
     return n && n.type === "document" && n.fileSrc ? n : undefined;
+}
+
+/** Look up an image-bearing node (e.g., conferences) by ID. */
+export function getImageNode(id: string): GraphNode | undefined {
+    const n = getNode(id);
+    return n && n.imageSrc ? n : undefined;
 }
 
 /** All valid node IDs (for response validation). */

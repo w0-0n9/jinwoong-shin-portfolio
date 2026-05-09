@@ -4,8 +4,9 @@ import { useEffect, useRef } from "react";
 import { Bot, Loader2, Send, User, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
-import { getDocumentNode, GraphNode } from "@/lib/knowledge-graph";
+import { getDocumentNode, getImageNode, GraphNode } from "@/lib/knowledge-graph";
 import { FileCard } from "@/components/chatbot/FileCard";
+import { ImageCard } from "@/components/chatbot/ImageCard";
 
 export interface ChatMessage {
     id: string;
@@ -13,6 +14,8 @@ export interface ChatMessage {
     content: string;
     /** AI messages only — list of document node ids to render as file cards. */
     fileIds?: string[];
+    /** AI messages only — list of image-bearing node ids (e.g., conferences) to render as image cards. */
+    imageIds?: string[];
     /** AI messages only — node ids the answer references (for graph activation). */
     nodeIds?: string[];
 }
@@ -24,6 +27,7 @@ interface ChatPanelProps {
     onInputChange: (v: string) => void;
     onSend: () => void;
     onOpenFile: (node: GraphNode) => void;
+    onOpenImage: (node: GraphNode) => void;
     suggestions?: string[];
 }
 
@@ -34,6 +38,7 @@ export function ChatPanel({
     onInputChange,
     onSend,
     onOpenFile,
+    onOpenImage,
     suggestions = [],
 }: ChatPanelProps) {
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -102,6 +107,19 @@ export function ChatPanel({
                                         if (!node) return null;
                                         return (
                                             <FileCard key={fid} node={node} onOpen={() => onOpenFile(node)} />
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            {/* Image attachments for AI messages (e.g., conference photos) */}
+                            {msg.role === "ai" && msg.imageIds && msg.imageIds.length > 0 && (
+                                <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    {msg.imageIds.map((iid) => {
+                                        const node = getImageNode(iid);
+                                        if (!node) return null;
+                                        return (
+                                            <ImageCard key={iid} node={node} onOpen={() => onOpenImage(node)} />
                                         );
                                     })}
                                 </div>

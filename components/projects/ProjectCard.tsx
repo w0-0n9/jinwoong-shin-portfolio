@@ -32,7 +32,7 @@ export function ProjectCard({ title, description, tags, links, image, imageClass
         >
             <div className="relative flex flex-col h-full">
                 {image ? (
-                    <div className={`relative w-full h-48 overflow-hidden border-b border-[#e8e8ed] ${imageClassName || "bg-[#f5f5f7]"}`}>
+                    <div className={`relative w-full h-36 sm:h-44 md:h-48 overflow-hidden border-b border-[#e8e8ed] ${imageClassName || "bg-[#f5f5f7]"}`}>
                         <Image
                             src={image}
                             alt={title}
@@ -41,19 +41,19 @@ export function ProjectCard({ title, description, tags, links, image, imageClass
                         />
                     </div>
                 ) : (
-                    <div className="relative w-full h-48 overflow-hidden border-b border-[#e8e8ed] bg-gradient-to-br from-[#f5f5f7] via-white to-[#0071e3]/8 flex items-center justify-center">
+                    <div className="relative w-full h-36 sm:h-44 md:h-48 overflow-hidden border-b border-[#e8e8ed] bg-gradient-to-br from-[#f5f5f7] via-white to-[#0071e3]/8 flex items-center justify-center">
                         <div className="flex items-center gap-2">
-                            <Sparkles size={18} className="text-[#0071e3]" />
-                            <span className="font-mono text-xl font-semibold tracking-tight text-[#1d1d1f]">
+                            <Sparkles size={16} className="text-[#0071e3]" />
+                            <span className="font-mono text-lg md:text-xl font-semibold tracking-tight text-[#1d1d1f]">
                                 jinwoong<span className="text-[#0071e3]">.ai</span>
                             </span>
                         </div>
                     </div>
                 )}
 
-                <div className="p-6 flex flex-col flex-grow">
-                    <div className="flex justify-between items-start mb-3 gap-3">
-                        <h3 className="text-lg font-semibold text-[#1d1d1f] tracking-tight leading-tight">{title}</h3>
+                <div className="p-5 md:p-6 flex flex-col flex-grow">
+                    <div className="flex justify-between items-start mb-2.5 md:mb-3 gap-3">
+                        <h3 className="text-base md:text-lg font-semibold text-[#1d1d1f] tracking-tight leading-tight">{title}</h3>
                         {hasRealLink && (
                             <div className="flex gap-2 flex-shrink-0">
                                 {links.github && links.github !== "#" && (
@@ -70,7 +70,7 @@ export function ProjectCard({ title, description, tags, links, image, imageClass
                         )}
                     </div>
 
-                    <p className="text-[#6e6e73] text-sm mb-5 flex-grow leading-[1.55] line-clamp-6">
+                    <p className="text-[#6e6e73] text-[13px] md:text-sm mb-4 md:mb-5 flex-grow leading-[1.5] md:leading-[1.55] line-clamp-3 md:line-clamp-6">
                         {description}
                     </p>
 
@@ -78,7 +78,7 @@ export function ProjectCard({ title, description, tags, links, image, imageClass
                         {tags.map((tag) => (
                             <span
                                 key={tag}
-                                className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#f5f5f7] text-[#424245] border border-[#e8e8ed]"
+                                className="text-[10px] md:text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#f5f5f7] text-[#424245] border border-[#e8e8ed]"
                             >
                                 {tag}
                             </span>

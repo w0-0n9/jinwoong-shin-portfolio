@@ -14,7 +14,7 @@ const skills = {
 
 export function About() {
     return (
-        <section id="about" className="py-16 md:py-24 lg:py-32 bg-[#f5f5f7]">
+        <section id="about" className="py-12 sm:py-16 md:py-24 lg:py-32 bg-[#f5f5f7]">
             <div className="container mx-auto px-6 grid md:grid-cols-2 gap-10 md:gap-16 items-stretch">
                 {/* Left: Text */}
                 <motion.div

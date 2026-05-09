@@ -8,7 +8,7 @@ import { careerData } from "@/lib/career-data";
 
 export default function Career() {
     return (
-        <section id="experience" className="py-16 md:py-24 lg:py-32 bg-white">
+        <section id="experience" className="py-12 sm:py-16 md:py-24 lg:py-32 bg-white">
             <div className="container mx-auto px-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -69,24 +69,24 @@ export default function Career() {
                                 </div>
                             </div>
 
-                            <div className="bg-white border border-[#e8e8ed] rounded-2xl p-7 md:p-8 hover:border-[#d2d2d7] transition-colors">
-                                <p className="text-[#424245] mb-7 leading-[1.5] text-[15px]">
+                            <div className="bg-white border border-[#e8e8ed] rounded-2xl p-5 md:p-8 hover:border-[#d2d2d7] transition-colors">
+                                <p className="text-[#424245] mb-5 md:mb-7 leading-[1.5] text-[14px] md:text-[15px]">
                                     {item.description}
                                 </p>
 
                                 {item.projects && item.projects.length > 0 && (
-                                    <div className="space-y-7 mb-6">
+                                    <div className="space-y-5 md:space-y-7 mb-5 md:mb-6">
                                         {item.projects.map((project, pIdx) => (
                                             <div key={pIdx}>
-                                                <h4 className="text-sm font-semibold text-[#1d1d1f] mb-3 flex items-center gap-2 tracking-tight">
+                                                <h4 className="text-[13px] md:text-sm font-semibold text-[#1d1d1f] mb-2.5 md:mb-3 flex items-center gap-2 tracking-tight">
                                                     <span className="h-px w-5 bg-[#0071e3]" />
                                                     {project.name}
                                                 </h4>
-                                                <ul className="space-y-2.5">
+                                                <ul className="space-y-2 md:space-y-2.5">
                                                     {project.achievements.map((achievement, i) => (
-                                                        <li key={i} className="flex items-start gap-3">
-                                                            <span className="text-[#0071e3] mt-2 text-[10px]">●</span>
-                                                            <span className="text-[#424245] text-[14px] leading-[1.55]">
+                                                        <li key={i} className="flex items-start gap-2.5 md:gap-3">
+                                                            <span className="text-[#0071e3] mt-1.5 md:mt-2 text-[9px] md:text-[10px]">●</span>
+                                                            <span className="text-[#424245] text-[13px] md:text-[14px] leading-[1.5] md:leading-[1.55]">
                                                                 {achievement}
                                                             </span>
                                                         </li>
@@ -98,11 +98,11 @@ export default function Career() {
                                 )}
 
                                 {item.achievements && item.achievements.length > 0 && (
-                                    <ul className="space-y-2.5 mb-6">
+                                    <ul className="space-y-2 md:space-y-2.5 mb-5 md:mb-6">
                                         {item.achievements.map((achievement, i) => (
-                                            <li key={i} className="flex items-start gap-3">
-                                                <span className="text-[#0071e3] mt-2 text-[10px]">●</span>
-                                                <span className="text-[#424245] text-[14px] leading-[1.55]">
+                                            <li key={i} className="flex items-start gap-2.5 md:gap-3">
+                                                <span className="text-[#0071e3] mt-1.5 md:mt-2 text-[9px] md:text-[10px]">●</span>
+                                                <span className="text-[#424245] text-[13px] md:text-[14px] leading-[1.5] md:leading-[1.55]">
                                                     {achievement}
                                                 </span>
                                             </li>
@@ -110,11 +110,11 @@ export default function Career() {
                                     </ul>
                                 )}
 
-                                <div className="flex flex-wrap gap-2 pt-5 border-t border-[#e8e8ed]">
+                                <div className="flex flex-wrap gap-1.5 md:gap-2 pt-4 md:pt-5 border-t border-[#e8e8ed]">
                                     {item.techStack.map((tech) => (
                                         <span
                                             key={tech}
-                                            className="px-2.5 py-1 rounded-full text-xs font-medium bg-[#f5f5f7] text-[#424245] border border-[#e8e8ed]"
+                                            className="px-2 md:px-2.5 py-0.5 md:py-1 rounded-full text-[11px] md:text-xs font-medium bg-[#f5f5f7] text-[#424245] border border-[#e8e8ed]"
                                         >
                                             {tech}
                                         </span>

@@ -60,7 +60,7 @@ export function Education() {
     const [pdf, setPdf] = useState<PdfViewerInfo | null>(null);
 
     return (
-        <section id="education" className="py-16 md:py-24 lg:py-32 bg-white overflow-hidden">
+        <section id="education" className="py-12 sm:py-16 md:py-24 lg:py-32 bg-white overflow-hidden">
             <div className="container mx-auto px-6 mb-8 md:mb-12">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -79,7 +79,7 @@ export function Education() {
             <Carousel
                 layoutIdPrefix="education"
                 snapAlign="start"
-                cardWidthClassName="w-[clamp(280px,32vw,400px)]"
+                cardWidthClassName="w-[clamp(260px,32vw,400px)]"
                 items={schools.map((school) => ({
                     id: school.id,
                     tabLabel: school.name,

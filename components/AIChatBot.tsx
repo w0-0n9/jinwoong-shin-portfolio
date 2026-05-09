@@ -136,10 +136,11 @@ export default function AIChatBot() {
 
     return (
         <>
-            {/* Floating Button */}
+            {/* Floating Button — bottom inset respects iOS home indicator */}
             <motion.button
                 onClick={() => setOpen(!isOpen)}
-                className="fixed bottom-6 right-6 z-40 p-3.5 bg-[#0071e3] hover:bg-[#0077ed] text-white rounded-full shadow-[0_8px_24px_-8px_rgba(0,113,227,0.45)] transition-colors flex items-center justify-center"
+                style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+                className="fixed right-6 z-40 p-3.5 bg-[#0071e3] hover:bg-[#0077ed] text-white rounded-full shadow-[0_8px_24px_-8px_rgba(0,113,227,0.45)] transition-colors flex items-center justify-center"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 aria-label={isOpen ? "Close AI assistant" : "Open AI assistant"}
@@ -161,8 +162,8 @@ export default function AIChatBot() {
                         aria-label="AI Assistant"
                     >
                         <div className="flex flex-col h-full">
-                            {/* Header */}
-                            <header className="flex items-center justify-between px-5 py-3 border-b border-[#e8e8ed] bg-white/90 backdrop-blur-sm flex-shrink-0">
+                            {/* Header — safe-pt respects iOS Dynamic Island / notch */}
+                            <header className="flex items-center justify-between px-5 py-3 border-b border-[#e8e8ed] bg-white/90 backdrop-blur-sm flex-shrink-0 safe-pt">
                                 <div className="flex items-center gap-3">
                                     <div className="w-9 h-9 rounded-full bg-[#0071e3]/10 flex items-center justify-center">
                                         <Sparkles className="w-4 h-4 text-[#0071e3]" />

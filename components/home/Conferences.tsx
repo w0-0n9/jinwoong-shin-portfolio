@@ -80,7 +80,7 @@ export function Conferences() {
     const [lightbox, setLightbox] = useState<LightboxImage | null>(null);
 
     return (
-        <section id="conferences" className="py-16 md:py-24 lg:py-32 bg-white overflow-hidden">
+        <section id="conferences" className="py-12 sm:py-16 md:py-24 lg:py-32 bg-white overflow-hidden">
             <div className="container mx-auto px-6 mb-8 md:mb-12">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -99,7 +99,7 @@ export function Conferences() {
             <Carousel
                 layoutIdPrefix="conferences"
                 snapAlign="start"
-                cardWidthClassName="w-[clamp(280px,32vw,400px)]"
+                cardWidthClassName="w-[clamp(260px,32vw,400px)]"
                 items={conferences.map((c) => ({
                     id: c.id,
                     tabLabel: c.name,

@@ -151,9 +151,8 @@ export function Carousel({
                     */}
                     <div
                         ref={scrollerRef}
-                        className="flex gap-6 overflow-x-auto snap-x snap-mandatory hide-scrollbar py-2 -mx-2"
+                        className="flex gap-6 overflow-x-auto snap-x snap-mandatory hide-scrollbar py-2 -mx-2 px-2"
                     >
-                        <div className="w-2 flex-shrink-0" aria-hidden="true" />
                         {items.map((item, idx) => (
                             <div
                                 key={item.id}
@@ -162,7 +161,7 @@ export function Carousel({
                                 }}
                                 data-idx={idx}
                                 className={cn(
-                                    "flex-shrink-0 rounded-2xl transition-shadow duration-300 snap-start",
+                                    "flex-shrink-0 rounded-2xl transition-shadow duration-300 snap-start scroll-ml-2",
                                     cardWidthClassName,
                                     activeIndex === idx && "shadow-[0_0_0_2px_#0071e3]"
                                 )}
@@ -170,7 +169,6 @@ export function Carousel({
                                 {item.node}
                             </div>
                         ))}
-                        <div className="w-2 flex-shrink-0" aria-hidden="true" />
                     </div>
                 </div>
             ) : (

@@ -5,9 +5,9 @@ import { ProjectCard } from "@/components/projects/ProjectCard";
 
 const projects = [
     {
-        title: "Return Reason Classification AI",
-        description: "Designed and owned an LLM-powered pipeline to summarize and classify 200K+ annual return records for LG Electronics products at The Home Depot. Replaced manual analysis with automated GenAI workflows, contributing to a ~2% reduction in return rates.",
-        tags: ["LLM", "Embeddings", "Batch Processing", "Python", "Data Science"],
+        title: "Return Reason Analysis AX",
+        description: "Owned an LLM-powered pipeline summarizing and classifying 230K+ annual return records across LG Electronics' Home Depot and LG.com (DTC) channels. Orchestrated by Cloud Composer + Vertex AI batch inference, contributing to a ~2% return-rate reduction (~$1.6M estimated annual savings). Migrated from Gemini 2.5 Flash to a locally-hosted Gemma 4 SLM on Apple Silicon (Ollama / MLX) with 91% accuracy parity.",
+        tags: ["Vertex AI", "Cloud Composer", "Gemma 4", "Apple Silicon", "Ollama", "MLX", "Embeddings"],
         image: "/projects/lg-return-analysis.png",
         imageClassName: "bg-white p-4", // Add white background and padding for the logo
         imageFit: "contain" as const,
@@ -17,9 +17,9 @@ const projects = [
         },
     },
     {
-        title: "Enterprise Contact Center AI",
-        description: "Led the architecture of a contact center AI system integrating AWS Connect STT with Salesforce Agentforce. Built a RAG-based multi-agent system for real-time call transcription, troubleshooting retrieval, and structured summarization.",
-        tags: ["AWS Connect", "Salesforce", "RAG", "Multi-Agent", "Semantic Search"],
+        title: "Contact Center AX Platform",
+        description: "Architected an enterprise contact center AI platform deployed across 23 agents handling 800+ daily customer interactions (~11K monthly calls), integrating AWS Connect STT with Salesforce Agentforce — deployed in 2 months, 150% faster than industry baseline. Designed an Adaptive RAG (ReAct-based modular) multi-agent architecture spanning Web, iMessage, and WhatsApp, backed by a Bynder DAM → GCS → Salesforce Data Cloud knowledge pipeline (2,082 docs, 12.4GB) secured by the Salesforce Trust Layer.",
+        tags: ["AWS Connect", "Salesforce Agentforce", "Adaptive RAG", "Multi-Agent", "Salesforce Data Cloud", "Trust Layer"],
         image: "/projects/agentforce.jpg",
         links: {
             demo: "#",

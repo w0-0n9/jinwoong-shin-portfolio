@@ -75,16 +75,41 @@ export default function Career() {
                                     {item.description}
                                 </p>
 
-                                <ul className="space-y-3 mb-6">
-                                    {item.achievements.map((achievement, i) => (
-                                        <li key={i} className="flex items-start gap-3">
-                                            <span className="text-blue-400 mt-1.5 text-xs">▹</span>
-                                            <span className="text-slate-400 text-sm leading-relaxed">
-                                                {achievement}
-                                            </span>
-                                        </li>
-                                    ))}
-                                </ul>
+                                {item.projects && item.projects.length > 0 && (
+                                    <div className="space-y-6 mb-6">
+                                        {item.projects.map((project, pIdx) => (
+                                            <div key={pIdx}>
+                                                <h4 className="text-sm font-semibold text-blue-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                    <span className="h-px w-6 bg-blue-400/50" />
+                                                    {project.name}
+                                                </h4>
+                                                <ul className="space-y-3">
+                                                    {project.achievements.map((achievement, i) => (
+                                                        <li key={i} className="flex items-start gap-3">
+                                                            <span className="text-blue-400 mt-1.5 text-xs">▹</span>
+                                                            <span className="text-slate-400 text-sm leading-relaxed">
+                                                                {achievement}
+                                                            </span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {item.achievements && item.achievements.length > 0 && (
+                                    <ul className="space-y-3 mb-6">
+                                        {item.achievements.map((achievement, i) => (
+                                            <li key={i} className="flex items-start gap-3">
+                                                <span className="text-blue-400 mt-1.5 text-xs">▹</span>
+                                                <span className="text-slate-400 text-sm leading-relaxed">
+                                                    {achievement}
+                                                </span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
 
                                 <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-800/50">
                                     {item.techStack.map((tech) => (

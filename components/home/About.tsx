@@ -3,9 +3,9 @@
 import { motion } from "framer-motion";
 
 const skills = {
-    "Languages": ["Python", "Java", "SQL", "JavaScript"],
-    "ML / LLM": ["LLM-based Summarization & Classification", "Embeddings", "Prompt Engineering", "RAG"],
-    "Cloud / Data": ["Google Cloud Platform (Vertex AI, BigQuery)", "Production ML Pipelines", "Batch Processing"]
+    "Languages": ["Python", "SQL", "Java"],
+    "AI / ML": ["RAG", "Multi-agent Systems", "Model Evaluation", "On-premises LLM Serving", "Prompt Engineering"],
+    "Platforms": ["Vertex AI", "BigQuery", "Cloud Composer", "AWS", "Apple Silicon", "Ollama", "MLX"]
 };
 
 export function About() {
@@ -24,15 +24,14 @@ export function About() {
                     </h2>
                     <div className="space-y-4 text-gray-400 leading-relaxed">
                         <p>
-                            I am a Software Engineer with 1.5+ years of experience specializing in LLM-powered data pipelines and enterprise AI solutions.
-                            Currently at <strong>LG CNS America</strong>, I design and operate scalable GenAI systems that solve real-world business problems.
+                            I am an LLM Engineer with 1.5+ years at <strong>LG CNS America</strong>, shipping enterprise GenAI across cloud and on-premises stacks.
+                            I led a <strong>multi-agent contact center platform</strong> handling 11K+ monthly calls, and an end-to-end <strong>return analytics pipeline</strong> over 230K+ records that contributed to a ~2% return-rate reduction (~$1.6M estimated annual savings).
                         </p>
                         <p>
-                            My work ranges from building <strong>production-grade RAG architectures</strong> for contact centers to automating complex data classification tasks using large language models.
-                            I strongly believe in leveraging AI to replace manual analysis with automated, intelligent workflows.
+                            My work spans <strong>production-grade RAG architectures</strong>, model evaluation across cloud and locally-served SLMs (Apple Silicon · Ollama · MLX), and pipeline orchestration on <strong>Cloud Composer + Vertex AI</strong>.
                         </p>
                         <p>
-                            I hold a B.S. in Computer Science from the <strong>University of Wisconsin–Madison</strong> (2024).
+                            I hold a B.S. in Computer Science from the <strong>University of Wisconsin–Madison</strong> (May 2024, GPA 3.55 / 4.00).
                         </p>
                     </div>
                 </motion.div>

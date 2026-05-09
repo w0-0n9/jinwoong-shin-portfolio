@@ -39,9 +39,11 @@ export function Education() {
                                 <p className="text-xl text-blue-400 font-medium mb-4">
                                     B.S. in Computer Science
                                 </p>
-                                <p className="text-gray-400 max-w-lg">
-                                    Graduated in 2024
-                                </p>
+                                <div className="flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-4 text-gray-400">
+                                    <span>Graduated May 2024</span>
+                                    <span className="hidden md:inline-block w-1 h-1 bg-gray-600 rounded-full self-center" />
+                                    <span className="font-mono text-sm text-gray-300">GPA 3.55 / 4.00</span>
+                                </div>
                             </div>
                         </div>
                     </div>

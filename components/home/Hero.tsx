@@ -34,7 +34,7 @@ export function Hero() {
                             </span>
                         </h1>
                         <p className="text-xl text-gray-400 max-w-lg leading-relaxed">
-                            An LLM Engineer specializing in AI-driven data pipelines and enterprise analytics. Currently building multi-agent systems at LG CNS America.
+                            An LLM Engineer at LG CNS America shipping enterprise GenAI across cloud and on-premises stacks — from a multi-agent contact center handling 11K+ monthly calls to a 230K+ record return analytics pipeline.
                         </p>
                     </motion.div>
 

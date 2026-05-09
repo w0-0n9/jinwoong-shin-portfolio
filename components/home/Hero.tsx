@@ -95,16 +95,44 @@ export function Hero() {
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.7, delay: 0.1 }}
-                    className="relative flex justify-center order-1 lg:order-2"
+                    className="flex justify-center order-1 lg:order-2"
                 >
-                    <div className="relative w-56 h-56 sm:w-72 sm:h-72 lg:w-[420px] lg:h-[520px] rounded-full lg:rounded-3xl overflow-hidden bg-[#f5f5f7] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.15)] ring-1 ring-black/5">
-                        <Image
-                            src="/profile.jpg"
-                            alt="Jinwoong Shin"
-                            fill
-                            className="object-cover"
-                            priority
-                        />
+                    <div className="relative">
+                        {/* Main Profile */}
+                        <div className="relative w-56 h-56 sm:w-72 sm:h-72 lg:w-[420px] lg:h-[520px] rounded-full lg:rounded-3xl overflow-hidden bg-[#f5f5f7] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.15)] ring-1 ring-black/5">
+                            <Image
+                                src="/profile.jpg"
+                                alt="Jinwoong Shin"
+                                fill
+                                className="object-cover"
+                                priority
+                            />
+                        </div>
+
+                        {/* AI Assistant Floating Badge */}
+                        <Link href="/chat">
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                transition={{ duration: 0.6, delay: 0.8, type: "spring", bounce: 0.4 }}
+                                className="absolute -top-2 -right-4 sm:-top-4 sm:-right-8 lg:-top-6 lg:-right-10 flex flex-col items-end gap-1.5 group cursor-pointer z-10"
+                            >
+                                {/* Speech Bubble */}
+                                <div className="relative bg-white rounded-2xl rounded-br-[4px] px-3 py-2 sm:px-4 sm:py-2.5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] ring-1 ring-[#e8e8ed] transition-transform duration-300 group-hover:-translate-y-1">
+                                    <div className="flex items-center gap-1.5">
+                                        <Sparkles size={14} className="text-[#0071e3] animate-pulse" />
+                                        <span className="text-[11px] sm:text-xs font-semibold text-[#1d1d1f] whitespace-nowrap">
+                                            Ask the AI Assistant
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                {/* Avatar */}
+                                <div className="relative w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-full border-4 border-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden bg-[#e8e8ed] mr-1 transition-transform duration-300 group-hover:scale-105">
+                                    <Image src="/ai-avatar.png" alt="AI Consultant" fill className="object-cover" />
+                                </div>
+                            </motion.div>
+                        </Link>
                     </div>
                 </motion.div>
             </div>

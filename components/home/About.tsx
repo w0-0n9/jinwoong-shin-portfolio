@@ -26,13 +26,13 @@ export function About() {
                 >
                     <div>
                         <p className="text-sm font-semibold text-[#0071e3] uppercase tracking-[0.12em] mb-4">About</p>
-                        <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-[-0.03em] text-[#1d1d1f] mb-8 leading-[1.1]">
+                        <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-[-0.03em] text-[#1d1d1f] mb-8 leading-[1.1] break-words">
                             End-to-end is{" "}
                             <br className="hidden md:block" />
                             the only way I know.
                         </h2>
                     </div>
-                    <div className="flex-1 flex flex-col justify-between gap-6 text-[#424245] text-lg leading-[1.5]">
+                    <div className="flex-1 flex flex-col justify-between gap-6 text-[#424245] text-base md:text-lg leading-[1.6] break-words">
                         <p>
                             I&apos;m an LLM Engineer who likes building production GenAI <span className="text-[#1d1d1f] font-medium">end-to-end</span> — from messy data plumbing through model selection to the surface where someone actually uses it. The work I&apos;m proudest of started as unstructured chaos and ended as something quiet that saved money or hours.
                         </p>

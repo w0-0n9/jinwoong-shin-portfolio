@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Download, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
-import { useAIAssistant } from "@/lib/ai-assistant-context";
 
 const navLinks = [
     { name: "About", href: "/#about" },
@@ -22,7 +21,6 @@ const navLinks = [
 export function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const { open: openAIAssistant } = useAIAssistant();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -63,15 +61,14 @@ export function Navbar() {
                             {link.name}
                         </Link>
                     ))}
-                    <button
-                        type="button"
-                        onClick={openAIAssistant}
+                    <Link
+                        href="/chat"
                         className="text-sm font-medium text-[#424245] hover:text-[#1d1d1f] transition-colors flex items-center gap-1.5"
                         aria-label="Open AI Assistant"
                     >
                         <Sparkles size={14} className="text-[#0071e3]" />
                         AI Assistant
-                    </button>
+                    </Link>
                     <Link href="/resume.pdf" target="_blank" rel="noopener noreferrer" download>
                         <Button variant="primary" size="sm" className="gap-1.5">
                             <Download size={14} />
@@ -110,17 +107,14 @@ export function Navbar() {
                                     {link.name}
                                 </Link>
                             ))}
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    openAIAssistant();
-                                    setIsMobileMenuOpen(false);
-                                }}
+                            <Link
+                                href="/chat"
+                                onClick={() => setIsMobileMenuOpen(false)}
                                 className="text-left text-base font-medium text-[#1d1d1f] hover:text-[#0071e3] transition-colors flex items-center gap-2"
                             >
                                 <Sparkles size={16} className="text-[#0071e3]" />
                                 AI Assistant
-                            </button>
+                            </Link>
                             <Link href="/resume.pdf" target="_blank" rel="noopener noreferrer" download className="w-full">
                                 <Button className="w-full gap-2">
                                     <Download size={16} />

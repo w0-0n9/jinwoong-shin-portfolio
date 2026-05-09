@@ -3,11 +3,10 @@
 import { motion } from "framer-motion";
 import { ArrowDown, Download, Github, Linkedin, Mail, Phone, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { useAIAssistant } from "@/lib/ai-assistant-context";
 import Image from "next/image";
+import Link from "next/link";
 
 export function Hero() {
-    const { open: openAIAssistant } = useAIAssistant();
 
     return (
         <section className="min-h-screen flex items-center justify-center pt-24 pb-12 md:pt-28 md:pb-20 bg-white">
@@ -50,15 +49,16 @@ export function Hero() {
                                     Browse the portfolio <ArrowDown size={16} />
                                 </Button>
                             </a>
-                            <Button
-                                size="lg"
-                                variant="secondary"
-                                onClick={openAIAssistant}
-                                className="gap-2 w-full sm:w-auto justify-center"
-                            >
-                                <Sparkles size={14} className="text-[#0071e3]" />
-                                Ask the AI Assistant
-                            </Button>
+                            <Link href="/chat" className="w-full sm:w-auto">
+                                <Button
+                                    size="lg"
+                                    variant="secondary"
+                                    className="gap-2 w-full sm:w-auto justify-center"
+                                >
+                                    <Sparkles size={14} className="text-[#0071e3]" />
+                                    Ask the AI Assistant
+                                </Button>
+                            </Link>
                             <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" download className="w-full sm:w-auto">
                                 <Button variant="outline" size="lg" className="gap-2 w-full sm:w-auto justify-center">
                                     <Download size={14} />

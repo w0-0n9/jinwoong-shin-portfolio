@@ -10,26 +10,26 @@ export function Hero() {
     const { open: openAIAssistant } = useAIAssistant();
 
     return (
-        <section className="min-h-screen flex items-center justify-center pt-28 pb-20 bg-white">
-            <div className="container mx-auto px-6 grid lg:grid-cols-[1.1fr_0.9fr] gap-16 items-center">
+        <section className="min-h-screen flex items-center justify-center pt-24 pb-12 md:pt-28 md:pb-20 bg-white">
+            <div className="container mx-auto px-6 grid lg:grid-cols-[1.1fr_0.9fr] gap-12 lg:gap-16 items-center">
                 {/* Left: Content */}
-                <div className="flex flex-col gap-8">
+                <div className="flex flex-col gap-6 md:gap-8">
                     <motion.div
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
                     >
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f5f5f7] border border-[#e8e8ed] text-[#1d1d1f] text-xs font-medium mb-8">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f5f5f7] border border-[#e8e8ed] text-[#1d1d1f] text-xs font-medium mb-6 md:mb-8">
                             <span className="relative flex h-1.5 w-1.5">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#0071e3] opacity-60"></span>
                                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#0071e3]"></span>
                             </span>
                             Available for new opportunities
                         </div>
-                        <h1 className="text-5xl lg:text-7xl font-semibold tracking-[-0.04em] text-[#1d1d1f] mb-6 leading-[1.05]">
+                        <h1 className="text-4xl sm:text-5xl lg:text-7xl font-semibold tracking-[-0.04em] text-[#1d1d1f] mb-5 md:mb-6 leading-[1.05]">
                             Jinwoong Shin
                         </h1>
-                        <p className="text-xl lg:text-2xl text-[#6e6e73] max-w-xl leading-[1.4] tracking-tight">
+                        <p className="text-lg sm:text-xl lg:text-2xl text-[#6e6e73] max-w-xl leading-[1.4] tracking-tight">
                             LLM Engineer at LG CNS America. I build production GenAI across cloud and on-premises stacks.
                         </p>
                     </motion.div>
@@ -44,9 +44,9 @@ export function Hero() {
                         <p className="text-xs font-medium text-[#86868b] uppercase tracking-[0.12em]">
                             How would you like to explore?
                         </p>
-                        <div className="flex flex-wrap items-center gap-3">
-                            <a href="#about">
-                                <Button size="lg" className="gap-2">
+                        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
+                            <a href="#about" className="w-full sm:w-auto">
+                                <Button size="lg" className="gap-2 w-full sm:w-auto justify-center">
                                     Browse the portfolio <ArrowDown size={16} />
                                 </Button>
                             </a>
@@ -54,13 +54,13 @@ export function Hero() {
                                 size="lg"
                                 variant="secondary"
                                 onClick={openAIAssistant}
-                                className="gap-2"
+                                className="gap-2 w-full sm:w-auto justify-center"
                             >
                                 <Sparkles size={14} className="text-[#0071e3]" />
                                 Ask the AI Assistant
                             </Button>
-                            <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" download>
-                                <Button variant="outline" size="lg" className="gap-2">
+                            <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" download className="w-full sm:w-auto">
+                                <Button variant="outline" size="lg" className="gap-2 w-full sm:w-auto justify-center">
                                     <Download size={14} />
                                     Download Resume
                                 </Button>

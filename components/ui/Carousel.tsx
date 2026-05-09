@@ -108,22 +108,22 @@ export function Carousel({
     return (
         <>
             {/* Tab row */}
-            <div className="container mx-auto px-6 mb-10">
+            <div className="container mx-auto px-6 mb-6 md:mb-10">
                 <div className="border-b border-[#d2d2d7]">
-                    <div className="flex gap-x-8 overflow-x-auto hide-scrollbar -mb-px">
+                    <div className="flex gap-x-5 md:gap-x-8 overflow-x-auto hide-scrollbar -mb-px">
                         {items.map((item, idx) => (
                             <button
                                 key={item.id}
                                 type="button"
                                 onClick={() => scrollTo(idx)}
                                 className={cn(
-                                    "relative py-3 text-sm whitespace-nowrap transition-colors flex items-center gap-2 flex-shrink-0",
+                                    "relative py-2.5 md:py-3 text-xs md:text-sm whitespace-nowrap transition-colors flex items-center gap-1.5 md:gap-2 flex-shrink-0",
                                     activeIndex === idx
                                         ? "text-[#1d1d1f] font-semibold"
                                         : "text-[#86868b] hover:text-[#1d1d1f] font-medium"
                                 )}
                             >
-                                <span className="font-mono text-xs text-[#86868b]">
+                                <span className="font-mono text-[10px] md:text-xs text-[#86868b]">
                                     {String(idx + 1).padStart(2, "0")}
                                 </span>
                                 {item.tabLabel}
@@ -196,8 +196,8 @@ export function Carousel({
                 </div>
             )}
 
-            {/* Arrows + counter */}
-            <div className="container mx-auto px-6 mt-8 flex items-center justify-center gap-3">
+            {/* Arrows + counter — hidden on mobile (swipe is more natural) */}
+            <div className="container mx-auto px-6 mt-8 hidden md:flex items-center justify-center gap-3">
                 <button
                     type="button"
                     onClick={() => scrollTo(Math.max(0, activeIndex - 1))}

@@ -14,8 +14,8 @@ const skills = {
 
 export function About() {
     return (
-        <section id="about" className="py-32 bg-[#f5f5f7]">
-            <div className="container mx-auto px-6 grid md:grid-cols-2 gap-16 items-stretch">
+        <section id="about" className="py-16 md:py-24 lg:py-32 bg-[#f5f5f7]">
+            <div className="container mx-auto px-6 grid md:grid-cols-2 gap-10 md:gap-16 items-stretch">
                 {/* Left: Text */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -54,18 +54,18 @@ export function About() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: 0.15 }}
-                    className="h-full bg-white rounded-2xl border border-[#e8e8ed] p-8 md:p-10 flex flex-col"
+                    className="h-full bg-white rounded-2xl border border-[#e8e8ed] p-6 md:p-10 flex flex-col"
                 >
-                    <h3 className="text-xl font-semibold text-[#1d1d1f] mb-8 tracking-tight">Tech Stack</h3>
+                    <h3 className="text-xl font-semibold text-[#1d1d1f] mb-6 md:mb-8 tracking-tight">Tech Stack</h3>
 
-                    <div className="flex-1 flex flex-col justify-between gap-6 -mx-8 md:-mx-10">
+                    <div className="flex-1 flex flex-col justify-between gap-5 md:gap-6 -mx-6 md:-mx-10">
                         {Object.entries(skills).map(([category, items]) => (
                             <div key={category}>
-                                <h4 className="px-8 md:px-10 text-xs font-semibold text-[#86868b] uppercase tracking-[0.1em] mb-2.5">
+                                <h4 className="px-6 md:px-10 text-xs font-semibold text-[#86868b] uppercase tracking-[0.1em] mb-2.5">
                                     {category}
                                 </h4>
                                 <div className="relative">
-                                    <div className="flex gap-2 overflow-x-auto hide-scrollbar px-8 md:px-10 mask-fade-x">
+                                    <div className="flex gap-2 overflow-x-auto hide-scrollbar px-6 md:px-10 mask-fade-x">
                                         {items.map((skill) => (
                                             <span
                                                 key={skill}

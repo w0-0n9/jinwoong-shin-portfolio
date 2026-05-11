@@ -1,0 +1,84 @@
+name: Deploy
+
+# Auto-deploy hosting + Cloud Functions to Firebase on every push to main.
+#
+# SETUP (one-time, required):
+# 1. In GCP IAM, create (or reuse) a service account with these roles:
+#    - Firebase Admin
+#    - Cloud Functions Admin
+#    - Cloud Run Admin
+#    - Artifact Registry Writer
+#    - Service Account User (on the App Engine default SA)
+# 2. Download a JSON key for that service account.
+# 3. In GitHub → Settings → Secrets and variables → Actions, add a new
+#    repository secret named  FIREBASE_SERVICE_ACCOUNT_JINWOONG_SHIN_PORTFOLIO
+#    and paste the entire JSON file content as the value.
+# 4. Push to main. This workflow runs the graph sync, builds, and deploys.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build & deploy to Firebase
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install site dependencies
+        run: npm ci
+
+      - name: Install Cloud Functions dependencies
+        run: npm ci --prefix functions
+
+      - name: Sync knowledge graph (lib → functions mirror)
+        run: npm run sync:graph
+
+      - name: Type-check Cloud Functions
+        run: npx tsc --noEmit
+        working-directory: functions
+
+      - name: Build site (Next.js static export)
+        run: npm run build
+        env:
+          NEXT_TURBOPACK_EXPERIMENTAL_USE_SYSTEM_TLS_CERTS: '1'
+
+      - name: Build Cloud Functions
+        run: npm run build --prefix functions
+
+      - name: Write service account credentials
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JINWOONG_SHIN_PORTFOLIO }}
+        run: |
+          if [ -z "$GCP_SA_KEY" ]; then
+            echo "::error::FIREBASE_SERVICE_ACCOUNT_JINWOONG_SHIN_PORTFOLIO secret is not set."
+            echo "::error::Add it in GitHub → Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          echo "$GCP_SA_KEY" > "$HOME/firebase-sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/firebase-sa.json" >> "$GITHUB_ENV"
+
+      - name: Deploy hosting + functions
+        run: npx firebase-tools deploy --only hosting,functions --project jinwoong-shin-portfolio --non-interactive --force
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+
+      - name: Cleanup credentials
+        if: always()
+        run: rm -f "$HOME/firebase-sa.json"

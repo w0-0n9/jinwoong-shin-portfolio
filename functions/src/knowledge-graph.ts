@@ -4,7 +4,7 @@
  * Run `npm run sync:graph` (or just `npm run build` / `firebase deploy`)
  * to regenerate this file. Any manual edits here will be overwritten.
  *
- * Last generated: 2026-05-11T13:45:42.983Z
+ * Last generated: 2026-05-11T14:01:28.602Z
  */
 
 export type NodeType =

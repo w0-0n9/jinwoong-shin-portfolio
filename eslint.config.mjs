@@ -12,6 +12,14 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Firebase Hosting upload cache — contains a copy of .next/ build output.
+    ".firebase/**",
+    // Operational scripts (CommonJS / Node-level) — not app code, intentionally use require().
+    "deploy-functions.js",
+    "deploy-hosting.js",
+    "scripts/**",
+    // Server-side codebase has its own tsconfig and is bundled separately.
+    "functions/**",
   ]),
 ]);
 

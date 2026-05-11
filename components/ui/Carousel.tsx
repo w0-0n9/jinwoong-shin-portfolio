@@ -92,7 +92,10 @@ export function Carousel({
     const scrollTo = (idx: number) => {
         const target = cardRefs.current[idx];
         if (!target) return;
-        // Lock auto-detect briefly so the click intent wins even when nothing actually scrolls
+        // Lock auto-detect briefly so the click intent wins even when nothing actually scrolls.
+        // This runs in a user-triggered event handler (button click), not during render, so the
+        // react-hooks/purity rule's "Date.now is impure" warning is a false positive here.
+        // eslint-disable-next-line react-hooks/purity
         userClickRef.current = Date.now() + 600;
         setActiveIndex(idx);
         target.scrollIntoView({

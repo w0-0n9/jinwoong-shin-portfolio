@@ -8,7 +8,13 @@ const INTERACTIVE_SELECTOR =
 const CURSOR_SIZE = 28;
 
 export function CustomCursor() {
-    const [enabled, setEnabled] = useState(false);
+    // Lazy init: decide once on mount whether this device supports a hover cursor.
+    // SSR-safe — `window` is undefined on the server, so we default to disabled
+    // and the hydration mismatch is harmless because the cursor element doesn't render anyway.
+    const [enabled] = useState(() => {
+        if (typeof window === "undefined") return false;
+        return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    });
     const [isPointer, setIsPointer] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
     const [isPressed, setIsPressed] = useState(false);
@@ -19,10 +25,7 @@ export function CustomCursor() {
     const y = useSpring(cursorY, { damping: 22, stiffness: 1100, mass: 0.18 });
 
     useEffect(() => {
-        if (typeof window === "undefined") return;
-        const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
-        if (!mq.matches) return;
-        setEnabled(true);
+        if (!enabled) return;
 
         const half = CURSOR_SIZE / 2;
         const handleMove = (e: MouseEvent) => {
@@ -49,7 +52,7 @@ export function CustomCursor() {
             window.removeEventListener("mousedown", handleDown);
             window.removeEventListener("mouseup", handleUp);
         };
-    }, [cursorX, cursorY]);
+    }, [enabled, cursorX, cursorY]);
 
     if (!enabled) return null;
 

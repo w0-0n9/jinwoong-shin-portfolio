@@ -1,5 +1,7 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
+import { getFunctions } from "firebase/functions";
+// To test with Firebase emulators locally, also import `connectFunctionsEmulator`
+// from "firebase/functions" and call it on `functions` below.
 
 // Replace these with your actual Firebase config keys
 // You can find these in the Firebase Console -> Project Settings
@@ -15,9 +17,5 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const functions = getFunctions(app, "us-central1");
-
-// Connect to emulator if running locally
-// Uncomment the line below to test comfortably with emulators
-// connectFunctionsEmulator(functions, "127.0.0.1", 5001);
 
 export { app, functions };

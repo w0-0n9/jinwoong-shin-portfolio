@@ -230,3 +230,9 @@
   ul.clean li { position: relative; padding-left: 22px; margin-bottom: 10px; line-height: 1.65; color: var(--ink-soft); }
   ul.clean li::before { content: ""; position: absolute; left: 4px; top: 12px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
   ul.clean li b { color: var(--ink); font-weight: 600; }
+
+  /* figures (product photos / images with captions) */
+  figure.fig { margin: 32px 0; }
+  figure.fig img { display: block; width: 100%; height: auto; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); }
+  figure.fig figcaption { margin-top: 10px; font-size: 13.5px; color: var(--ink-faint); line-height: 1.55; text-align: center; }
+  figure.fig figcaption .src-note { opacity: .8; }

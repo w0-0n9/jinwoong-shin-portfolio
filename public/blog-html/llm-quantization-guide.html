@@ -274,8 +274,8 @@
         <span class="lang-en"><b>For</b> · Local-LLM beginners → deployment decisions</span>
         <span class="lang-ko"><b>구성</b> · 9개 섹션</span>
         <span class="lang-en"><b>Format</b> · 9 sections</span>
-        <span class="lang-ko"><b>출처</b> · 강의 정리</span>
-        <span class="lang-en"><b>Source</b> · Distilled from a lecture</span>
+        <span class="lang-ko"><b>방식</b> · 논문·공식 문서 직접 조사</span>
+        <span class="lang-en"><b>Method</b> · Researched from papers & official docs</span>
       </div>
     </header>
 
@@ -668,14 +668,24 @@
       <div class="lang-ko">로컬 LLM · 양자화 핵심 정리 · 입문부터 배포 결정까지</div>
       <div class="lang-en">Local LLMs · quantization essentials · from beginner to deployment decisions</div>
       <div class="src lang-ko">
-        본문: 강의 트랜스크립트를 토대로 재구성<br>
-        언급된 기법·도구: 양자화(8/4비트) · GPTQ · AWQ · GGUF · 프루닝 · 지식 증류 · Naver HyperCLOVA X<br>
-        한글자막: 한효정
+        <strong style="color:var(--ink-soft)">직접 조사·작성한 글입니다.</strong> 아래 논문과 공식 문서를 토대로 정리했습니다.<br><br>
+        <strong style="color:var(--ink-soft)">References</strong><br>
+        · Frantar et al., “GPTQ: Accurate Post-Training Quantization,” ICLR 2023 (<a href="https://arxiv.org/abs/2210.17323" target="_blank" rel="noopener noreferrer">arXiv:2210.17323</a>)<br>
+        · Lin et al., “AWQ: Activation-aware Weight Quantization,” MLSys 2024 (<a href="https://arxiv.org/abs/2306.00978" target="_blank" rel="noopener noreferrer">arXiv:2306.00978</a>)<br>
+        · Dettmers et al., “LLM.int8(),” NeurIPS 2022 (<a href="https://arxiv.org/abs/2208.07339" target="_blank" rel="noopener noreferrer">arXiv:2208.07339</a>) — 8비트, 미미한 성능 손실<br>
+        · Dettmers &amp; Zettlemoyer, “The case for 4-bit precision: k-bit Inference Scaling Laws,” ICML 2023 (<a href="https://arxiv.org/abs/2212.09720" target="_blank" rel="noopener noreferrer">arXiv:2212.09720</a>) — “압축한 대형 모델 &gt; 소형 모델” 근거<br>
+        · 프루닝: Han et al., NeurIPS 2015 (<a href="https://arxiv.org/abs/1506.02626" target="_blank" rel="noopener noreferrer">arXiv:1506.02626</a>) · 지식 증류: Hinton et al., 2015 (<a href="https://arxiv.org/abs/1503.02531" target="_blank" rel="noopener noreferrer">arXiv:1503.02531</a>)<br>
+        · GGUF/llama.cpp (<a href="https://github.com/ggerganov/llama.cpp" target="_blank" rel="noopener noreferrer">github</a>) · Ollama (<a href="https://ollama.com" target="_blank" rel="noopener noreferrer">ollama.com</a>) · Apple MLX (<a href="https://github.com/ml-explore/mlx" target="_blank" rel="noopener noreferrer">github</a>) · Naver HyperCLOVA X (<a href="https://arxiv.org/abs/2404.01954" target="_blank" rel="noopener noreferrer">arXiv:2404.01954</a>)
       </div>
       <div class="src lang-en">
-        Body: reconstructed from a lecture transcript.<br>
-        Techniques & tools referenced: quantization (8/4-bit) · GPTQ · AWQ · GGUF · pruning · knowledge distillation · Naver HyperCLOVA X<br>
-        Korean subtitles: Han Hyo-jung
+        <strong style="color:var(--ink-soft)">Researched and written from scratch</strong>, compiled from the papers and official docs below.<br><br>
+        <strong style="color:var(--ink-soft)">References</strong><br>
+        · Frantar et al., “GPTQ: Accurate Post-Training Quantization,” ICLR 2023 (<a href="https://arxiv.org/abs/2210.17323" target="_blank" rel="noopener noreferrer">arXiv:2210.17323</a>)<br>
+        · Lin et al., “AWQ: Activation-aware Weight Quantization,” MLSys 2024 (<a href="https://arxiv.org/abs/2306.00978" target="_blank" rel="noopener noreferrer">arXiv:2306.00978</a>)<br>
+        · Dettmers et al., “LLM.int8(),” NeurIPS 2022 (<a href="https://arxiv.org/abs/2208.07339" target="_blank" rel="noopener noreferrer">arXiv:2208.07339</a>) — 8-bit, negligible loss<br>
+        · Dettmers &amp; Zettlemoyer, “The case for 4-bit precision: k-bit Inference Scaling Laws,” ICML 2023 (<a href="https://arxiv.org/abs/2212.09720" target="_blank" rel="noopener noreferrer">arXiv:2212.09720</a>) — basis for “compressed large &gt; small native”<br>
+        · Pruning: Han et al., NeurIPS 2015 (<a href="https://arxiv.org/abs/1506.02626" target="_blank" rel="noopener noreferrer">arXiv:1506.02626</a>) · Distillation: Hinton et al., 2015 (<a href="https://arxiv.org/abs/1503.02531" target="_blank" rel="noopener noreferrer">arXiv:1503.02531</a>)<br>
+        · GGUF/llama.cpp (<a href="https://github.com/ggerganov/llama.cpp" target="_blank" rel="noopener noreferrer">github</a>) · Ollama (<a href="https://ollama.com" target="_blank" rel="noopener noreferrer">ollama.com</a>) · Apple MLX (<a href="https://github.com/ml-explore/mlx" target="_blank" rel="noopener noreferrer">github</a>) · Naver HyperCLOVA X (<a href="https://arxiv.org/abs/2404.01954" target="_blank" rel="noopener noreferrer">arXiv:2404.01954</a>)
       </div>
     </footer>
 

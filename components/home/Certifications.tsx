@@ -146,9 +146,9 @@ export function Certifications() {
                 }))}
             />
 
-            {/* Writeups row */}
-            <div className="container mx-auto px-6 mt-16 md:mt-24">
-                <div className="flex items-end justify-between gap-4 mb-5 md:mb-6">
+            {/* Writeups row — a slider so it scales as posts are added */}
+            <div className="container mx-auto px-6 mt-16 md:mt-24 mb-5 md:mb-6">
+                <div className="flex items-end justify-between gap-4">
                     <h3 className="text-xl md:text-2xl font-semibold tracking-tight text-[#1d1d1f]">
                         Writeups
                     </h3>
@@ -160,12 +160,17 @@ export function Certifications() {
                         <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform" />
                     </Link>
                 </div>
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {blogPosts.map((post) => (
-                        <WriteupCard key={post.slug} post={post} />
-                    ))}
-                </div>
             </div>
+            <Carousel
+                layoutIdPrefix="writeups"
+                snapAlign="start"
+                cardWidthClassName="w-[clamp(260px,32vw,400px)]"
+                items={blogPosts.map((post) => ({
+                    id: post.slug,
+                    tabLabel: post.title.split(":")[0],
+                    node: <WriteupCard post={post} />,
+                }))}
+            />
         </section>
     );
 }

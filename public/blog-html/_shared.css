@@ -251,3 +251,12 @@
   pre .cm { color: #8b94a3; }     /* comment */
   pre .kw { color: #c3a6ff; }     /* keyword */
   pre .st { color: #9ae6b4; }     /* string / value */
+
+  /* mobile: give tables a floor width so columns stay readable and the table
+     scrolls horizontally as a unit, instead of squishing headers into vertical
+     word-stacks. (.cmp already has overflow-x: auto.) */
+  @media (max-width: 640px) {
+    .cmp table { min-width: 500px; }
+    .cmp th, .cmp td { padding: 11px 13px; }
+    .cmp thead th { white-space: nowrap; }
+  }

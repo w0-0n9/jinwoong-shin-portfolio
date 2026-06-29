@@ -25,7 +25,7 @@ export const blogPosts: BlogPost[] = [
     date: "2026-06-29",
     tags: ["Model Compression", "Pruning", "Knowledge Distillation", "LLM", "On-device AI"],
     content: `A deep dive into the two model-compression levers beyond quantization. Pruning: why over-parameterization lets you cut, unstructured vs structured vs N:M (2:4) sparsity, magnitude/iterative pruning, the Lottery Ticket Hypothesis, and one-shot LLM pruning (SparseGPT, Wanda). Knowledge distillation: dark knowledge and temperature, response/feature/relation-based knowledge, DistilBERT and sequence-level KD, white-box vs black-box (data) distillation. Plus how to combine distill → prune → quantize. Use the EN / 한국어 toggle to read it in either language.`,
-    htmlSource: "/blog-html/pruning-and-distillation.html?v=3",
+    htmlSource: "/blog-html/pruning-and-distillation.html?v=4",
     bilingual: true,
   },
   {
@@ -35,7 +35,7 @@ export const blogPosts: BlogPost[] = [
     date: "2026-06-29",
     tags: ["GB10", "Grace Blackwell", "Edge AI", "On-prem LLM", "CUDA"],
     content: `A jargon-decoded breakdown and industrial use-case analysis of the NVIDIA GB10 Grace Blackwell superchip (Dell Pro Max with GB10 / DGX Spark): unified coherent memory, FP4/NVFP4, the sprinter-vs-decathlete trade-off, three real demos (local 120B LLM + RAG, an RL agent, on-prem driveway video), scaling out with NCCL, and where it actually fits on real projects (data residency, edge multimodal, PoC→production portability). Use the EN / 한국어 toggle to read it in either language.`,
-    htmlSource: "/blog-html/dell-gb10-edge-ai.html?v=5",
+    htmlSource: "/blog-html/dell-gb10-edge-ai.html?v=6",
     bilingual: true,
   },
   {
@@ -45,7 +45,7 @@ export const blogPosts: BlogPost[] = [
     date: "2026-06-29",
     tags: ["LLM", "Quantization", "GPTQ", "AWQ", "GGUF", "On-device AI"],
     content: `A practical guide to running large language models locally through quantization — why giant models are stuck in data centers, how lowering numeric precision (8-bit, 4-bit) saves up to 87.5% of memory, and how to pick between GPTQ, AWQ and GGUF for your hardware. Bonus: pruning and knowledge distillation. Use the EN / 한국어 toggle to read it in either language.`,
-    htmlSource: "/blog-html/llm-quantization-guide.html?v=8",
+    htmlSource: "/blog-html/llm-quantization-guide.html?v=9",
     bilingual: true,
   },
   {
@@ -55,7 +55,7 @@ export const blogPosts: BlogPost[] = [
     date: "2026-06-29",
     tags: ["RAG", "LLM", "Embeddings", "Vector Search", "AI Engineering"],
     content: `A core-concepts guide to RAG — what it is, why retrieval (not generation) is where things break, and how embeddings, chunking, vector databases, hybrid search, rerankers, contextual retrieval and late chunking fit into a single pipeline. Use the EN / 한국어 toggle to read it in either language.`,
-    htmlSource: "/blog-html/rag-concepts-guide.html?v=5",
+    htmlSource: "/blog-html/rag-concepts-guide.html?v=6",
     bilingual: true,
   },
   {
@@ -65,7 +65,7 @@ export const blogPosts: BlogPost[] = [
     date: "2026-01-15",
     tags: ["AWS", "Certification", "AI", "Machine Learning"],
     content: `Study notes and decision patterns from passing the AWS Certified AI Practitioner (AIF-C01) — SageMaker tools, inference options, Bedrock customization, RAG Knowledge Bases, prompts, generation parameters, evaluation metrics and core ML concepts. The full guide renders from the self-contained HTML.`,
-    htmlSource: "/blog-html/aws-ai-practitioner.html?v=4",
+    htmlSource: "/blog-html/aws-ai-practitioner.html?v=5",
     certification: {
       title: "AWS Certified AI Practitioner",
       issuer: "Amazon Web Services (AWS)",

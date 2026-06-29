@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import { blogPosts } from "@/lib/blog-data";
 
 type Lang = "en" | "ko";
 
@@ -42,6 +43,8 @@ interface HtmlPostReaderProps {
     bilingual?: boolean;
     /** Language shown before the visitor has made a choice. */
     defaultLang?: Lang;
+    /** Slug of the post being read — excluded from the "Read next" list. */
+    currentSlug?: string;
 }
 
 // Top offset (px) used both for sticky positioning and scroll-spy thresholds.
@@ -52,7 +55,9 @@ export function HtmlPostReader({
     title,
     bilingual = false,
     defaultLang = "en",
+    currentSlug,
 }: HtmlPostReaderProps) {
+    const morePosts = blogPosts.filter((p) => p.slug !== currentSlug).slice(0, 3);
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [height, setHeight] = useState("80vh");
     const [toc, setToc] = useState<TocItem[]>([]);
@@ -298,6 +303,45 @@ export function HtmlPostReader({
                         className="block w-full border-none bg-transparent"
                         style={{ height }}
                     />
+
+                    {/* Read next — other writeups, aligned to the article's reading width */}
+                    {morePosts.length > 0 && (
+                        <div className="mx-auto max-w-[740px] px-6 lg:px-0 mt-4 mb-20 pt-10 border-t border-[#e8e8ed]">
+                            <h2 className="text-lg font-semibold tracking-tight text-[#1d1d1f] mb-5">
+                                {lang === "ko" ? "다음 읽을거리" : "Read next"}
+                            </h2>
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                {morePosts.map((p) => (
+                                    <Link
+                                        key={p.slug}
+                                        href={`/blog/${p.slug}`}
+                                        className="group block rounded-2xl border border-[#e8e8ed] bg-white p-5 hover:border-[#d2d2d7] hover:shadow-[0_8px_30px_-10px_rgba(0,0,0,0.08)] transition-all"
+                                    >
+                                        <div className="flex flex-wrap gap-1.5 mb-2.5">
+                                            {p.tags.slice(0, 2).map((tag) => (
+                                                <span
+                                                    key={tag}
+                                                    className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#f5f5f7] text-[#424245] border border-[#e8e8ed]"
+                                                >
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                        </div>
+                                        <h3 className="text-base font-semibold leading-snug text-[#1d1d1f] group-hover:text-[#0071e3] transition-colors line-clamp-2">
+                                            {p.title}
+                                        </h3>
+                                        <div className="mt-3 flex items-center justify-between">
+                                            <span className="text-xs text-[#86868b]">{p.date}</span>
+                                            <ArrowRight
+                                                size={14}
+                                                className="text-[#0071e3] group-hover:translate-x-0.5 transition-transform"
+                                            />
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 

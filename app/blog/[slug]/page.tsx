@@ -40,6 +40,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                         title={post.title}
                         bilingual={post.bilingual}
                         defaultLang="en"
+                        currentSlug={post.slug}
                     />
                 </div>
             </main>

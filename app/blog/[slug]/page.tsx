@@ -1,6 +1,10 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPostBySlug, blogPosts } from "@/lib/blog-data";
+import { getArticleText } from "@/lib/blog-content";
 import { Navbar } from "@/components/layout/Navbar";
+
+const SITE = "https://jinwoong-shin-portfolio.web.app";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
@@ -22,6 +26,33 @@ export async function generateStaticParams() {
     }));
 }
 
+export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
+    const { slug } = await params;
+    const post = getPostBySlug(slug);
+    if (!post) return {};
+    const url = `/blog/${post.slug}`;
+    return {
+        title: post.title,
+        description: post.description,
+        keywords: post.tags,
+        alternates: { canonical: url },
+        openGraph: {
+            type: "article",
+            title: post.title,
+            description: post.description,
+            url,
+            publishedTime: post.date,
+            authors: ["Jinwoong Shin"],
+            tags: post.tags,
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: post.title,
+            description: post.description,
+        },
+    };
+}
+
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
     const { slug } = await params;
     const post = getPostBySlug(slug);
@@ -31,9 +62,36 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     }
 
     if (post.htmlSource) {
+        // The visible article is iframed (for its self-contained design); expose
+        // the real text + structured data so search engines index this URL.
+        const articleText = getArticleText(post.slug);
+        const jsonLd = {
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            headline: post.title,
+            description: post.description,
+            datePublished: post.date,
+            dateModified: post.date,
+            keywords: post.tags.join(", "),
+            inLanguage: post.bilingual ? ["en", "ko"] : "en",
+            author: { "@type": "Person", name: "Jinwoong Shin", url: SITE },
+            publisher: { "@type": "Person", name: "Jinwoong Shin", url: SITE },
+            mainEntityOfPage: { "@type": "WebPage", "@id": `${SITE}/blog/${post.slug}` },
+            url: `${SITE}/blog/${post.slug}`,
+        };
         return (
             <main className="min-h-screen bg-[#fbfbf9] text-[#1d1d1f]">
                 <Navbar />
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                />
+                {/* Crawlable copy of the article (the visible version is iframed). */}
+                <article className="sr-only">
+                    <h1>{post.title}</h1>
+                    <p>{post.description}</p>
+                    {articleText && <div>{articleText}</div>}
+                </article>
                 <div className="pt-28 pb-24">
                     <HtmlPostReader
                         src={post.htmlSource}

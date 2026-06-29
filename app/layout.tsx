@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
+
+// Google Analytics 4 measurement ID (public value — safe to inline).
+const GA_ID = "G-TPF71VXKQ6";
 
 // Initialize Inter
 const inter = Inter({
@@ -71,6 +75,20 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased overflow-x-hidden`}
       >
         {children}
+
+        {/* Google Analytics (gtag.js) */}
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="ga-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_ID}');
+          `}
+        </Script>
       </body>
     </html>
   );

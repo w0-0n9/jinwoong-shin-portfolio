@@ -210,6 +210,19 @@
         accelerates it as a <span class="em">first-class citizen</span> in hardware. (This is the cutting edge of
         <a href="/blog/llm-quantization-guide">quantization</a>, which I covered in an earlier post.)
       </p>
+      <div class="box key">
+        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">짚고 가기 · FP4 ≠ NVFP4</span><span class="lang-en">Clarify · FP4 ≠ NVFP4</span></div>
+        <p class="lang-ko">
+          <strong>FP4</strong>는 "4비트 부동소수점"이라는 <strong>일반 범주</strong>(보통 E2M1 레이아웃)이고, <strong>NVFP4</strong>는 그중 <strong>NVIDIA의 구체적 포맷</strong>입니다 —
+          16개 값 묶음마다 FP8 스케일 + 텐서 전체 FP32 스케일을 더하는 <strong>2단계 스케일링</strong>이 특징이라 정확도가 높죠.
+          (업계 표준 MXFP4는 32개 묶음 + 거듭제곱 스케일로 더 단순.) 즉 <strong>FP4 ⊃ NVFP4</strong>.
+        </p>
+        <p class="lang-en">
+          <strong>FP4</strong> is the <strong>general category</strong> (“4-bit floating point,” usually an E2M1 layout); <strong>NVFP4</strong> is <strong>NVIDIA's specific format</strong> within it —
+          its <strong>two-level scaling</strong> (an FP8 scale per 16-value micro-block plus a per-tensor FP32 scale) is what keeps accuracy high.
+          (The industry-standard MXFP4 uses 32-value blocks with a power-of-two scale — simpler.) In short, <strong>FP4 ⊃ NVFP4</strong>.
+        </p>
+      </div>
       <div class="box field">
         <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">핵심 수치 · NVFP4</span><span class="lang-en">Key number · NVFP4</span></div>
         <p class="lang-ko">

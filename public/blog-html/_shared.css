@@ -252,11 +252,11 @@
   pre .kw { color: #c3a6ff; }     /* keyword */
   pre .st { color: #9ae6b4; }     /* string / value */
 
-  /* mobile: give tables a floor width so columns stay readable and the table
-     scrolls horizontally as a unit, instead of squishing headers into vertical
-     word-stacks. (.cmp already has overflow-x: auto.) */
+  /* mobile: give every column a min-width so text wraps to a few readable lines
+     instead of squishing into vertical word-stacks; column headers stay on one
+     line. The table then scrolls horizontally as a unit at a sensible width.
+     (.cmp already has overflow-x: auto; the page itself stays overflow-free.) */
   @media (max-width: 640px) {
-    .cmp table { min-width: 500px; }
-    .cmp th, .cmp td { padding: 11px 13px; }
+    .cmp th, .cmp td { white-space: normal; min-width: 150px; padding: 11px 13px; }
     .cmp thead th { white-space: nowrap; }
   }

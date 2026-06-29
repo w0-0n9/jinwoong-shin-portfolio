@@ -45,7 +45,7 @@ export const blogPosts: BlogPost[] = [
     date: "2026-06-29",
     tags: ["LLM", "Quantization", "GPTQ", "AWQ", "GGUF", "On-device AI"],
     content: `A practical guide to running large language models locally through quantization — why giant models are stuck in data centers, how lowering numeric precision (8-bit, 4-bit) saves up to 87.5% of memory, and how to pick between GPTQ, AWQ and GGUF for your hardware. Bonus: pruning and knowledge distillation. Use the EN / 한국어 toggle to read it in either language.`,
-    htmlSource: "/blog-html/llm-quantization-guide.html?v=5",
+    htmlSource: "/blog-html/llm-quantization-guide.html?v=6",
     bilingual: true,
   },
   {

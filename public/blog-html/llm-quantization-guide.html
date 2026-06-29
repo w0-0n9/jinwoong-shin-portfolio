@@ -24,9 +24,10 @@
       <a href="#tools"><span class="n">04</span><span class="lang-ko">도구 선택</span><span class="lang-en">Picking a tool</span></a>
       <a href="#gptq-awq"><span class="n">05</span><span class="lang-ko">GPTQ vs AWQ</span><span class="lang-en">GPTQ vs AWQ</span></a>
       <a href="#tradeoff"><span class="n">06</span><span class="lang-ko">공짜 점심은 없다</span><span class="lang-en">No free lunch</span></a>
-      <a href="#advanced"><span class="n">07</span><span class="lang-ko">고급 기법</span><span class="lang-en">Advanced techniques</span></a>
-      <a href="#cheatsheet"><span class="n">08</span><span class="lang-ko">치트 시트</span><span class="lang-en">Cheat sheets</span></a>
-      <a href="#recap"><span class="n">09</span><span class="lang-ko">한 장 요약</span><span class="lang-en">One-page recap</span></a>
+      <a href="#methods"><span class="n">07</span><span class="lang-ko">PTQ vs QAT</span><span class="lang-en">PTQ vs QAT</span></a>
+      <a href="#advanced"><span class="n">08</span><span class="lang-ko">고급 기법</span><span class="lang-en">Advanced techniques</span></a>
+      <a href="#cheatsheet"><span class="n">09</span><span class="lang-ko">치트 시트</span><span class="lang-en">Cheat sheets</span></a>
+      <a href="#recap"><span class="n">10</span><span class="lang-ko">한 장 요약</span><span class="lang-en">One-page recap</span></a>
     </nav>
   </aside>
 
@@ -300,8 +301,83 @@
     </section>
 
     <!-- 07 -->
-    <section id="advanced">
+    <section id="methods">
       <div class="sec-num">SECTION 07</div>
+      <h2 class="lang-ko">PTQ vs QAT — 언제 양자화하나</h2>
+      <h2 class="lang-en">PTQ vs QAT — when you quantize</h2>
+      <p class="lang-ko">
+        지금까지 본 GPTQ·AWQ·GGUF는 사실 모두 한 부류입니다 — <strong>이미 학습이 끝난 모델을 나중에 양자화</strong>하는
+        <strong>PTQ(Post-Training Quantization)</strong>. 양자화 방식은 크게 두 갈래로 나뉘어요.
+      </p>
+      <p class="lang-en">
+        GPTQ, AWQ and GGUF are actually all one family — <strong>PTQ (Post-Training Quantization)</strong>,
+        which quantizes a model <strong>after training is finished.</strong> Quantization splits into two big approaches.
+      </p>
+      <div class="cmp">
+        <table>
+          <thead><tr>
+            <th></th>
+            <th class="h-dense"><span class="lang-ko">PTQ (학습 후)</span><span class="lang-en">PTQ (after training)</span></th>
+            <th class="h-sparse"><span class="lang-ko">QAT (학습 중)</span><span class="lang-en">QAT (during training)</span></th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <th><span class="lang-ko">언제</span><span class="lang-en">When</span></th>
+              <td class="dense"><span class="lang-ko">학습 끝난 모델에 적용</span><span class="lang-en">applied after training</span></td>
+              <td class="sparse"><span class="lang-ko">학습하면서 양자화를 미리 반영</span><span class="lang-en">built in during training</span></td>
+            </tr>
+            <tr>
+              <th><span class="lang-ko">비용</span><span class="lang-en">Cost</span></th>
+              <td class="dense"><span class="lang-ko">싸다 (재학습 X, 보정 데이터만)</span><span class="lang-en">cheap (no retrain, just calibration)</span></td>
+              <td class="sparse"><span class="lang-ko">비싸다 (재학습 필요)</span><span class="lang-en">expensive (needs retraining)</span></td>
+            </tr>
+            <tr>
+              <th><span class="lang-ko">강점</span><span class="lang-en">Strength</span></th>
+              <td class="dense"><span class="lang-ko">8/4비트에서 충분히 정확</span><span class="lang-en">accurate enough at 8/4-bit</span></td>
+              <td class="sparse"><span class="lang-ko">아주 낮은 비트(2–3bit)·민감 모델에서 유리</span><span class="lang-en">better at very low bits / sensitive models</span></td>
+            </tr>
+            <tr>
+              <th><span class="lang-ko">대표</span><span class="lang-en">Examples</span></th>
+              <td class="dense">GPTQ · AWQ · GGUF</td>
+              <td class="sparse"><span class="lang-ko">FakeQuant 삽입 후 재학습</span><span class="lang-en">fake-quant nodes + retraining</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="box key">
+        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">QAT의 원리 · FakeQuant</span><span class="lang-en">How QAT works · fake-quant</span></div>
+        <p class="lang-ko">
+          <strong>QAT(Quantization-Aware Training)</strong>는 학습 중 순전파에 <strong>"가짜 양자화(FakeQuant)" 노드</strong>를 끼워,
+          모델이 양자화 오차를 <em>미리 겪게</em> 합니다. 역전파로 그 오차를 줄이도록 가중치가 적응하므로,
+          PTQ가 무너지는 <strong>아주 낮은 비트</strong>나 손실 민감 모델에서도 정확도가 잘 버팁니다. 대신 재학습 비용이 크죠.
+        </p>
+        <p class="lang-en">
+          <strong>QAT (Quantization-Aware Training)</strong> inserts <strong>“fake-quant” nodes</strong> into the forward pass during training,
+          so the model <em>experiences the quantization error up front.</em> Backprop lets the weights adapt to minimize it,
+          so accuracy holds up at <strong>very low bit-widths</strong> or on loss-sensitive models where PTQ breaks down — at the cost of retraining.
+        </p>
+      </div>
+      <div class="box field">
+        <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">덤 · QLoRA</span><span class="lang-en">Bonus · QLoRA</span></div>
+        <p class="lang-ko">
+          <strong>QLoRA</strong>는 결이 또 다릅니다 — 모델을 <strong>4비트로 양자화해 얼린 채</strong>, 작은 <strong>LoRA 어댑터</strong>만 학습하는 파인튜닝 기법이에요.
+          메모리를 크게 줄여 <strong>단일 GPU에서 대형 모델 파인튜닝</strong>을 가능케 합니다. "양자화 + 효율적 파인튜닝"의 결합 — 양자화된 모델을 <em>내 데이터로</em> 길들이고 싶을 때.
+        </p>
+        <p class="lang-en">
+          <strong>QLoRA</strong> is a different beast — fine-tuning that keeps the model <strong>frozen at 4-bit</strong> and trains only a small <strong>LoRA adapter.</strong>
+          It slashes memory enough to <strong>fine-tune a large model on a single GPU.</strong> Quantization + efficient fine-tuning — for when you want to adapt a quantized model <em>to your own data.</em>
+        </p>
+      </div>
+      <div class="box key">
+        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">정리</span><span class="lang-en">In short</span></div>
+        <p class="lang-ko">대부분은 <strong>PTQ(GPTQ/AWQ/GGUF)면 충분</strong>합니다. 아주 낮은 비트나 빠듯한 정확도가 필요하면 <strong>QAT</strong>, 양자화 모델을 내 데이터로 파인튜닝하려면 <strong>QLoRA</strong>.</p>
+        <p class="lang-en">For most cases <strong>PTQ (GPTQ/AWQ/GGUF) is enough.</strong> Reach for <strong>QAT</strong> when you need very low bits or tight accuracy, and <strong>QLoRA</strong> to fine-tune a quantized model on your own data.</p>
+      </div>
+    </section>
+
+    <!-- 08 -->
+    <section id="advanced">
+      <div class="sec-num">SECTION 08</div>
       <h2 class="lang-ko">보너스 — 양자화 너머의 두 기법</h2>
       <h2 class="lang-en">Bonus — two techniques beyond quantization</h2>
       <p class="lang-ko">
@@ -357,9 +433,9 @@
       </div>
     </section>
 
-    <!-- 08 -->
+    <!-- 09 -->
     <section id="cheatsheet">
-      <div class="sec-num">SECTION 08</div>
+      <div class="sec-num">SECTION 09</div>
       <h2 class="lang-ko">치트 시트 — 내 상황엔 뭘 쓸까</h2>
       <h2 class="lang-en">Cheat sheets — what should I use?</h2>
 
@@ -396,9 +472,9 @@
       </div>
     </section>
 
-    <!-- 09 -->
+    <!-- 10 -->
     <section id="recap">
-      <div class="sec-num">SECTION 09</div>
+      <div class="sec-num">SECTION 10</div>
       <h2 class="lang-ko">한 장 요약</h2>
       <h2 class="lang-en">One-page recap</h2>
       <div class="terms">
@@ -464,7 +540,9 @@
         · Dettmers et al., “LLM.int8(),” NeurIPS 2022 (<a href="https://arxiv.org/abs/2208.07339" target="_blank" rel="noopener noreferrer">arXiv:2208.07339</a>) — 8비트, 미미한 성능 손실<br>
         · Dettmers &amp; Zettlemoyer, “The case for 4-bit precision: k-bit Inference Scaling Laws,” ICML 2023 (<a href="https://arxiv.org/abs/2212.09720" target="_blank" rel="noopener noreferrer">arXiv:2212.09720</a>) — “압축한 대형 모델 &gt; 소형 모델” 근거<br>
         · 프루닝: Han et al., NeurIPS 2015 (<a href="https://arxiv.org/abs/1506.02626" target="_blank" rel="noopener noreferrer">arXiv:1506.02626</a>) · 지식 증류: Hinton et al., 2015 (<a href="https://arxiv.org/abs/1503.02531" target="_blank" rel="noopener noreferrer">arXiv:1503.02531</a>)<br>
-        · GGUF/llama.cpp (<a href="https://github.com/ggerganov/llama.cpp" target="_blank" rel="noopener noreferrer">github</a>) · Ollama (<a href="https://ollama.com" target="_blank" rel="noopener noreferrer">ollama.com</a>) · Apple MLX (<a href="https://github.com/ml-explore/mlx" target="_blank" rel="noopener noreferrer">github</a>) · Naver HyperCLOVA X (<a href="https://arxiv.org/abs/2404.01954" target="_blank" rel="noopener noreferrer">arXiv:2404.01954</a>)
+        · GGUF/llama.cpp (<a href="https://github.com/ggerganov/llama.cpp" target="_blank" rel="noopener noreferrer">github</a>) · Ollama (<a href="https://ollama.com" target="_blank" rel="noopener noreferrer">ollama.com</a>) · Apple MLX (<a href="https://github.com/ml-explore/mlx" target="_blank" rel="noopener noreferrer">github</a>) · Naver HyperCLOVA X (<a href="https://arxiv.org/abs/2404.01954" target="_blank" rel="noopener noreferrer">arXiv:2404.01954</a>)<br>
+        · QLoRA: Dettmers et al., 2023 (<a href="https://arxiv.org/abs/2305.14314" target="_blank" rel="noopener noreferrer">arXiv:2305.14314</a>) — 4비트 양자화 + LoRA 파인튜닝<br>
+        · PTQ/QAT·QLoRA 분류 한국어 정리 참고: <a href="https://data-newbie.tistory.com/992" target="_blank" rel="noopener noreferrer">data-newbie (tistory)</a>
       </div>
       <div class="src lang-en">
         <strong style="color:var(--ink-soft)">Researched and written from scratch</strong>, compiled from the papers and official docs below.<br><br>
@@ -474,7 +552,9 @@
         · Dettmers et al., “LLM.int8(),” NeurIPS 2022 (<a href="https://arxiv.org/abs/2208.07339" target="_blank" rel="noopener noreferrer">arXiv:2208.07339</a>) — 8-bit, negligible loss<br>
         · Dettmers &amp; Zettlemoyer, “The case for 4-bit precision: k-bit Inference Scaling Laws,” ICML 2023 (<a href="https://arxiv.org/abs/2212.09720" target="_blank" rel="noopener noreferrer">arXiv:2212.09720</a>) — basis for “compressed large &gt; small native”<br>
         · Pruning: Han et al., NeurIPS 2015 (<a href="https://arxiv.org/abs/1506.02626" target="_blank" rel="noopener noreferrer">arXiv:1506.02626</a>) · Distillation: Hinton et al., 2015 (<a href="https://arxiv.org/abs/1503.02531" target="_blank" rel="noopener noreferrer">arXiv:1503.02531</a>)<br>
-        · GGUF/llama.cpp (<a href="https://github.com/ggerganov/llama.cpp" target="_blank" rel="noopener noreferrer">github</a>) · Ollama (<a href="https://ollama.com" target="_blank" rel="noopener noreferrer">ollama.com</a>) · Apple MLX (<a href="https://github.com/ml-explore/mlx" target="_blank" rel="noopener noreferrer">github</a>) · Naver HyperCLOVA X (<a href="https://arxiv.org/abs/2404.01954" target="_blank" rel="noopener noreferrer">arXiv:2404.01954</a>)
+        · GGUF/llama.cpp (<a href="https://github.com/ggerganov/llama.cpp" target="_blank" rel="noopener noreferrer">github</a>) · Ollama (<a href="https://ollama.com" target="_blank" rel="noopener noreferrer">ollama.com</a>) · Apple MLX (<a href="https://github.com/ml-explore/mlx" target="_blank" rel="noopener noreferrer">github</a>) · Naver HyperCLOVA X (<a href="https://arxiv.org/abs/2404.01954" target="_blank" rel="noopener noreferrer">arXiv:2404.01954</a>)<br>
+        · QLoRA: Dettmers et al., 2023 (<a href="https://arxiv.org/abs/2305.14314" target="_blank" rel="noopener noreferrer">arXiv:2305.14314</a>) — 4-bit quantization + LoRA fine-tuning<br>
+        · PTQ/QAT/QLoRA taxonomy — Korean reference: <a href="https://data-newbie.tistory.com/992" target="_blank" rel="noopener noreferrer">data-newbie (tistory)</a>
       </div>
     </footer>
 

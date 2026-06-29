@@ -41,6 +41,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                         bilingual={post.bilingual}
                         defaultLang="en"
                         currentSlug={post.slug}
+                        date={post.date}
                     />
                 </div>
             </main>

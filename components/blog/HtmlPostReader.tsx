@@ -36,6 +36,16 @@ interface TocItem {
     en: string;
 }
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+// Format an ISO date ("2026-06-29") without Date() to avoid timezone drift.
+function formatDate(iso: string, lang: Lang): string {
+    const parts = iso.split("-").map(Number);
+    if (parts.length !== 3 || parts.some(Number.isNaN)) return iso;
+    const [y, m, d] = parts;
+    return lang === "ko" ? `${y}년 ${m}월 ${d}일` : `${MONTHS[m - 1]} ${d}, ${y}`;
+}
+
 interface HtmlPostReaderProps {
     src: string;
     title: string;
@@ -45,6 +55,8 @@ interface HtmlPostReaderProps {
     defaultLang?: Lang;
     /** Slug of the post being read — excluded from the "Read next" list. */
     currentSlug?: string;
+    /** ISO publish date ("2026-06-29"), shown above the article. */
+    date?: string;
 }
 
 // Top offset (px) used both for sticky positioning and scroll-spy thresholds.
@@ -56,6 +68,7 @@ export function HtmlPostReader({
     bilingual = false,
     defaultLang = "en",
     currentSlug,
+    date,
 }: HtmlPostReaderProps) {
     const morePosts = blogPosts.filter((p) => p.slug !== currentSlug).slice(0, 3);
     const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -64,6 +77,7 @@ export function HtmlPostReader({
     const tocRef = useRef<TocItem[]>([]);
     const [activeId, setActiveId] = useState("");
     const [progress, setProgress] = useState(0);
+    const [readMinutes, setReadMinutes] = useState(0);
 
     const lang = useSyncExternalStore(
         subscribeLang,
@@ -85,6 +99,22 @@ export function HtmlPostReader({
         const iframe = iframeRef.current;
         if (iframe && iframe.contentWindow) {
             setHeight(`${iframe.contentWindow.document.body.scrollHeight + 40}px`);
+        }
+    }, []);
+
+    // Estimate reading time from the visible-language text (innerText skips the
+    // hidden language). ~200 English words/min + ~500 CJK chars/min.
+    const computeReadMinutes = useCallback(() => {
+        try {
+            const text = iframeRef.current?.contentDocument?.body?.innerText ?? "";
+            if (!text) return;
+            const cjkRe = /[ㄱ-힝一-鿿぀-ヿ]/g;
+            const cjk = (text.match(cjkRe) || []).length;
+            const words = (text.replace(cjkRe, " ").match(/[A-Za-z0-9]+/g) || []).length;
+            const minutes = Math.max(1, Math.round(words / 200 + cjk / 500));
+            setReadMinutes(minutes);
+        } catch {
+            /* cross-origin guard */
         }
     }, []);
 
@@ -156,6 +186,10 @@ export function HtmlPostReader({
             } catch {
                 /* cross-origin guard */
             }
+
+            // After the shared stylesheet has applied (so the hidden language is
+            // excluded), estimate the reading time.
+            setTimeout(computeReadMinutes, 200);
         };
 
         iframe.addEventListener("load", handleLoad);
@@ -166,12 +200,14 @@ export function HtmlPostReader({
             window.removeEventListener("resize", recomputeHeight);
             observer?.disconnect();
         };
-    }, [bilingual, applyLang, recomputeHeight]);
+    }, [bilingual, applyLang, recomputeHeight, computeReadMinutes]);
 
-    // Apply language changes triggered by the toggle.
+    // Apply language changes triggered by the toggle, and re-estimate read time.
     useEffect(() => {
         if (bilingual) applyLang(lang);
-    }, [lang, bilingual, applyLang]);
+        const t = setTimeout(computeReadMinutes, 120);
+        return () => clearTimeout(t);
+    }, [lang, bilingual, applyLang, computeReadMinutes]);
 
     // Drive the progress gauge + active-section highlight from the window scroll.
     useEffect(() => {
@@ -295,6 +331,14 @@ export function HtmlPostReader({
 
                 {/* article content — full-bleed, sits directly on the page background */}
                 <div className="min-w-0">
+                    {/* date · reading time, aligned to the article's reading width */}
+                    {(date || readMinutes > 0) && (
+                        <div className="mx-auto max-w-[740px] mb-2 flex items-center gap-2 text-sm text-[#86868b]">
+                            {date && <time dateTime={date}>{formatDate(date, lang)}</time>}
+                            {date && readMinutes > 0 && <span className="w-1 h-1 rounded-full bg-[#d2d2d7]" />}
+                            {readMinutes > 0 && <span>{readMinutes}{lang === "ko" ? "분 읽기" : " min read"}</span>}
+                        </div>
+                    )}
                     <iframe
                         ref={iframeRef}
                         src={src}

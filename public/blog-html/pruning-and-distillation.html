@@ -8,7 +8,7 @@
 <script>try{var l=localStorage.getItem('blog-lang');document.documentElement.setAttribute('data-lang',(l==='ko'||l==='en')?l:'en');}catch(e){document.documentElement.setAttribute('data-lang','en');}</script>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" />
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
-<link rel="stylesheet" href="/blog-html/_shared.css?v=2" />
+<link rel="stylesheet" href="/blog-html/_shared.css?v=3" />
 </head>
 <body>
 <div id="progress"></div>
@@ -26,8 +26,9 @@
       <a href="#distill"><span class="n">06</span><span class="lang-ko">지식 증류란</span><span class="lang-en">What distillation is</span></a>
       <a href="#distill-kinds"><span class="n">07</span><span class="lang-ko">세 가지 지식</span><span class="lang-en">Three kinds of knowledge</span></a>
       <a href="#distill-llm"><span class="n">08</span><span class="lang-ko">LLM 증류</span><span class="lang-en">Distilling LLMs</span></a>
-      <a href="#combine"><span class="n">09</span><span class="lang-ko">셋을 합치기</span><span class="lang-en">Combining all three</span></a>
-      <a href="#recap"><span class="n">10</span><span class="lang-ko">한 장 요약</span><span class="lang-en">One-page recap</span></a>
+      <a href="#handson"><span class="n">09</span><span class="lang-ko">실습 — 코드로</span><span class="lang-en">Hands-on — in code</span></a>
+      <a href="#combine"><span class="n">10</span><span class="lang-ko">셋을 합치기</span><span class="lang-en">Combining all three</span></a>
+      <a href="#recap"><span class="n">11</span><span class="lang-ko">한 장 요약</span><span class="lang-en">One-page recap</span></a>
     </nav>
   </aside>
 
@@ -51,8 +52,8 @@
       <div class="meta-row">
         <span class="lang-ko"><b>대상</b> · 양자화는 봤고, 더 깊이 가고 싶은 분</span>
         <span class="lang-en"><b>For</b> · You've seen quantization, you want to go deeper</span>
-        <span class="lang-ko"><b>구성</b> · 11개 섹션 (가지치기 + 증류)</span>
-        <span class="lang-en"><b>Format</b> · 11 sections (pruning + distillation)</span>
+        <span class="lang-ko"><b>구성</b> · 12개 섹션 (이론 + 코드 실습)</span>
+        <span class="lang-en"><b>Format</b> · 12 sections (theory + hands-on code)</span>
         <span class="lang-ko"><b>방식</b> · 논문 직접 조사 + 정리</span>
         <span class="lang-en"><b>Method</b> · Researched from papers</span>
       </div>
@@ -328,8 +329,101 @@
     </section>
 
     <!-- 09 -->
-    <section id="combine">
+    <section id="handson">
       <div class="sec-num">SECTION 09</div>
+      <h2 class="lang-ko">실습 — 코드로는 이렇게 짧습니다</h2>
+      <h2 class="lang-en">Hands-on — it's this short in code</h2>
+      <p class="lang-ko">이론은 길었지만, 막상 코드로는 몇 줄이면 시작합니다. PyTorch 기준 최소 예시로 감을 잡아봅시다.</p>
+      <p class="lang-en">The theory was long, but the code to get started is just a few lines. Here are minimal PyTorch examples to build the intuition.</p>
+
+      <h3 class="lang-ko">① 가지치기 — PyTorch 내장 API</h3>
+      <h3 class="lang-en">① Pruning — PyTorch's built-in API</h3>
+      <p class="lang-ko"><code>torch.nn.utils.prune</code>로, 한 레이어의 가중치 중 크기가 작은 30%를 0으로 만드는 게 사실상 한 줄입니다.</p>
+      <p class="lang-en">With <code>torch.nn.utils.prune</code>, zeroing the smallest-30% weights of a layer is essentially one line.</p>
+      <pre><code>import torch.nn.utils.prune as prune
+
+<span class="cm"># 1) Zero out the 30% smallest-magnitude weights of one layer</span>
+prune.l1_unstructured(model.fc, name="weight", amount=0.3)
+
+<span class="cm"># 2) Bake the zeros in permanently (drop the pruning mask)</span>
+prune.remove(model.fc, "weight")
+
+<span class="cm"># 3) Iterative: cut a little -> fine-tune -> repeat (keeps accuracy)</span>
+for step in range(5):
+    prune.l1_unstructured(model.fc, name="weight", amount=0.2)
+    train_one_epoch(model)        <span class="cm"># recover the lost accuracy</span>
+    prune.remove(model.fc, "weight")</code></pre>
+      <p class="lang-ko">
+        주의: 위 <em>비정형</em> 가지치기는 메모리만 줄지 일반 GPU에선 빨라지지 않습니다(앞의 "희소 ≠ 빠름").
+        실제 속도가 필요하면 <strong>2:4 정형 희소</strong>(NVIDIA <code>apex</code> ASP)나 <strong>구조적 가지치기</strong>를, <strong>LLM</strong>이라면
+        재학습 없는 <strong>SparseGPT·Wanda</strong> 레포에 캘리브레이션 데이터만 넣어 돌리면 됩니다.
+      </p>
+      <p class="lang-en">
+        Note: the <em>unstructured</em> pruning above only saves memory — it won't speed up a normal GPU (“sparse ≠ fast” from earlier).
+        For real speed use <strong>2:4 structured sparsity</strong> (NVIDIA <code>apex</code> ASP) or <strong>structured pruning</strong>; for an <strong>LLM</strong>,
+        grab the <strong>SparseGPT/Wanda</strong> repos and just feed a calibration set — no retraining.
+      </p>
+
+      <h3 class="lang-ko">② 지식 증류 — 학습 루프 (화이트박스)</h3>
+      <h3 class="lang-en">② Knowledge distillation — the training loop (white-box)</h3>
+      <p class="lang-ko">학생을 학습시키되, 손실에 "선생의 부드러운 분포를 따라가라"는 항을 더하면 끝입니다. 핵심은 두 갈래 손실이에요.</p>
+      <p class="lang-en">Train the student, but add a loss term that says “follow the teacher's softened distribution.” The heart is a two-part loss.</p>
+      <pre><code>import torch.nn.functional as F
+
+T, alpha = 4.0, 0.5      <span class="cm"># temperature; how much to weight the true label</span>
+teacher.eval()           <span class="cm"># teacher is frozen (never trains)</span>
+
+for x, y in loader:
+    with torch.no_grad():
+        t_logits = teacher(x)          <span class="cm"># the teacher's "opinion"</span>
+    s_logits = student(x)              <span class="cm"># the student's guess</span>
+
+    <span class="cm"># (1) learn the true label, the normal way</span>
+    ce = F.cross_entropy(s_logits, y)
+
+    <span class="cm"># (2) mimic the teacher's softened distribution = dark knowledge</span>
+    kd = F.kl_div(
+        F.log_softmax(s_logits / T, dim=-1),
+        F.softmax(t_logits / T, dim=-1),
+        reduction="batchmean",
+    ) * (T * T)                        <span class="cm"># T^2 keeps gradients scaled right</span>
+
+    loss = alpha * ce + (1 - alpha) * kd
+    loss.backward(); opt.step(); opt.zero_grad()</code></pre>
+      <p class="lang-ko">
+        줄별로: 선생은 <code>eval()</code>로 얼리고(학습 X), 매 배치마다 선생 로짓을 <code>no_grad</code>로 뽑습니다.
+        손실 ①은 평범한 정답 학습, ②는 <strong>온도 T로 부드럽게 한 두 분포의 KL</strong> — 다크 널리지를 전달하는 핵심. 둘을 <code>alpha</code>로 섞고, 역전파는 <strong>학생에게만</strong> 흐릅니다.
+      </p>
+      <p class="lang-en">
+        Line by line: freeze the teacher with <code>eval()</code> (no training) and pull its logits under <code>no_grad</code> each batch.
+        Loss ① is ordinary label learning; ② is the <strong>KL between the two distributions softened by temperature T</strong> — the channel for dark knowledge. Mix them with <code>alpha</code>; gradients flow into the <strong>student only.</strong>
+      </p>
+
+      <h3 class="lang-ko">③ 블랙박스(데이터) 증류 — 폐쇄 모델일 때</h3>
+      <h3 class="lang-en">③ Black-box (data) distillation — when the teacher is closed</h3>
+      <p class="lang-ko">선생이 로짓을 안 주는 API 모델이면? 큰 모델로 <strong>답변 데이터를 대량 생성</strong>하고, 그걸로 작은 모델을 <strong>지도 미세조정(SFT)</strong>하면 됩니다.</p>
+      <p class="lang-en">What if the teacher is an API that won't share logits? Use the big model to <strong>generate a dataset of answers</strong>, then <strong>supervised-fine-tune (SFT)</strong> the small model on it.</p>
+      <pre><code><span class="cm"># 1) Generate training data WITH the big teacher (e.g., a GPT-class API)</span>
+data = [{"q": q, "a": teacher_api(q)} for q in prompts]
+
+<span class="cm"># 2) Supervised fine-tune the small student on those (q, a) pairs</span>
+sft(student, data)   <span class="cm"># e.g., Hugging Face TRL SFTTrainer</span></code></pre>
+      <div class="box field">
+        <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">바로 쓰는 도구</span><span class="lang-en">Tools you'd actually reach for</span></div>
+        <p class="lang-ko">
+          <strong>가지치기</strong>: <code>torch.nn.utils.prune</code>(기본) · <strong>SparseGPT·Wanda</strong>(LLM 원샷) · NVIDIA <code>apex</code> ASP(2:4).
+          <strong>증류</strong>: PyTorch 직접 구현 또는 Hugging Face <code>transformers</code> · <code>TRL</code>(SFT) · <code>optimum</code>. 작게 시작해 데이터·온도(T)·alpha를 조금씩 튜닝하는 게 정석입니다.
+        </p>
+        <p class="lang-en">
+          <strong>Pruning</strong>: <code>torch.nn.utils.prune</code> (basics) · <strong>SparseGPT/Wanda</strong> (one-shot for LLMs) · NVIDIA <code>apex</code> ASP (2:4).
+          <strong>Distillation</strong>: roll your own in PyTorch, or Hugging Face <code>transformers</code> · <code>TRL</code> (SFT) · <code>optimum</code>. Start small and tune the data, temperature (T) and alpha bit by bit.
+        </p>
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section id="combine">
+      <div class="sec-num">SECTION 10</div>
       <h2 class="lang-ko">셋을 합치기 — 무엇을 언제 쓸까</h2>
       <h2 class="lang-en">Combining all three — what to use when</h2>
       <p class="lang-ko">
@@ -367,9 +461,9 @@
       </div>
     </section>
 
-    <!-- 10 -->
+    <!-- 11 -->
     <section id="recap">
-      <div class="sec-num">SECTION 10</div>
+      <div class="sec-num">SECTION 11</div>
       <h2 class="lang-ko">한 장 요약</h2>
       <h2 class="lang-en">One-page recap</h2>
       <div class="terms">

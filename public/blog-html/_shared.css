@@ -236,3 +236,11 @@
   figure.fig img { display: block; width: 100%; height: auto; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); }
   figure.fig figcaption { margin-top: 10px; font-size: 13.5px; color: var(--ink-faint); line-height: 1.55; text-align: center; }
   figure.fig figcaption .src-note { opacity: .8; }
+
+  /* code: inline + multi-line blocks */
+  code { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; }
+  pre { margin: 18px 0; padding: 16px 18px; background: #1d2129; color: #e6e8eb; border-radius: 12px; overflow-x: auto; font-size: 13px; line-height: 1.65; -webkit-overflow-scrolling: touch; }
+  pre code { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; background: none; padding: 0; border-radius: 0; color: inherit; font-size: inherit; white-space: pre; }
+  pre .cm { color: #8b94a3; }     /* comment */
+  pre .kw { color: #c3a6ff; }     /* keyword */
+  pre .st { color: #9ae6b4; }     /* string / value */

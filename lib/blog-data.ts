@@ -25,7 +25,7 @@ export const blogPosts: BlogPost[] = [
     date: "2026-06-29",
     tags: ["Model Compression", "Pruning", "Knowledge Distillation", "LLM", "On-device AI"],
     content: `A deep dive into the two model-compression levers beyond quantization. Pruning: why over-parameterization lets you cut, unstructured vs structured vs N:M (2:4) sparsity, magnitude/iterative pruning, the Lottery Ticket Hypothesis, and one-shot LLM pruning (SparseGPT, Wanda). Knowledge distillation: dark knowledge and temperature, response/feature/relation-based knowledge, DistilBERT and sequence-level KD, white-box vs black-box (data) distillation. Plus how to combine distill → prune → quantize. Use the EN / 한국어 toggle to read it in either language.`,
-    htmlSource: "/blog-html/pruning-and-distillation.html?v=1",
+    htmlSource: "/blog-html/pruning-and-distillation.html?v=2",
     bilingual: true,
   },
   {

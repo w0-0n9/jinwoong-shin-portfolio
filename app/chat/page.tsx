@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
@@ -41,8 +41,6 @@ export default function ChatPage() {
     const [pdf, setPdf] = useState<PdfViewerInfo | null>(null);
     const [lightbox, setLightbox] = useState<LightboxImage | null>(null);
 
-    const fadeTimeoutRef = useRef<number | null>(null);
-
     const handleSend = useCallback(async () => {
         if (!input.trim() || isLoading) return;
 
@@ -74,14 +72,10 @@ export default function ChatPage() {
             };
             setMessages((prev) => [...prev, aiMsg]);
 
-            // Activate relevant nodes in the graph
+            // Activate relevant nodes in the graph and keep them focused until the
+            // next question. (Previously this auto-reset to [] after 12s, which
+            // snapped the camera back to the full graph mid-read.)
             setActiveNodeIds(validatedNodeIds);
-
-            // Auto-fade after a few seconds so the next question starts clean
-            if (fadeTimeoutRef.current) window.clearTimeout(fadeTimeoutRef.current);
-            fadeTimeoutRef.current = window.setTimeout(() => {
-                setActiveNodeIds([]);
-            }, 12_000);
         } catch (err) {
             console.error("Chat send failed:", err);
             setMessages((prev) => [

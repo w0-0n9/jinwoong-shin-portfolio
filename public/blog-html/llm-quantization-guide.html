@@ -344,6 +344,17 @@
           </tbody>
         </table>
       </div>
+      <div class="box analogy">
+        <div class="tag"><span class="dot" style="background:var(--warm)"></span> <span class="lang-ko">비유 · 압축될 걸 알고 찍기</span><span class="lang-en">Analogy · shoot for the compression</span></div>
+        <p class="lang-ko">
+          <strong>PTQ</strong>는 좋은 카메라로 사진을 다 찍은 뒤 <strong>마지막에 용량을 줄이는</strong> 것 — 줄이는 순간 디테일이 살짝 뭉개집니다.
+          <strong>QAT</strong>는 처음부터 "어차피 압축될 사진"이라 여기고 <strong>압축에 강한 구도로 찍는 연습</strong>을 하는 것 — 같은 용량이라도 결과가 더 낫죠. (2장의 JPG 비유와 같은 맥락입니다.)
+        </p>
+        <p class="lang-en">
+          <strong>PTQ</strong> is shooting with a great camera and <strong>shrinking the file at the very end</strong> — detail blurs the moment you compress.
+          <strong>QAT</strong> is shooting as if you already know it'll be compressed, <strong>practicing compositions that survive compression</strong> — so the same file size looks better. (Same spirit as the JPG analogy in §2.)
+        </p>
+      </div>
       <div class="box key">
         <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">QAT의 원리 · FakeQuant</span><span class="lang-en">How QAT works · fake-quant</span></div>
         <p class="lang-ko">
@@ -356,6 +367,16 @@
           so the model <em>experiences the quantization error up front.</em> Backprop lets the weights adapt to minimize it,
           so accuracy holds up at <strong>very low bit-widths</strong> or on loss-sensitive models where PTQ breaks down — at the cost of retraining.
         </p>
+        <p class="lang-ko">
+          <strong>예시:</strong> 가중치 <code>0.732</code>는 4비트 격자에선 가장 가까운 값 <code>0.75</code>로 반올림됩니다(오차 +0.018).
+          PTQ는 학습이 다 끝난 뒤 이 반올림을 <strong>딱 한 번</strong> 적용하죠. QAT는 학습 <strong>중에도 매 스텝 이 반올림(FakeQuant)을 거치게</strong> 해서,
+          신경망이 "어차피 0.75로 갈 거면 다른 가중치로 그 오차를 메우자"고 <strong>미리 적응</strong>합니다.
+        </p>
+        <p class="lang-en">
+          <strong>Example:</strong> a weight of <code>0.732</code> rounds to the nearest 4-bit level <code>0.75</code> (error +0.018).
+          PTQ applies that rounding <strong>once</strong>, after training is done. QAT routes <strong>every training step through the same rounding (fake-quant)</strong>,
+          so the network <strong>adapts in advance</strong> — “if this is heading to 0.75 anyway, let other weights absorb the error.”
+        </p>
       </div>
       <div class="box field">
         <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">덤 · QLoRA</span><span class="lang-en">Bonus · QLoRA</span></div>
@@ -366,6 +387,14 @@
         <p class="lang-en">
           <strong>QLoRA</strong> is a different beast — fine-tuning that keeps the model <strong>frozen at 4-bit</strong> and trains only a small <strong>LoRA adapter.</strong>
           It slashes memory enough to <strong>fine-tune a large model on a single GPU.</strong> Quantization + efficient fine-tuning — for when you want to adapt a quantized model <em>to your own data.</em>
+        </p>
+        <p class="lang-ko">
+          <strong>예시:</strong> 700억 모델을 4비트로 얼리면 본체는 고정(학습 X). 거기에 전체의 <strong>1%도 안 되는 작은 LoRA 어댑터</strong>만 얹어 학습합니다.
+          그 결과, 수백 GB가 필요하던 풀 파인튜닝이 <strong>단일 GPU(24~48GB)</strong>에서 돌아가게 됩니다.
+        </p>
+        <p class="lang-en">
+          <strong>Example:</strong> freeze a 70B model at 4-bit (its body never trains), then add a tiny <strong>LoRA adapter — well under 1% of the params</strong> — and train only that.
+          Full fine-tuning that used to need hundreds of GB now fits on a <strong>single GPU (24–48 GB).</strong>
         </p>
       </div>
       <div class="box key">

@@ -42,9 +42,16 @@
   /* embedded in the site reader: the parent page supplies the TOC + progress */
   html[data-embed] #progress { display: none; }
   html[data-embed] aside { display: none; }
-  html[data-embed] .wrap { grid-template-columns: 1fr; }
-  html[data-embed] main { padding: 0; }
+  /* minmax(0,1fr) + min-width:0 let the column shrink below content min-size so
+     wide code blocks / tables scroll (overflow-x) instead of overflowing on mobile */
+  html[data-embed] .wrap { grid-template-columns: minmax(0, 1fr); }
+  html[data-embed] main { padding: 0; min-width: 0; }
+  html[data-embed] .col { min-width: 0; }
   html[data-embed] header.hero { padding-top: 8px; }
+  /* never let media/code/tables force horizontal overflow inside the reader */
+  html[data-embed] img,
+  html[data-embed] table { max-width: 100%; }
+  html[data-embed] pre { max-width: 100%; }
 
   /* reading progress */
   #progress {

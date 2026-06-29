@@ -25,7 +25,7 @@ export const blogPosts: BlogPost[] = [
     date: "2026-06-29",
     tags: ["GB10", "Grace Blackwell", "Edge AI", "On-prem LLM", "CUDA"],
     content: `A jargon-decoded breakdown and industrial use-case analysis of the NVIDIA GB10 Grace Blackwell superchip (Dell Pro Max with GB10 / DGX Spark): unified coherent memory, FP4/NVFP4, the sprinter-vs-decathlete trade-off, three real demos (local 120B LLM + RAG, an RL agent, on-prem driveway video), scaling out with NCCL, and where it actually fits on real projects (data residency, edge multimodal, PoC→production portability). Use the EN / 한국어 toggle to read it in either language.`,
-    htmlSource: "/blog-html/dell-gb10-edge-ai.html?v=1",
+    htmlSource: "/blog-html/dell-gb10-edge-ai.html?v=2",
     bilingual: true,
   },
   {

@@ -24,10 +24,11 @@
       <a href="#fp4"><span class="n">04</span><span class="lang-ko">FP4의 마법</span><span class="lang-en">The FP4 trick</span></a>
       <a href="#decathlete"><span class="n">05</span><span class="lang-ko">스프린터 vs 십종경기</span><span class="lang-en">Sprinter vs decathlete</span></a>
       <a href="#jobs"><span class="n">06</span><span class="lang-ko">세 가지 실증</span><span class="lang-en">Three real jobs</span></a>
-      <a href="#scaleout"><span class="n">07</span><span class="lang-ko">스케일아웃</span><span class="lang-en">Scaling out</span></a>
-      <a href="#stack"><span class="n">08</span><span class="lang-ko">소프트웨어 스택</span><span class="lang-en">The software stack</span></a>
-      <a href="#industry"><span class="n">09</span><span class="lang-ko">산업 현장 활용 분석</span><span class="lang-en">Industrial use — analysis</span></a>
-      <a href="#recap"><span class="n">10</span><span class="lang-ko">한 장 요약</span><span class="lang-en">One-page recap</span></a>
+      <a href="#benchmarks"><span class="n">07</span><span class="lang-ko">실측 벤치마크</span><span class="lang-en">Hands-on benchmarks</span></a>
+      <a href="#scaleout"><span class="n">08</span><span class="lang-ko">스케일아웃</span><span class="lang-en">Scaling out</span></a>
+      <a href="#stack"><span class="n">09</span><span class="lang-ko">소프트웨어 스택</span><span class="lang-en">The software stack</span></a>
+      <a href="#industry"><span class="n">10</span><span class="lang-ko">산업 현장 활용 분석</span><span class="lang-en">Industrial use — analysis</span></a>
+      <a href="#recap"><span class="n">11</span><span class="lang-ko">한 장 요약</span><span class="lang-en">One-page recap</span></a>
     </nav>
   </aside>
 
@@ -53,8 +54,8 @@
       <div class="meta-row">
         <span class="lang-ko"><b>대상</b> · 온프렘/엣지 AI를 고민하는 엔지니어·의사결정자</span>
         <span class="lang-en"><b>For</b> · Engineers & decision-makers weighing on-prem / edge AI</span>
-        <span class="lang-ko"><b>구성</b> · 11개 섹션 (용어 풀이 + 활용 분석)</span>
-        <span class="lang-en"><b>Format</b> · 11 sections (jargon explained + use-case analysis)</span>
+        <span class="lang-ko"><b>구성</b> · 12개 섹션 (용어 풀이 + 실측 + 활용 분석)</span>
+        <span class="lang-en"><b>Format</b> · 12 sections (jargon + hands-on benchmarks + analysis)</span>
         <span class="lang-ko"><b>방식</b> · NVIDIA/Dell 공식 스펙 조사 + 분석</span>
         <span class="lang-en"><b>Method</b> · Researched from NVIDIA/Dell specs + analysis</span>
       </div>
@@ -336,8 +337,117 @@
     </section>
 
     <!-- 07 -->
-    <section id="scaleout">
+    <section id="benchmarks">
       <div class="sec-num">SECTION 07</div>
+      <h2 class="lang-ko">실측 벤치마크 — 직접 돌려본 숫자</h2>
+      <h2 class="lang-en">Hands-on benchmarks — the numbers from actually running it</h2>
+      <p class="lang-ko">
+        개념은 그렇다 치고, 실제로 돌리면 숫자가 어떻게 나올까요? 한 박스에서 직접 측정한 결과를 정리합니다.
+        (수치는 핸즈온 테스트 기준의 근사치예요.)
+      </p>
+      <p class="lang-en">
+        Concepts are nice — but what do the numbers look like when you actually run it? Here's what a single box measured in hands-on testing
+        (figures are approximate).
+      </p>
+
+      <h3 class="lang-ko">① 코딩 모델 3종 — 토큰 생성 속도</h3>
+      <h3 class="lang-en">① Three coding models — token throughput</h3>
+      <div class="cmp">
+        <table>
+          <thead><tr>
+            <th><span class="lang-ko">모델</span><span class="lang-en">Model</span></th>
+            <th><span class="lang-ko">토큰/초</span><span class="lang-en">Tokens/s</span></th>
+            <th><span class="lang-ko">메모리</span><span class="lang-en">Memory</span></th>
+            <th><span class="lang-ko">한 줄 평</span><span class="lang-en">Verdict</span></th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <th>Qwen3 Coder 30B</th>
+              <td class="dense"><strong>~57</strong></td>
+              <td><span class="lang-ko">~48GB</span><span class="lang-en">~48 GB</span></td>
+              <td><span class="lang-ko">가장 빠름 · 바이브 코딩 1순위 추천</span><span class="lang-en">Fastest · top pick for vibe coding</span></td>
+            </tr>
+            <tr>
+              <th>GPT-OSS 120B</th>
+              <td class="dense">~35</td>
+              <td><span class="lang-ko">~65GB</span><span class="lang-en">~65 GB</span></td>
+              <td><span class="lang-ko">크기(1,200억) 대비 양호 · 충분히 쓸 만함</span><span class="lang-en">Solid for a 120B · perfectly usable</span></td>
+            </tr>
+            <tr>
+              <th><span class="lang-ko">40B MoE 코더 (화제작)</span><span class="lang-en">A 40B MoE coder (much-hyped)</span></th>
+              <td class="dense">~7</td>
+              <td><span class="lang-ko">40GB+</span><span class="lang-en">40 GB+</span></td>
+              <td><span class="lang-ko">벤치 점수는 최상위지만 실사용은 느림</span><span class="lang-en">Top benchmark scores, but slow in practice</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="box key">
+        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">두 가지 포인트</span><span class="lang-en">Two takeaways</span></div>
+        <p class="lang-ko">
+          <strong>1.</strong> 소비자용 GPU는 최상급 5090도 VRAM이 32GB가 한계입니다. GB10은 <strong>65GB도 넉넉히</strong> 먹어서 1,200억 모델이 통째로 돕니다 — 통합 메모리의 힘.<br>
+          <strong>2.</strong> 벤치마크 점수 ≠ 체감 속도. 실제 바이브 코딩(로컬·무료·인터넷 없이 코드 생성)엔 <strong>속도와 결과의 균형</strong>이 좋은 Qwen3 Coder 30B가 가장 실용적이었습니다.
+        </p>
+        <p class="lang-en">
+          <strong>1.</strong> Even a top consumer GPU (RTX 5090) caps at 32 GB of VRAM. GB10 happily uses <strong>65 GB</strong>, so a 120B model runs whole — the power of unified memory.<br>
+          <strong>2.</strong> Benchmark score ≠ felt speed. For real vibe coding (generating code locally, free, no internet), the <strong>best balance of speed and quality</strong> was Qwen3 Coder 30B.
+        </p>
+      </div>
+
+      <h3 class="lang-ko">② 이미지·영상 생성 — 원본 모델이 통째로 돈다</h3>
+      <h3 class="lang-en">② Image & video generation — the full models fit</h3>
+      <div class="cmp">
+        <table>
+          <thead><tr>
+            <th><span class="lang-ko">워크로드</span><span class="lang-en">Workload</span></th>
+            <th><span class="lang-ko">모델</span><span class="lang-en">Model</span></th>
+            <th><span class="lang-ko">시간</span><span class="lang-en">Time</span></th>
+            <th><span class="lang-ko">메모리 · 전력</span><span class="lang-en">Memory · power</span></th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <th><span class="lang-ko">이미지</span><span class="lang-en">Image</span></th>
+              <td><span class="lang-ko">Qwen-Image (원본, 1328²)</span><span class="lang-en">Qwen-Image (full, 1328²)</span></td>
+              <td class="dense"><span class="lang-ko">~22분</span><span class="lang-en">~22 min</span></td>
+              <td><span class="lang-ko">~37GB · GPU 96% · ~87W · ~83°C</span><span class="lang-en">~37 GB · GPU 96% · ~87 W · ~83°C</span></td>
+            </tr>
+            <tr>
+              <th><span class="lang-ko">영상 (텍스트→영상)</span><span class="lang-en">Video (text→video)</span></th>
+              <td><span class="lang-ko">LTX-2 19B (오디오 동시)</span><span class="lang-en">LTX-2 19B (with audio)</span></td>
+              <td class="dense"><span class="lang-ko">~10분</span><span class="lang-en">~10 min</span></td>
+              <td><span class="lang-ko">~41GB · ~90W · ~77°C</span><span class="lang-en">~41 GB · ~90 W · ~77°C</span></td>
+            </tr>
+            <tr>
+              <th><span class="lang-ko">영상 (이미지→영상)</span><span class="lang-en">Video (image→video)</span></th>
+              <td>LTX-2 19B</td>
+              <td class="dense"><span class="lang-ko">~6분</span><span class="lang-en">~6 min</span></td>
+              <td><span class="lang-ko">상동</span><span class="lang-en">similar</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="lang-ko">
+        포인트는 속도가 아니라 <strong>"원본(양자화 안 한) 모델이 통째로 돌아간다"</strong>는 점입니다. 소비자용 GPU라면 VRAM 부족으로 양자화하거나 포기해야 할 최신 이미지·영상 모델이, 128GB 통합 메모리 덕에 그대로 실행됩니다.
+      </p>
+      <p class="lang-en">
+        The point isn't speed — it's that <strong>the full (un-quantized) models run whole.</strong> The latest image/video models that a consumer GPU would have to quantize or give up on (for lack of VRAM) just run, thanks to the 128 GB unified memory.
+      </p>
+      <div class="box field">
+        <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">전력 · 온도 · 소음</span><span class="lang-en">Power · heat · noise</span></div>
+        <p class="lang-ko">
+          유휴 시 <strong>10W 미만</strong>, 빡세게 돌 때 <strong>85~90W</strong>, 온도 약 <strong>83°C</strong>, 그리고 <strong>조용하고 시원합니다</strong>(쿨링 설계가 좋음).
+          비교하자면 데이터센터 H200은 한 노드에 2,800W급 6개가 달리죠. 책상 위에서 벽 콘센트로 끝나는 전력 예산이라 "상시 가동" 부담이 거의 없습니다.
+        </p>
+        <p class="lang-en">
+          Idle <strong>under 10 W</strong>, busy <strong>85–90 W</strong>, ~<strong>83°C</strong>, and it stays <strong>quiet and cool</strong> (good cooling design).
+          For contrast, a data-center H200 node carries six ~2,800 W parts. This is a wall-socket power budget on your desk — almost no “always-on” guilt.
+        </p>
+      </div>
+    </section>
+
+    <!-- 08 -->
+    <section id="scaleout">
+      <div class="sec-num">SECTION 08</div>
       <h2 class="lang-ko">스케일아웃 — 두 대로 베이비 클러스터</h2>
       <h2 class="lang-en">Scaling out — a baby cluster from two boxes</h2>
       <p class="lang-ko">
@@ -361,11 +471,22 @@
           Not a “two Thunderbolt cables” hack — a real fabric. Put the big decoder on one node and pin the embedder/retriever on the other (a side-car) to keep memory pressure flat as you add tools.
         </p>
       </div>
+      <div class="box field">
+        <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">실측 · 두 대로 405B</span><span class="lang-en">Measured · 405B on two boxes</span></div>
+        <p class="lang-ko">
+          실제로 두 박스를 QSFP로 묶어 <strong>405B(4,050억 파라미터) 모델</strong>을 로컬에서 구동했습니다. 모델 로딩만으로도 오래 걸리고 두 대의 메모리가 꽉 차며,
+          생성 속도는 <strong>약 1.4 토큰/초</strong> — 빠르진 않습니다. 하지만 인터넷 없이, 책상 위에서 4,050억 파라미터가 돈다는 것 자체가 핵심입니다(연구·검증용으로 충분). 듀얼 구성은 세팅이 까다로우니 가이드를 따라가는 걸 권합니다.
+        </p>
+        <p class="lang-en">
+          In practice, two boxes wired over QSFP ran a <strong>405B-parameter model</strong> locally. Loading alone takes a while and fills both boxes' memory,
+          and generation lands at <strong>~1.4 tokens/s</strong> — not fast. But the point is that 405B runs at all, on your desk, with no internet (plenty for research and validation). The dual setup is fiddly, so follow a setup guide.
+        </p>
+      </div>
     </section>
 
-    <!-- 08 -->
+    <!-- 09 -->
     <section id="stack">
-      <div class="sec-num">SECTION 08</div>
+      <div class="sec-num">SECTION 09</div>
       <h2 class="lang-ko">소프트웨어 스택 — 마찰 없는 경험</h2>
       <h2 class="lang-en">The software stack — frictionless</h2>
       <p class="lang-ko">
@@ -391,9 +512,9 @@
       </div>
     </section>
 
-    <!-- 09 -->
+    <!-- 10 -->
     <section id="industry">
-      <div class="sec-num">SECTION 09</div>
+      <div class="sec-num">SECTION 10</div>
       <h2 class="lang-ko">산업 현장 활용 분석 — 어디에 진짜 쓸까</h2>
       <h2 class="lang-en">Industrial use — where it really fits (my analysis)</h2>
       <p class="lang-ko">
@@ -464,12 +585,14 @@
       <div class="box field">
         <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">현장</span><span class="lang-en">Field</span></div>
         <p class="lang-ko">
-          ~230W는 1년 내내 켜둬도 전기료가 '수백' 단위지 '네 자리' 후회가 아닙니다. 본체 ~$3–4K. 클라우드 GPU 시간당 과금에 비하면,
-          상시 추론·학습 워크로드를 <strong>고정비로</strong> 돌릴 때 매력적이죠. 결론: 정말 필요할 때만 클라우드로 가고, 기본은 로컬.
+          요즘은 고성능 GPU가 <strong>돈이 있어도 못 구하는</strong> 품귀라, 보통 클라우드 GPU를 빌립니다. 그런데 성능이 보장되는 인스턴스를 24시간 풀가동하면
+          <strong>월 1,200만~5,600만 원</strong> 수준이 나옵니다(토큰·시간 기반 과금). 반면 GB10은 <strong>한 번 투자(~$3–4K)</strong> 후 반복 실험에 <strong>추가 과금이 없습니다.</strong>
+          전력도 ~230W라 1년 내내 켜둬도 전기료가 '수백' 단위지 '네 자리' 후회가 아니고요. 결론: 정말 필요할 때만 클라우드로 가고, 기본은 로컬 — 특히 수천 번 반복하는 초기 프로토타이핑에 강합니다.
         </p>
         <p class="lang-en">
-          ~230 W means leaving it on all year is a “few hundred” bill, not four-figure regret. ~$3–4K up front. Against hourly cloud-GPU billing,
-          it's compelling for always-on inference/training as a <strong>fixed cost</strong>. The takeaway: go cloud only when you truly must; default to local.
+          High-end GPUs are in such short supply that <strong>money alone often can't buy one</strong>, so people rent cloud GPUs. But a guaranteed-performance instance run 24/7
+          can cost <strong>roughly ₩12M–56M (≈ $9K–42K) per month</strong> (token/hour billing). GB10 is a <strong>one-time buy (~$3–4K)</strong> with <strong>no extra charge for repeated experiments.</strong>
+          At ~230 W, leaving it on all year is a “few hundred” bill, not four-figure regret. The takeaway: go cloud only when you truly must; default to local — especially for early prototyping that iterates thousands of times.
         </p>
       </div>
 
@@ -490,9 +613,9 @@
       </div>
     </section>
 
-    <!-- 10 -->
+    <!-- 11 -->
     <section id="recap">
-      <div class="sec-num">SECTION 10</div>
+      <div class="sec-num">SECTION 11</div>
       <h2 class="lang-ko">한 장 요약 — 용어 + 결론</h2>
       <h2 class="lang-en">One-page recap — terms + takeaway</h2>
       <div class="terms">

@@ -269,6 +269,14 @@ export const nodes: GraphNode[] = [
             "Blog writeup. Study notes and decision patterns for the AWS Certified AI Practitioner exam: SageMaker tools, inference options, Bedrock customization/throughput, RAG Knowledge Bases, prompts, generation parameters, evaluation metrics and core ML concepts. English only.",
         meta: { url: "/blog/aws-ai-practitioner", date: "Jan 2026", languages: "EN", kind: "writeup" },
     },
+    {
+        id: "article-gb10",
+        type: "article",
+        label: "A Data Center on Your Desk: Dell Pro Max with GB10 for On-Prem & Edge AI",
+        description:
+            "Blog writeup / analysis. Decodes the NVIDIA GB10 Grace Blackwell superchip (Dell Pro Max with GB10 / DGX Spark) in plain language — unified coherent memory, NVLink-C2C, FP4/NVFP4, the CUDA stack, sprinter-vs-decathlete trade-off, NCCL scale-out — then analyzes real industrial uses: on-prem LLM/RAG with data residency, edge multimodal vision, PoC→production portability. Bilingual (English / Korean).",
+        meta: { url: "/blog/dell-gb10-edge-ai", date: "Jun 2026", languages: "EN / KO", kind: "writeup" },
+    },
 
     // Skills — Languages
     { id: "skill-python", type: "skill", label: "Python" },
@@ -402,6 +410,10 @@ export const edges: GraphEdge[] = [
     { source: "article-quantization", target: "skill-mlx", relation: "covers" },
     { source: "article-aws-cert", target: "cert-aws-ai", relation: "covers" },
     { source: "article-aws-cert", target: "skill-model-eval", relation: "covers" },
+    { source: "jinwoong", target: "article-gb10", relation: "wrote" },
+    { source: "article-gb10", target: "skill-on-prem-llm", relation: "covers" },
+    { source: "article-gb10", target: "skill-multi-agent", relation: "covers" },
+    { source: "article-gb10", target: "skill-rag", relation: "covers" },
 
     // Project: Return Reason Analysis → skills
     { source: "proj-return-analysis", target: "skill-python", relation: "uses" },

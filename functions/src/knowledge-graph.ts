@@ -4,7 +4,7 @@
  * Run `npm run sync:graph` (or just `npm run build` / `firebase deploy`)
  * to regenerate this file. Any manual edits here will be overwritten.
  *
- * Last generated: 2026-06-29T13:54:39.116Z
+ * Last generated: 2026-06-29T14:57:52.150Z
  */
 
 export type NodeType =
@@ -288,6 +288,18 @@ export const nodes: GraphNode[] = [
             "url": "/blog/aws-ai-practitioner",
             "date": "Jan 2026",
             "languages": "EN",
+            "kind": "writeup"
+        }
+    },
+    {
+        "id": "article-gb10",
+        "type": "article",
+        "label": "A Data Center on Your Desk: Dell Pro Max with GB10 for On-Prem & Edge AI",
+        "description": "Blog writeup / analysis. Decodes the NVIDIA GB10 Grace Blackwell superchip (Dell Pro Max with GB10 / DGX Spark) in plain language — unified coherent memory, NVLink-C2C, FP4/NVFP4, the CUDA stack, sprinter-vs-decathlete trade-off, NCCL scale-out — then analyzes real industrial uses: on-prem LLM/RAG with data residency, edge multimodal vision, PoC→production portability. Bilingual (English / Korean).",
+        "meta": {
+            "url": "/blog/dell-gb10-edge-ai",
+            "date": "Jun 2026",
+            "languages": "EN / KO",
             "kind": "writeup"
         }
     },
@@ -681,6 +693,26 @@ export const edges: GraphEdge[] = [
     {
         "source": "article-aws-cert",
         "target": "skill-model-eval",
+        "relation": "covers"
+    },
+    {
+        "source": "jinwoong",
+        "target": "article-gb10",
+        "relation": "wrote"
+    },
+    {
+        "source": "article-gb10",
+        "target": "skill-on-prem-llm",
+        "relation": "covers"
+    },
+    {
+        "source": "article-gb10",
+        "target": "skill-multi-agent",
+        "relation": "covers"
+    },
+    {
+        "source": "article-gb10",
+        "target": "skill-rag",
         "relation": "covers"
     },
     {

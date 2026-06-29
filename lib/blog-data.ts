@@ -19,6 +19,16 @@ export interface BlogPost {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "dell-gb10-edge-ai",
+    title: "A Data Center on Your Desk: Dell Pro Max with GB10 for On-Prem & Edge AI",
+    description: "What NVIDIA's GB10 Grace Blackwell superchip (Dell Pro Max with GB10 / DGX Spark) really is — unified memory, FP4, the CUDA stack — explained in plain language, then an analysis of how to put it to work on real industrial projects. Readable in English and Korean.",
+    date: "2026-06-29",
+    tags: ["GB10", "Grace Blackwell", "Edge AI", "On-prem LLM", "CUDA"],
+    content: `A jargon-decoded breakdown and industrial use-case analysis of the NVIDIA GB10 Grace Blackwell superchip (Dell Pro Max with GB10 / DGX Spark): unified coherent memory, FP4/NVFP4, the sprinter-vs-decathlete trade-off, three real demos (local 120B LLM + RAG, an RL agent, on-prem driveway video), scaling out with NCCL, and where it actually fits on real projects (data residency, edge multimodal, PoC→production portability). Use the EN / 한국어 toggle to read it in either language.`,
+    htmlSource: "/blog-html/dell-gb10-edge-ai.html?v=1",
+    bilingual: true,
+  },
+  {
     slug: "llm-quantization-guide",
     title: "Run a 70B Model on Your Laptop: The Quantization Playbook",
     description: "How quantization shrinks giant LLMs to fit on a laptop — 8-bit vs 4-bit, GPTQ vs AWQ vs GGUF, plus pruning and knowledge distillation, with a hardware-to-tool cheat sheet. Readable in English and Korean.",

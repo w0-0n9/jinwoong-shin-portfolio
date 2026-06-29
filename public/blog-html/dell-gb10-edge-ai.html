@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ko" data-lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>A Data Center on Your Desk · Dell Pro Max with GB10 for On-Prem & Edge AI</title>
+<meta name="description" content="What NVIDIA's GB10 Grace Blackwell superchip (Dell Pro Max with GB10 / DGX Spark) really is — unified memory, FP4, the CUDA stack — explained in plain language, then an analysis of how to put it to work on real industrial projects." />
+<script>try{var l=localStorage.getItem('blog-lang');document.documentElement.setAttribute('data-lang',(l==='ko'||l==='en')?l:'en');}catch(e){document.documentElement.setAttribute('data-lang','en');}</script>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/blog-html/_shared.css?v=1" />
+</head>
+<body>
+<div id="progress"></div>
+
+<div class="wrap">
+  <aside>
+    <div class="toc-label"><span class="lang-ko">목차</span><span class="lang-en">Contents</span></div>
+    <nav class="toc" id="toc">
+      <a href="#intro"><span class="n">00</span><span class="lang-ko">들어가며</span><span class="lang-en">Intro</span></a>
+      <a href="#what"><span class="n">01</span><span class="lang-ko">GB10이 뭔가</span><span class="lang-en">What GB10 is</span></a>
+      <a href="#spec"><span class="n">02</span><span class="lang-ko">스펙 한눈에</span><span class="lang-en">Specs at a glance</span></a>
+      <a href="#memory"><span class="n">03</span><span class="lang-ko">통합 메모리</span><span class="lang-en">Unified memory</span></a>
+      <a href="#fp4"><span class="n">04</span><span class="lang-ko">FP4의 마법</span><span class="lang-en">The FP4 trick</span></a>
+      <a href="#decathlete"><span class="n">05</span><span class="lang-ko">스프린터 vs 십종경기</span><span class="lang-en">Sprinter vs decathlete</span></a>
+      <a href="#jobs"><span class="n">06</span><span class="lang-ko">세 가지 실증</span><span class="lang-en">Three real jobs</span></a>
+      <a href="#scaleout"><span class="n">07</span><span class="lang-ko">스케일아웃</span><span class="lang-en">Scaling out</span></a>
+      <a href="#stack"><span class="n">08</span><span class="lang-ko">소프트웨어 스택</span><span class="lang-en">The software stack</span></a>
+      <a href="#industry"><span class="n">09</span><span class="lang-ko">산업 현장 활용 분석</span><span class="lang-en">Industrial use — analysis</span></a>
+      <a href="#recap"><span class="n">10</span><span class="lang-ko">한 장 요약</span><span class="lang-en">One-page recap</span></a>
+    </nav>
+  </aside>
+
+  <main>
+  <div class="col">
+
+    <header class="hero" id="intro">
+      <span class="kicker"><span class="lang-ko">엣지 AI · GB10 분석</span><span class="lang-en">Edge AI · a GB10 analysis</span></span>
+      <h1 class="lang-ko">데이터센터를<br><span class="hl">책상 위로</span></h1>
+      <h1 class="lang-en">A data center,<br><span class="hl">on your desk</span></h1>
+      <p class="lede lang-ko">
+        손바닥만 한 상자 하나가 1,200억 파라미터 어시스턴트를 메모리에 상주시킨 채, 강화학습 에이전트를 훈련하고,
+        집 앞 CCTV를 클라우드로 보내지 않고 분석합니다. NVIDIA의 <em>GB10 그레이스 블랙웰 슈퍼칩</em>
+        — Dell <strong>Pro Max with GB10</strong>(= DGX Spark 계열) — 이 무엇인지 용어부터 차근차근 풀고,
+        제가 실제 <strong>산업 프로젝트</strong>에 어떻게 쓸 수 있을지 분석합니다.
+      </p>
+      <p class="lede lang-en">
+        A box that fits in your palm keeps a 120-billion-parameter assistant resident in memory, trains a reinforcement-learning
+        agent, and analyzes a driveway camera without shipping a single frame to the cloud. This is what NVIDIA's
+        <em>GB10 Grace Blackwell superchip</em> — Dell's <strong>Pro Max with GB10</strong> (the DGX Spark family) — actually is,
+        explained jargon and all, plus my analysis of how it earns its place on real <strong>industrial projects</strong>.
+      </p>
+      <div class="meta-row">
+        <span class="lang-ko"><b>대상</b> · 온프렘/엣지 AI를 고민하는 엔지니어·의사결정자</span>
+        <span class="lang-en"><b>For</b> · Engineers & decision-makers weighing on-prem / edge AI</span>
+        <span class="lang-ko"><b>구성</b> · 11개 섹션 (용어 풀이 + 활용 분석)</span>
+        <span class="lang-en"><b>Format</b> · 11 sections (jargon explained + use-case analysis)</span>
+        <span class="lang-ko"><b>방식</b> · NVIDIA/Dell 공식 스펙 조사 + 분석</span>
+        <span class="lang-en"><b>Method</b> · Researched from NVIDIA/Dell specs + analysis</span>
+      </div>
+    </header>
+
+    <div class="hook">
+      <p class="big lang-ko">"로컬에서 이걸 할 수 있을까?"가 아니라</p>
+      <p class="big lang-en">Not “can I do this locally?” but</p>
+      <p class="lang-ko">"<span class="accent">굳이 다른 데서 할 이유가 있나?</span>"로 질문이 바뀌는 순간이 있습니다.
+      이 글의 목표는 두 가지예요 — (1) 어려운 하드웨어 용어를 <strong>비유로 쉽게</strong> 풀고,
+      (2) 그걸 토대로 <strong>실제 산업 현장에서의 쓸모</strong>를 냉정하게 따져보기. 모두를 위한 장비는 아니니,
+      당신에게 맞는지도 같이 가려봅니다.</p>
+      <p class="lang-en">“<span class="accent">why would I do it anywhere else?</span>” There's a point where the question flips like that.
+      This piece has two goals — (1) explain the hard hardware jargon with <strong>plain-language analogies</strong>, and
+      (2) use that to soberly judge its <strong>value on real industrial work</strong>. It isn't for everyone, so we'll also figure
+      out whether it's for you.</p>
+    </div>
+
+    <!-- 01 -->
+    <section id="what">
+      <div class="sec-num">SECTION 01</div>
+      <h2 class="lang-ko">GB10이 대체 뭔가 — 한 칩에 들어간 원룸</h2>
+      <h2 class="lang-en">What GB10 actually is — a studio apartment on one chip</h2>
+      <p class="lang-ko">
+        <strong>GB10 그레이스 블랙웰 슈퍼칩</strong>은 NVIDIA가 만든 단일 칩으로, 두 종류의 프로세서를 한 몸에 붙였습니다.
+        <span class="em">블랙웰(Blackwell)</span>급 GPU와 <span class="em">그레이스(Grace)</span>급 ARM CPU를
+        <strong>NVLink-C2C</strong>(칩과 칩을 직결하는 초고속 통로)로 묶고, 둘이 <strong>하나의 메모리 풀(128GB)</strong>을 공유합니다.
+        Dell은 이걸 담아 <strong>Pro Max with GB10</strong>이라는 데스크용 박스로 출시했고, NVIDIA의 <strong>DGX Spark</strong>와 사실상 같은 설계입니다.
+      </p>
+      <p class="lang-en">
+        The <strong>GB10 Grace Blackwell superchip</strong> is a single NVIDIA chip that fuses two kinds of processor into one body:
+        a <span class="em">Blackwell</span>-class GPU and a <span class="em">Grace</span>-class Arm CPU, joined by
+        <strong>NVLink-C2C</strong> (a chip-to-chip express lane) and sharing <strong>one 128 GB pool of memory</strong>.
+        Dell ships it as the desk-side <strong>Pro Max with GB10</strong>, essentially the same design as NVIDIA's <strong>DGX Spark</strong>.
+      </p>
+      <div class="box analogy">
+        <div class="tag"><span class="dot" style="background:var(--warm)"></span> <span class="lang-ko">비유 · 원룸 vs 따로 사는 부부</span><span class="lang-en">Analogy · a studio vs a long-distance couple</span></div>
+        <p class="lang-ko">
+          보통 PC는 CPU와 GPU가 <strong>따로 사는 부부</strong> 같습니다. 각자 자기 메모리(RAM / VRAM)를 갖고,
+          데이터를 주고받을 때마다 <strong>PCIe 버스</strong>라는 택배로 짐을 부칩니다 — 느리고 번거롭죠.
+          GB10은 둘이 <strong>같은 원룸(통합 메모리)</strong>에 사는 격이에요. 같은 데이터를 양쪽이 곧바로 보니, "이 텐서가 지금 CPU 쪽이야 GPU 쪽이야?"를 고민할 필요가 없습니다.
+        </p>
+        <p class="lang-en">
+          In a normal PC, the CPU and GPU are like a <strong>long-distance couple</strong>: each keeps its own memory (RAM vs VRAM)
+          and ships data back and forth by courier — the <strong>PCIe bus</strong> — which is slow and fiddly.
+          GB10 is more like the two of them sharing <strong>one studio apartment</strong> (unified memory). Both see the same data directly,
+          so you never have to ask “is this tensor on the CPU side or the GPU side right now?”
+        </p>
+      </div>
+    </section>
+
+    <!-- 02 -->
+    <section id="spec">
+      <div class="sec-num">SECTION 02</div>
+      <h2 class="lang-ko">스펙 한눈에 (그리고 무슨 뜻인지)</h2>
+      <h2 class="lang-en">Specs at a glance (and what they mean)</h2>
+      <div class="cmp">
+        <table>
+          <thead><tr>
+            <th><span class="lang-ko">구성</span><span class="lang-en">Part</span></th>
+            <th><span class="lang-ko">사양 (공식 발표 기준)</span><span class="lang-en">Spec (as announced)</span></th>
+            <th><span class="lang-ko">쉽게 말하면</span><span class="lang-en">In plain terms</span></th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <th>CPU</th>
+              <td class="dense"><span class="lang-ko">20코어 ARM (Cortex-X925 10 + A725 10)</span><span class="lang-en">20-core Arm (10× Cortex-X925 + 10× A725)</span></td>
+              <td><span class="lang-ko">힘센 코어 10 + 알뜰 코어 10 (빅·리틀)</span><span class="lang-en">10 strong cores + 10 efficient cores (big.LITTLE)</span></td>
+            </tr>
+            <tr>
+              <th>GPU</th>
+              <td class="dense"><span class="lang-ko">Blackwell · CUDA 코어 6,144 · 최신 텐서/RT 코어 · ~2.4GHz</span><span class="lang-en">Blackwell · 6,144 CUDA cores · latest Tensor/RT cores · ~2.4 GHz</span></td>
+              <td><span class="lang-ko">AI 연산 담당 엔진</span><span class="lang-en">the AI compute engine</span></td>
+            </tr>
+            <tr>
+              <th><span class="lang-ko">AI 성능</span><span class="lang-en">AI perf</span></th>
+              <td class="dense"><span class="lang-ko">~1 페타플롭 (FP4 기준)</span><span class="lang-en">~1 petaFLOP (at FP4)</span></td>
+              <td><span class="lang-ko">초저정밀 연산으로 잰 최대치</span><span class="lang-en">peak at ultra-low precision</span></td>
+            </tr>
+            <tr>
+              <th><span class="lang-ko">메모리</span><span class="lang-en">Memory</span></th>
+              <td class="dense"><span class="lang-ko">128GB LPDDR5x 통합 · 대역폭 ~273GB/s</span><span class="lang-en">128 GB LPDDR5x unified · ~273 GB/s bandwidth</span></td>
+              <td><span class="lang-ko">CPU·GPU 공용. 용량은 크나 속도는 데스크탑 VRAM보다 느림</span><span class="lang-en">shared by both; big capacity, slower than desktop VRAM</span></td>
+            </tr>
+            <tr>
+              <th><span class="lang-ko">네트워크</span><span class="lang-en">Network</span></th>
+              <td class="dense"><span class="lang-ko">ConnectX-7 듀얼 QSFP (2×100GbE) + 10GbE</span><span class="lang-en">ConnectX-7 dual QSFP (2×100GbE) + 10GbE</span></td>
+              <td><span class="lang-ko">두 대를 묶어 미니 클러스터 가능</span><span class="lang-en">lets two boxes form a mini-cluster</span></td>
+            </tr>
+            <tr>
+              <th><span class="lang-ko">저장/전력</span><span class="lang-en">Storage / power</span></th>
+              <td class="dense"><span class="lang-ko">M.2 NVMe 최대 4TB · ~230W · DGX OS(우분투)</span><span class="lang-en">M.2 NVMe up to 4TB · ~230 W · DGX OS (Ubuntu)</span></td>
+              <td><span class="lang-ko">벽 콘센트로 충분, 가격 약 $3–4K</span><span class="lang-en">runs off a wall socket; ~$3–4K</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="lang-ko">
+        핵심만 기억하세요. <strong>메모리가 128GB로 크다</strong>(큰 모델이 통째로 들어감), 그런데 <strong>대역폭은 데스크탑 GPU보다 느리다</strong>(원본 속도 경쟁에선 불리),
+        대신 <strong>FP4라는 초저정밀 연산</strong>과 <strong>통합 메모리</strong>로 그 약점을 메운다. 이 세 줄이 GB10 성격의 전부입니다.
+      </p>
+      <p class="lang-en">
+        Remember just this: <strong>memory is large at 128 GB</strong> (a big model fits whole), but <strong>bandwidth is slower than a desktop GPU's</strong>
+        (so it loses raw-speed drag races), and it makes up for that with <strong>FP4 ultra-low-precision math</strong> and <strong>unified memory</strong>.
+        Those three lines are the entire personality of the GB10.
+      </p>
+    </section>
+
+    <!-- 03 -->
+    <section id="memory">
+      <div class="sec-num">SECTION 03</div>
+      <h2 class="lang-ko">통합 코히런트 메모리 — 마찰의 제거</h2>
+      <h2 class="lang-en">Unified coherent memory — removing friction</h2>
+      <p class="lang-ko">
+        <strong>통합 메모리(unified memory)</strong>는 CPU와 GPU가 같은 128GB를 공유한다는 뜻이고,
+        <strong>코히런트(coherent)</strong>는 한쪽이 값을 바꾸면 다른 쪽이 즉시 같은 값을 본다는 뜻입니다(일관성 보장).
+        디스크리트(분리형) VRAM에 익숙한 개발자가 가장 많이 버리는 시간이 바로 <span class="em">"RAM ↔ VRAM 복사와 동기화"</span>인데, GB10은 그 단계를 통째로 없앱니다.
+      </p>
+      <p class="lang-en">
+        <strong>Unified memory</strong> means the CPU and GPU share the same 128 GB, and <strong>coherent</strong> means when one side changes a value
+        the other instantly sees it (consistency is guaranteed). The single biggest time-sink for developers used to discrete VRAM is
+        <span class="em">copying and syncing between RAM and VRAM</span> — GB10 deletes that step entirely.
+      </p>
+      <div class="box key">
+        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">왜 중요한가</span><span class="lang-en">Why it matters</span></div>
+        <p class="lang-ko">
+          링 버퍼를 새로 짜고, 포인터 소유권 스케줄을 맞추고… 이런 <strong>'배관 작업'</strong>이 사라집니다.
+          그래서 디스크리트 VRAM(예: 24GB)에 갇혀 실험을 줄이던 사람이, 여기선 <strong>RAM과 VRAM을 저울질하지 않고</strong> 더 야심 찬 실험을 끝까지 돌립니다.
+          용량(128GB)이 크니 모델·리트리버·임베딩을 <strong>동시에 상주</strong>시킬 수 있는 게 핵심.
+        </p>
+        <p class="lang-en">
+          No more inventing a ring buffer or negotiating a pointer's custody schedule — that <strong>“plumbing”</strong> goes away.
+          People who shrank their experiments to fit discrete VRAM (say 24 GB) suddenly finish more ambitious ones because they're
+          <strong>not balancing RAM against VRAM</strong>. With 128 GB, you can keep the model, the retriever, and the embedder <strong>all resident at once</strong> — that's the point.
+        </p>
+      </div>
+    </section>
+
+    <!-- 04 -->
+    <section id="fp4">
+      <div class="sec-num">SECTION 04</div>
+      <h2 class="lang-ko">FP4의 마법 — 느린 메모리를 빠르게 느끼게</h2>
+      <h2 class="lang-en">The FP4 trick — making slow memory feel fast</h2>
+      <p class="lang-ko">
+        AI 모델은 수많은 숫자(가중치)로 이뤄지는데, 그 숫자를 몇 비트로 표현하느냐가 <strong>정밀도(precision)</strong>입니다.
+        FP16/FP8/FP4… 비트가 적을수록 메모리·연산이 가벼워지죠. <strong>FP4</strong>는 단 4비트 — 블랙웰의 <strong>트랜스포머 엔진</strong>이 이 FP4를
+        <span class="em">일급 시민</span>으로 하드웨어 가속합니다. (참고: 이건 제가 이전 글에서 다룬 <a href="/blog/llm-quantization-guide">양자화(Quantization)</a>의 최신 갈래입니다.)
+      </p>
+      <p class="lang-en">
+        An AI model is a sea of numbers (weights), and how many bits you use to write each one is its <strong>precision</strong>.
+        FP16 → FP8 → FP4: fewer bits means lighter memory and math. <strong>FP4</strong> is just 4 bits, and Blackwell's <strong>Transformer Engine</strong>
+        accelerates it as a <span class="em">first-class citizen</span> in hardware. (This is the cutting edge of
+        <a href="/blog/llm-quantization-guide">quantization</a>, which I covered in an earlier post.)
+      </p>
+      <div class="box field">
+        <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">핵심 수치 · NVFP4</span><span class="lang-en">Key number · NVFP4</span></div>
+        <p class="lang-ko">
+          NVIDIA의 <strong>NVFP4</strong> 양자화는 2단계 스케일링과 마이크로텐서 단위 보정으로,
+          많은 체크포인트에서 <strong>FP8 대비 정확도 손실을 약 1%p 이내</strong>로 유지합니다.
+          여기에 <strong>스페큘러티브 디코딩</strong>(작은 모델이 먼저 빠르게 초안을 내고 큰 모델이 검증)을 얹으면,
+          대역폭이 느린 LPDDR이라도 채팅·코딩이 <strong>체감상 빠르게</strong> 느껴집니다. 마케팅이 아니라 수학입니다.
+        </p>
+        <p class="lang-en">
+          NVIDIA's <strong>NVFP4</strong> quantization, with two-level scaling and per-microtensor calibration, keeps accuracy on many checkpoints
+          <strong>within ~1 percentage point of FP8</strong>. Stack <strong>speculative decoding</strong> on top (a small model drafts quickly, the big one verifies)
+          and even slow LPDDR feels <strong>snappy</strong> for chat and coding. That's not marketing — it's the math that makes this class of box feel fast.
+        </p>
+      </div>
+      <p class="lang-ko">
+        실전 함의: 약 <strong>110GB 메모리 예산</strong>이면 1,200억 파라미터급 모델을 FP4로 양자화해 상주시키고도,
+        임베딩 모델과 리트리버를 위한 여유까지 남습니다. "용량이 모자라 절벽에서 떨어지는" 일이 없다는 뜻이죠.
+      </p>
+      <p class="lang-en">
+        The practical upshot: a roughly <strong>110 GB memory budget</strong> lets you keep a 120-billion-class model resident at FP4
+        and still leave headroom for an embedding model and a retriever — no falling off a capacity cliff.
+      </p>
+    </section>
+
+    <!-- 05 -->
+    <section id="decathlete">
+      <div class="sec-num">SECTION 05</div>
+      <h2 class="lang-ko">스프린터 vs 십종경기 선수</h2>
+      <h2 class="lang-en">Sprinter vs decathlete</h2>
+      <p class="lang-ko">
+        "RTX 4090 두 장이면 더 빠르다"는 비교를 자주 봅니다. 맞습니다 — 단일 작업의 <strong>원본 속도(FP8)</strong>에선 데스크탑 GPU가 이깁니다.
+        하지만 그건 <strong>틀린 질문에 답</strong>하는 경우가 많아요.
+      </p>
+      <p class="lang-en">
+        You'll often see “two RTX 4090s are faster.” True — for <strong>raw speed (FP8)</strong> on a single task, a desktop GPU wins.
+        But that's often <strong>answering the wrong question.</strong>
+      </p>
+      <div class="box analogy">
+        <div class="tag"><span class="dot" style="background:var(--warm)"></span> <span class="lang-ko">비유 · 한 종목 vs 열 종목</span><span class="lang-en">Analogy · one event vs ten</span></div>
+        <p class="lang-ko">
+          4090 두 장은 합쳐 48GB VRAM의 <strong>단거리 스프린터</strong>입니다 — 하나의 좁은 루프에서 눈부시죠.
+          GB10은 <strong>십종경기 선수</strong>예요. 한 종목은 느려도, <strong>세 종목을 동시에</strong> 뜁니다 — 메모리에 다 들어가니까.
+          멀티모달·멀티에이전트에서 통합 메모리가 사주는 초능력이 바로 이겁니다.
+        </p>
+        <p class="lang-en">
+          Two 4090s are a <strong>sprinter</strong> with 48 GB of VRAM between them — brilliant in one tight loop.
+          GB10 is a <strong>decathlete</strong>: slower on a single event, but it runs <strong>three events at once</strong> because they all fit in memory.
+          That's the superpower unified memory buys you for multimodal and multi-agent setups.
+        </p>
+      </div>
+      <p class="lang-ko">
+        NVIDIA 데모의 정석 예시: <strong>GPT-OSS 1,200억 파라미터</strong>를 감독(supervisor)으로 두고, 코드 모델과 비전-언어 모델을
+        <strong>동시에 메모리에 올린</strong> 멀티에이전트 구성. 질문 하나 답하려고 모델을 메모리에 넣었다 뺐다 하지 않습니다 — 오케스트라 전체가 무대에 올라 있죠.
+      </p>
+      <p class="lang-en">
+        The canonical NVIDIA demo: <strong>GPT-OSS at 120B</strong> as a supervisor, flanked by a code model and a vision-language model,
+        <strong>all resident at once</strong> in a multi-agent setup. You don't swap models in and out to answer one question — the whole orchestra is on stage.
+      </p>
+    </section>
+
+    <!-- 06 -->
+    <section id="jobs">
+      <div class="sec-num">SECTION 06</div>
+      <h2 class="lang-ko">세 가지 실증 — "실제로 뭔가를 한다"</h2>
+      <h2 class="lang-en">Three real jobs — “it actually does something”</h2>
+
+      <h3 class="lang-ko">① 큰 모델을 로컬에서 (LLM + RAG + 도구)</h3>
+      <h3 class="lang-en">① A big model, locally (LLM + RAG + tools)</h3>
+      <p class="lang-ko">
+        Ollama 같은 도구를 <strong>CUDA로 컴파일</strong>하고 <strong>TensorRT-LLM</strong>에 링크하면 블랙웰의 FP4 경로를 탑니다.
+        120B급 양자화 모델 + 적당한 컨텍스트 + <strong>RAG</strong>(문서 검색 결합)까지 한 박스에서. 코딩·문서 Q&A에 "실제로 쓸 만한" 수준이 됩니다.
+      </p>
+      <p class="lang-en">
+        Compile a tool like Ollama <strong>with CUDA</strong> and link it against <strong>TensorRT-LLM</strong> to ride Blackwell's FP4 path.
+        A 120B-class quant + a reasonable context window + <strong>RAG</strong> (retrieval over your documents), all in one box — into the “I can actually use this” tier for coding and document Q&A.
+      </p>
+
+      <h3 class="lang-ko">② 강화학습 (Tempest 게임 에이전트)</h3>
+      <h3 class="lang-en">② Reinforcement learning (a Tempest game agent)</h3>
+      <p class="lang-ko">
+        <strong>강화학습(RL)</strong>은 에이전트가 시행착오로 "어떤 행동이 보상으로 이어지는가"를 배우는 방식입니다.
+        게임 프레임에서 핵심 지표를 뽑아 GB10으로 보내면, GB10이 <strong>리플레이 버퍼</strong>(과거 경험 저장소)에 쌓고
+        초당 수백 번 무작위로 꺼내 학습합니다. NumPy와 PyTorch만 설치하면 CUDA가 바로 잡히고,
+        서버 구동과 학습을 <strong>같은 박스</strong>에서 처리 — 스레드리퍼 타워 두 대를 손바닥 상자가 대체합니다. 가장 빠르진 않아도 "충분히 빠릅니다".
+      </p>
+      <p class="lang-en">
+        <strong>Reinforcement learning (RL)</strong> is how an agent learns, by trial and error, “which actions lead to reward.”
+        Extract key metrics from game frames, send them to the GB10, and it piles them into a <strong>replay buffer</strong> (a store of past experience),
+        sampling thousands of frames hundreds of times per second to train. Install just NumPy and PyTorch and CUDA is right there;
+        it runs the server <strong>and</strong> the training on the <strong>same box</strong> — a palm-sized unit replacing two Threadripper towers. Not the fastest, but fast enough.
+      </p>
+
+      <h3 class="lang-ko">③ 집 앞 영상 분석 (클라우드 없이)</h3>
+      <h3 class="lang-en">③ Driveway video (without the cloud)</h3>
+      <p class="lang-ko">
+        "낯선 차가 들어오면 문자 알림" — 그런데 영상은 절대 외부로 안 보냅니다. 흐름은 이렇습니다:
+      </p>
+      <p class="lang-en">
+        “Text me when an unfamiliar car pulls in” — but no video ever leaves the property. The pipeline:
+      </p>
+      <div class="flow">
+        <div class="step"><div class="s-n">1</div><div class="s-t"><span class="lang-ko">수신</span><span class="lang-en">Ingest</span></div><div class="s-d"><span class="lang-ko">RTSP로 카메라 영상</span><span class="lang-en">camera via RTSP</span></div></div>
+        <div class="arrow">→</div>
+        <div class="step"><div class="s-n">2</div><div class="s-t"><span class="lang-ko">디코딩</span><span class="lang-en">Decode</span></div><div class="s-d"><span class="lang-ko">GPU에서 (DeepStream)</span><span class="lang-en">on GPU (DeepStream)</span></div></div>
+        <div class="arrow">→</div>
+        <div class="step"><div class="s-n">3</div><div class="s-t"><span class="lang-ko">탐지</span><span class="lang-en">Detect</span></div><div class="s-d"><span class="lang-ko">YOLO로 차량 검출</span><span class="lang-en">YOLO finds vehicles</span></div></div>
+        <div class="arrow">→</div>
+        <div class="step"><div class="s-n">4</div><div class="s-t"><span class="lang-ko">판단</span><span class="lang-en">Decide</span></div><div class="s-d"><span class="lang-ko">'처음 보는 차'면 알림</span><span class="lang-en">notify only if “new”</span></div></div>
+      </div>
+      <div class="box field">
+        <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">용어 풀이</span><span class="lang-en">Jargon, decoded</span></div>
+        <p class="lang-ko">
+          <strong>RTSP</strong> = IP 카메라 영상 스트리밍 표준 프로토콜. <strong>DeepStream</strong> = 영상 디코딩~추론을 GPU에서 끝까지 처리하는 NVIDIA 파이프라인(CPU 낭비 X).
+          <strong>YOLO</strong> = 한 번에 사물 위치(바운딩 박스)를 찾는 경량 객체탐지 모델. <strong>임베딩(embedding)</strong> = 차량의 외형을 숫자 벡터로 요약한 '지문'.
+          이 지문을 NVMe의 <strong>벡터 인덱스</strong>에 우리 집 차들로 미리 채워두고, 들어온 차의 지문이 <strong>기존과 동떨어지면(OOD, out-of-distribution)</strong> = '처음 보는 차'로 판단.
+          n프레임 연속 지속될 때만 알림 → 오탐 억제. <strong>디코딩→탐지→임베딩→판단</strong> 전 과정이 박스를 떠나지 않습니다.
+        </p>
+        <p class="lang-en">
+          <strong>RTSP</strong> = the standard protocol for streaming IP-camera video. <strong>DeepStream</strong> = NVIDIA's pipeline that decodes and infers end-to-end on the GPU (no CPU waste).
+          <strong>YOLO</strong> = a lightweight detector that finds object locations (bounding boxes) in one pass. <strong>Embedding</strong> = a numeric “fingerprint” summarizing a car's appearance.
+          Prime a <strong>vector index</strong> on NVMe with your household's cars; if a new car's fingerprint is <strong>out-of-distribution (OOD)</strong> versus that gallery, it's “new.”
+          Require persistence across n frames to suppress false alarms. The whole loop — <strong>decode → detect → embed → decide</strong> — never leaves the box.
+        </p>
+      </div>
+    </section>
+
+    <!-- 07 -->
+    <section id="scaleout">
+      <div class="sec-num">SECTION 07</div>
+      <h2 class="lang-ko">스케일아웃 — 두 대로 베이비 클러스터</h2>
+      <h2 class="lang-en">Scaling out — a baby cluster from two boxes</h2>
+      <p class="lang-ko">
+        뒷면의 <strong>QSFP 포트</strong>는 장식이 아닙니다. 내장 <strong>ConnectX-7</strong> 네트워크 카드는 포트당 100Gbps를 내고,
+        두 대를 묶으면 <strong>NCCL</strong>(여러 GPU가 협력해 한 모델을 나눠 처리하게 해주는 NVIDIA 통신 라이브러리)로 작은 클러스터처럼 돌릴 수 있습니다.
+      </p>
+      <p class="lang-en">
+        The <strong>QSFP cages</strong> on the back aren't decoration. The built-in <strong>ConnectX-7</strong> NIC does 100 Gbit/s per port,
+        and wiring two boxes together lets you run <strong>NCCL</strong> (NVIDIA's library that lets multiple GPUs cooperate on one model) like a baby cluster.
+      </p>
+      <div class="box key">
+        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">현실적 기대치</span><span class="lang-en">Realistic expectations</span></div>
+        <p class="lang-ko">
+          한 칩 내부의 NVLink만큼은 아닙니다. 하지만 <strong>텐서 병렬</strong>(큰 디코더를 쪼개 분담)이나 <strong>MoE</strong>(전문가 혼합 모델의 라우팅)에는 충분한 네트워크 패브릭이에요.
+          공식 수치로 따뜻한 상태에서 <strong>풀 듀플렉스 130–150Gbps</strong>, 박스가 완전히 바쁘면 그 절반 수준. "썬더볼트 케이블 두 개"식 꼼수가 아니라 실제 패브릭입니다.
+          한 대는 큰 디코더, 다른 한 대(사이드카)에 임베딩·리트리버를 고정하면 도구를 늘려도 메모리 압박이 평탄해집니다.
+        </p>
+        <p class="lang-en">
+          It's not an on-chip NVLink domain. But it's a fabric good enough for <strong>tensor-parallel</strong> inference (splitting a big decoder across both)
+          or <strong>MoE</strong> (mixture-of-experts routing). Reference figures: <strong>130–150 Gbit/s full-duplex</strong> on a warm system, about half when the box is saturated.
+          Not a “two Thunderbolt cables” hack — a real fabric. Put the big decoder on one node and pin the embedder/retriever on the other (a side-car) to keep memory pressure flat as you add tools.
+        </p>
+      </div>
+    </section>
+
+    <!-- 08 -->
+    <section id="stack">
+      <div class="sec-num">SECTION 08</div>
+      <h2 class="lang-ko">소프트웨어 스택 — 마찰 없는 경험</h2>
+      <h2 class="lang-en">The software stack — frictionless</h2>
+      <p class="lang-ko">
+        설치는 리눅스 관리자 코스프레가 아니라 <strong>대시보드 접속 → VS Code 연결 → 작업 시작</strong>에 가깝습니다.
+        OS는 우분투 기반 <strong>DGX OS</strong>, 툴체인은 <strong>CUDA · TensorRT · Triton · PyTorch · vLLM</strong> 그대로.
+        <strong>"ARM이라 걱정?"</strong> — 커널 드라이버를 크로스 컴파일하는 게 아니라, 어차피 다른 곳에도 배포할 CUDA/Python/C++를 작성할 뿐이라 대부분 그냥 동작합니다.
+      </p>
+      <p class="lang-en">
+        Setup is less Linux-sysadmin cosplay, more <strong>open the dashboard → connect VS Code → get to work</strong>.
+        The OS is Ubuntu-based <strong>DGX OS</strong>; the toolchain is the toolchain — <strong>CUDA · TensorRT · Triton · PyTorch · vLLM</strong>.
+        <strong>Worried about Arm?</strong> You're not cross-compiling kernel drivers — you're writing the same CUDA/Python/C++ you'd deploy elsewhere, so most of it just works.
+      </p>
+      <div class="box key">
+        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">가장 깊은 가치 · 이식성</span><span class="lang-en">The deepest value · portability</span></div>
+        <p class="lang-ko">
+          책상 위 이 작은 박스에서 짠 코드가 데이터센터의 <strong>B200</strong> 랙까지 <strong>그대로(1:1) 올라갑니다.</strong>
+          더 큰 블랙웰로 갈 때 바뀌는 건 "쓸 수 있는 전력"과 "NCCL 링이 보는 GPU 수"뿐. 지금 GB10에서 배운 게 그대로 미래의 큰 장비에 적용됩니다.
+        </p>
+        <p class="lang-en">
+          Code you write on this desk-side box carries <strong>one-to-one</strong> up to a <strong>B200</strong> rack in a data center.
+          Moving to bigger Blackwell only changes how much power you can spend and how many GPUs your NCCL ring sees. What you learn on a GB10 today applies later, unchanged.
+        </p>
+      </div>
+    </section>
+
+    <!-- 09 -->
+    <section id="industry">
+      <div class="sec-num">SECTION 09</div>
+      <h2 class="lang-ko">산업 현장 활용 분석 — 어디에 진짜 쓸까</h2>
+      <h2 class="lang-en">Industrial use — where it really fits (my analysis)</h2>
+      <p class="lang-ko">
+        세 데모를 산업 언어로 번역하면, GB10이 빛나는 자리가 분명해집니다. 제 관점(온프렘 GenAI를 만드는 사람)에서 다섯 가지 케이스로 정리합니다.
+      </p>
+      <p class="lang-en">
+        Translate those three demos into industry language and the spots where GB10 shines get clear. From my vantage point (someone who ships on-prem GenAI), five cases.
+      </p>
+
+      <h3 class="lang-ko">① 데이터 거주성이 필수인 온프렘 LLM·RAG</h3>
+      <h3 class="lang-en">① On-prem LLM/RAG where data residency is mandatory</h3>
+      <div class="box field">
+        <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">현장</span><span class="lang-en">Field</span></div>
+        <p class="lang-ko">
+          금융·의료·제조·공공처럼 <strong>데이터를 외부로 못 내보내는</strong> 도메인. 사내 문서·계약서·도면 위에 RAG를 얹은 프라이빗 어시스턴트를
+          한 박스 안에서 완결합니다(검색→생성 전 과정 온프렘). 데모 ①·③이 정확히 이 모양 — "클라우드로 안 보낸다"가 요구사항인 곳에 딱 맞습니다.
+        </p>
+        <p class="lang-en">
+          Finance, healthcare, manufacturing, public sector — domains where <strong>data can't leave the building</strong>. A private assistant with RAG over internal docs, contracts and drawings,
+          self-contained in one box (retrieval → generation all on-prem). Demos ① and ③ are exactly this shape — a perfect fit where “no cloud” is the requirement.
+        </p>
+      </div>
+
+      <h3 class="lang-ko">② 공장·물류·리테일의 엣지 멀티모달 비전</h3>
+      <h3 class="lang-en">② Edge multimodal vision for factories, logistics, retail</h3>
+      <div class="box field">
+        <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">현장</span><span class="lang-en">Field</span></div>
+        <p class="lang-ko">
+          '집 앞 차량 감지'를 그대로 산업으로 옮기면 — <strong>불량 검출, 안전모/출입 통제, 재고·진열 인식, 차량/팰릿 추적</strong>입니다.
+          현장(엣지)에서 디코딩~판단을 끝내니 <strong>지연(latency)·대역폭·프라이버시</strong> 문제를 동시에 해결하고, 카메라가 늘면 "스트림과 NIC만 더"하면 됩니다. CUDA 그대로라 창고 규모 다중 카메라로 확장도 매끈.
+        </p>
+        <p class="lang-en">
+          Move “driveway detection” into industry and it becomes <strong>defect inspection, PPE/access control, inventory & shelf recognition, vehicle/pallet tracking</strong>.
+          Doing decode-to-decision at the edge solves <strong>latency, bandwidth and privacy</strong> at once; adding cameras is “more streams, more NIC.” Same CUDA, so scaling to a warehouse-scale multi-camera system is smooth.
+        </p>
+      </div>
+
+      <h3 class="lang-ko">③ PoC → 프로덕션 이식성, 그리고 플릿 배포</h3>
+      <h3 class="lang-en">③ PoC → production portability, and fleet deployment</h3>
+      <div class="box field">
+        <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">현장</span><span class="lang-en">Field</span></div>
+        <p class="lang-ko">
+          책상에서 만든 PoC가 같은 CUDA 스택으로 데이터센터 B200까지 직행합니다. <strong>"로컬에서 되던 게 프로덕션에서 안 되는"</strong> 흔한 함정을 줄이죠.
+          게다가 Dell은 이걸 <strong>표준 SKU</strong>로 — 서비스·예비 부품·관리 가능한 이미지로 — 제공하니, PoC가 "현장 10만 대"로 커질 때 플릿 장비처럼 다룰 수 있습니다. 이게 단순 미니PC와의 결정적 차이.
+        </p>
+        <p class="lang-en">
+          A PoC built at your desk goes straight to a B200 in the data center on the same CUDA stack, cutting the classic <strong>“worked locally, broke in prod”</strong> trap.
+          And Dell ships it as a <strong>standard SKU</strong> — with service, spares and a manageable image — so when a PoC grows to “100,000 units in the field,” you treat them like fleet devices. That's the decisive gap versus a generic mini-PC.
+        </p>
+      </div>
+
+      <h3 class="lang-ko">④ 멀티에이전트 워크스테이션 (동시 상주)</h3>
+      <h3 class="lang-en">④ A multi-agent workstation (everything resident)</h3>
+      <div class="box field">
+        <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">현장</span><span class="lang-en">Field</span></div>
+        <p class="lang-ko">
+          코드베이스를 아는 LLM + 도면·PDF를 이해하는 리트리버 + 소형 영상 분석 + 학습 루프를 <strong>한 번에</strong> 요구하는 워크플로우.
+          십종경기 선수의 특기(동시 상주)가 그대로 생산성으로 — 엔지니어 1인용 'AI 연구실'을 책상 위에 둘 수 있습니다.
+        </p>
+        <p class="lang-en">
+          Workflows that need an LLM that knows your codebase + a retriever that understands drawings/PDFs + small-scale video analytics + a training loop, <strong>all at once</strong>.
+          The decathlete's specialty (keeping it all resident) turns directly into productivity — a one-engineer “AI lab” on a desk.
+        </p>
+      </div>
+
+      <h3 class="lang-ko">⑤ 비용·전력 — "미터기 불안" 없는 상시 가동</h3>
+      <h3 class="lang-en">⑤ Cost & power — always-on without meter anxiety</h3>
+      <div class="box field">
+        <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">현장</span><span class="lang-en">Field</span></div>
+        <p class="lang-ko">
+          ~230W는 1년 내내 켜둬도 전기료가 '수백' 단위지 '네 자리' 후회가 아닙니다. 본체 ~$3–4K. 클라우드 GPU 시간당 과금에 비하면,
+          상시 추론·학습 워크로드를 <strong>고정비로</strong> 돌릴 때 매력적이죠. 결론: 정말 필요할 때만 클라우드로 가고, 기본은 로컬.
+        </p>
+        <p class="lang-en">
+          ~230 W means leaving it on all year is a “few hundred” bill, not four-figure regret. ~$3–4K up front. Against hourly cloud-GPU billing,
+          it's compelling for always-on inference/training as a <strong>fixed cost</strong>. The takeaway: go cloud only when you truly must; default to local.
+        </p>
+      </div>
+
+      <h3 class="lang-ko">언제 쓰지 말아야 하나 (냉정하게)</h3>
+      <h3 class="lang-en">When NOT to use it (soberly)</h3>
+      <div class="box key">
+        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">한계 직시</span><span class="lang-en">Know the limits</span></div>
+        <p class="lang-ko">
+          ⓐ 단일 작업의 <strong>원본 FP8/BF16 최대 처리량</strong>이 전부라면 → 데스크탑 4090급이 낫습니다.
+          ⓑ 워크로드가 <strong>이미지 생성 한 가지</strong>뿐이라면 → 통합 메모리·듀얼 QSFP가 필요 없습니다(과한 투자).
+          ⓒ $2,000대 AMD AI 미니PC나 통합 메모리 큰 M시리즈 맥도 <strong>FP8 추론·개발 경험</strong>은 훌륭하지만, 블랙웰 <strong>FP4 일급 지원·듀얼 100GbE·동일 CUDA 온램프</strong>는 없습니다 — GB10이 진짜 파는 건 이 '정렬(alignment)'입니다.
+        </p>
+        <p class="lang-en">
+          ⓐ If raw <strong>FP8/BF16 throughput</strong> on one task is all you need → a desktop 4090-class card is better.
+          ⓑ If your only workload is <strong>image generation</strong> → you don't need coherent memory or dual QSFP (overkill).
+          ⓒ A ~$2K AMD AI mini-PC or a big-unified-memory M-series Mac give lovely <strong>FP8 inference and dev experience</strong>, but not Blackwell <strong>FP4 as a first-class citizen, dual 100GbE, or the same CUDA on-ramp</strong> — that alignment is what GB10 actually sells.
+        </p>
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section id="recap">
+      <div class="sec-num">SECTION 10</div>
+      <h2 class="lang-ko">한 장 요약 — 용어 + 결론</h2>
+      <h2 class="lang-en">One-page recap — terms + takeaway</h2>
+      <div class="terms">
+        <span class="lang-ko">GB10</span><span class="lang-en">GB10</span>
+        <span class="lang-ko">통합 메모리</span><span class="lang-en">Unified memory</span>
+        <span class="lang-ko">NVLink-C2C</span><span class="lang-en">NVLink-C2C</span>
+        <span class="lang-ko">FP4 / NVFP4</span><span class="lang-en">FP4 / NVFP4</span>
+        <span class="lang-ko">CUDA</span><span class="lang-en">CUDA</span>
+        <span class="lang-ko">TensorRT-LLM</span><span class="lang-en">TensorRT-LLM</span>
+        <span class="lang-ko">RAG</span><span class="lang-en">RAG</span>
+        <span class="lang-ko">DeepStream / YOLO</span><span class="lang-en">DeepStream / YOLO</span>
+        <span class="lang-ko">NCCL</span><span class="lang-en">NCCL</span>
+      </div>
+      <dl class="recap">
+        <div><dt><span class="lang-ko">GB10</span><span class="lang-en">GB10</span></dt><dd><span class="lang-ko">Grace(ARM CPU)+Blackwell(GPU)를 한 칩에 융합한 NVIDIA 슈퍼칩. Dell Pro Max with GB10 / DGX Spark의 심장</span><span class="lang-en">NVIDIA superchip fusing Grace (Arm CPU) + Blackwell (GPU); the heart of Dell Pro Max with GB10 / DGX Spark</span></dd></div>
+        <div><dt><span class="lang-ko">통합 메모리</span><span class="lang-en">Unified memory</span></dt><dd><span class="lang-ko">CPU·GPU가 같은 128GB를 공유(코히런트). RAM↔VRAM 복사·동기화가 사라짐</span><span class="lang-en">CPU and GPU share the same coherent 128 GB; no RAM↔VRAM copy/sync</span></dd></div>
+        <div><dt><span class="lang-ko">FP4 / NVFP4</span><span class="lang-en">FP4 / NVFP4</span></dt><dd><span class="lang-ko">4비트 초저정밀. NVFP4 양자화로 FP8 대비 정확도 ~1%p 손실에 큰 모델을 상주</span><span class="lang-en">4-bit ultra-low precision; NVFP4 keeps accuracy ~1pp of FP8 while fitting big models</span></dd></div>
+        <div><dt><span class="lang-ko">NVLink-C2C</span><span class="lang-en">NVLink-C2C</span></dt><dd><span class="lang-ko">CPU-GPU를 직결하는 초고속 통로(PCIe 택배 대체)</span><span class="lang-en">a chip-to-chip express lane joining CPU and GPU (replaces the PCIe courier)</span></dd></div>
+        <div><dt><span class="lang-ko">NCCL</span><span class="lang-en">NCCL</span></dt><dd><span class="lang-ko">여러 GPU가 협력하도록 묶는 통신 라이브러리. 두 박스를 베이비 클러스터로</span><span class="lang-en">the comms library that makes multiple GPUs cooperate; two boxes → baby cluster</span></dd></div>
+        <div><dt><span class="lang-ko">DeepStream / YOLO</span><span class="lang-en">DeepStream / YOLO</span></dt><dd><span class="lang-ko">GPU 영상 파이프라인 / 경량 객체탐지 — 엣지 비전의 기본기</span><span class="lang-en">GPU video pipeline / lightweight object detection — the basics of edge vision</span></dd></div>
+      </dl>
+      <div class="box field" style="margin-top:30px">
+        <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">결론</span><span class="lang-en">Bottom line</span></div>
+        <p class="lang-ko">
+          GB10은 "한 종목 최고 속도"가 아니라 <strong>"여러 일을 동시에, 데이터를 밖으로 안 내보내고, 책상에서 데이터센터까지 같은 스택으로"</strong>를 파는 장비입니다.
+          데이터 거주성·엣지·이식성이 중요한 산업 프로젝트라면, "로컬에서 될까?"가 아니라 <strong>"굳이 클라우드로 갈 이유가 있나?"</strong>로 질문이 바뀝니다. 그게 이 박스의 진짜 가치예요.
+        </p>
+        <p class="lang-en">
+          GB10 doesn't sell “fastest at one event.” It sells <strong>“many things at once, with data that never leaves, on one stack from desk to data center.”</strong>
+          For industrial projects where data residency, the edge, and portability matter, the question flips from “can I do this locally?” to <strong>“why would I go to the cloud at all?”</strong> That's its real value.
+        </p>
+      </div>
+    </section>
+
+
+    <footer>
+      <div class="lang-ko">Dell Pro Max with GB10 · 온프렘/엣지 AI 활용 분석</div>
+      <div class="lang-en">Dell Pro Max with GB10 · an on-prem / edge AI use-case analysis</div>
+      <div class="src lang-ko">
+        <strong style="color:var(--ink-soft)">직접 조사·작성한 분석 글입니다.</strong> 하드웨어 스펙은 NVIDIA·Dell 공식 발표 기준이며, 세 가지 실증 시나리오는 플랫폼 역량을 보여주기 위한 예시입니다.<br><br>
+        <strong style="color:var(--ink-soft)">References</strong><br>
+        · NVIDIA DGX Spark / GB10 Grace Blackwell Superchip (<a href="https://www.nvidia.com/en-us/products/workstations/dgx-spark/" target="_blank" rel="noopener noreferrer">nvidia.com</a>) — 공식 스펙<br>
+        · Dell Pro Max with GB10 (<a href="https://www.dell.com/" target="_blank" rel="noopener noreferrer">dell.com</a>)<br>
+        · NVIDIA Blackwell 아키텍처 · NVFP4 양자화 · NVLink-C2C — 정밀도/대역폭 근거<br>
+        · TensorRT-LLM (<a href="https://github.com/NVIDIA/TensorRT-LLM" target="_blank" rel="noopener noreferrer">github</a>) · NCCL · Triton — 추론/분산 스택<br>
+        · NVIDIA DeepStream · Ultralytics YOLO (<a href="https://docs.ultralytics.com/" target="_blank" rel="noopener noreferrer">docs.ultralytics.com</a>) — 엣지 비전
+      </div>
+      <div class="src lang-en">
+        <strong style="color:var(--ink-soft)">Researched and written as my own analysis.</strong> Hardware specs follow NVIDIA's and Dell's official announcements; the three demo scenarios are illustrative of the platform's capabilities.<br><br>
+        <strong style="color:var(--ink-soft)">References</strong><br>
+        · NVIDIA DGX Spark / GB10 Grace Blackwell Superchip (<a href="https://www.nvidia.com/en-us/products/workstations/dgx-spark/" target="_blank" rel="noopener noreferrer">nvidia.com</a>) — official specs<br>
+        · Dell Pro Max with GB10 (<a href="https://www.dell.com/" target="_blank" rel="noopener noreferrer">dell.com</a>)<br>
+        · NVIDIA Blackwell architecture · NVFP4 quantization · NVLink-C2C — precision/bandwidth basis<br>
+        · TensorRT-LLM (<a href="https://github.com/NVIDIA/TensorRT-LLM" target="_blank" rel="noopener noreferrer">github</a>) · NCCL · Triton — inference/distributed stack<br>
+        · NVIDIA DeepStream · Ultralytics YOLO (<a href="https://docs.ultralytics.com/" target="_blank" rel="noopener noreferrer">docs.ultralytics.com</a>) — edge vision
+      </div>
+    </footer>
+
+  </div>
+  </main>
+</div>
+
+<script>
+  const bar = document.getElementById('progress');
+  const onScroll = () => {
+    const h = document.documentElement;
+    const denom = h.scrollHeight - h.clientHeight;
+    const scrolled = denom > 0 ? h.scrollTop / denom : 0;
+    bar.style.width = (scrolled * 100) + '%';
+  };
+  document.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  const links = Array.from(document.querySelectorAll('#toc a'));
+  const map = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(a => a.classList.remove('active'));
+        const a = map.get(e.target.id);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+  document.querySelectorAll('section, header.hero').forEach(s => io.observe(s));
+</script>
+</body>
+</html>

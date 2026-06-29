@@ -2,12 +2,24 @@
 
 import { useEffect, useRef } from "react";
 import { Loader2, Send, User, Sparkles } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { type Components } from "react-markdown";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { getDocumentNode, getImageNode, GraphNode } from "@/lib/knowledge-graph";
 import { FileCard } from "@/components/chatbot/FileCard";
 import { ImageCard } from "@/components/chatbot/ImageCard";
+
+// Render answer links as accent-styled anchors; external links open in a new tab.
+const markdownComponents: Components = {
+    a: ({ href, children, ...props }) => {
+        const external = !!href && /^https?:\/\//i.test(href);
+        return (
+            <a href={href} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})} {...props}>
+                {children}
+            </a>
+        );
+    },
+};
 
 export interface ChatMessage {
     id: string;
@@ -94,8 +106,8 @@ export function ChatPanel({
                                 )}
                             >
                                 {msg.role === "ai" ? (
-                                    <div className="prose prose-sm max-w-none prose-p:my-1 prose-p:leading-relaxed prose-headings:text-[#1d1d1f] prose-strong:text-[#1d1d1f] prose-ul:my-1 prose-li:my-0.5">
-                                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                    <div className="prose prose-sm max-w-none prose-p:my-1 prose-p:leading-relaxed prose-headings:text-[#1d1d1f] prose-strong:text-[#1d1d1f] prose-ul:my-1 prose-li:my-0.5 prose-a:text-[#0071e3] prose-a:font-medium prose-a:no-underline hover:prose-a:underline prose-a:break-words">
+                                        <ReactMarkdown components={markdownComponents}>{msg.content}</ReactMarkdown>
                                     </div>
                                 ) : (
                                     msg.content

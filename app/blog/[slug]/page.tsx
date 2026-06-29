@@ -8,7 +8,7 @@ import remarkGfm from "remark-gfm";
 
 import { CertificationBadge } from "@/components/blog/CertificationBadge";
 
-import { AutoResizingIframe } from "@/components/blog/AutoResizingIframe";
+import { HtmlPostReader } from "@/components/blog/HtmlPostReader";
 
 interface BlogPostPageProps {
     params: Promise<{
@@ -30,12 +30,28 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         notFound();
     }
 
+    if (post.htmlSource) {
+        return (
+            <main className="min-h-screen bg-[#fbfbf9] text-[#1d1d1f]">
+                <Navbar />
+                <div className="pt-28 pb-24">
+                    <HtmlPostReader
+                        src={post.htmlSource}
+                        title={post.title}
+                        bilingual={post.bilingual}
+                        defaultLang="en"
+                    />
+                </div>
+            </main>
+        );
+    }
+
     return (
         <main className="min-h-screen bg-white text-[#1d1d1f]">
             <Navbar />
 
-            <article className={post.htmlSource ? "w-full min-h-screen flex flex-col pt-32 pb-0 items-center" : "pt-32 pb-24 px-4 md:px-8 container mx-auto max-w-4xl"}>
-                <div className={post.htmlSource ? "w-full max-w-5xl px-6 mb-6" : ""}>
+            <article className="pt-32 pb-24 px-4 md:px-8 container mx-auto max-w-4xl">
+                <div>
                     <Link
                         href="/blog"
                         className="inline-flex items-center gap-2 text-[#6e6e73] hover:text-[#1d1d1f] transition-colors mb-10 group text-sm"
@@ -55,9 +71,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                     )}
                 </div>
 
-                {post.htmlSource ? (
-                    <AutoResizingIframe src={post.htmlSource} title={post.title} />
-                ) : (
+                {(
                     <div>
                         <header className="mb-12 pb-10 border-b border-[#e8e8ed]">
                             <div className="flex flex-wrap gap-1.5 mb-6">

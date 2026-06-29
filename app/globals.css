@@ -59,15 +59,6 @@ body {
   color: #1d1d1f;
 }
 
-/* Hide system cursor on devices that support hover (desktops, etc.) — custom cursor takes over */
-@media (hover: hover) and (pointer: fine) {
-  html,
-  body,
-  body * {
-    cursor: none;
-  }
-}
-
 /* Hide scrollbar utility (used in horizontal sliders) */
 .hide-scrollbar {
   scrollbar-width: none; /* Firefox */

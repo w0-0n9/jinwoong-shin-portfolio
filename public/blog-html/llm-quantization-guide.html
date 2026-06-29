@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="ko" data-lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Run a 70B Model on Your Laptop · The Quantization Playbook</title>
+<meta name="description" content="How quantization shrinks giant LLMs to fit on a laptop — 8-bit and 4-bit, GPTQ vs AWQ vs GGUF, pruning and knowledge distillation, with a hardware-to-tool cheat sheet." />
+<script>try{var l=localStorage.getItem('blog-lang');document.documentElement.setAttribute('data-lang',(l==='ko'||l==='en')?l:'en');}catch(e){document.documentElement.setAttribute('data-lang','en');}</script>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root {
+    --bg: #fbfbf9;
+    --surface: #ffffff;
+    --ink: #181a1f;
+    --ink-soft: #4a4f57;
+    --ink-faint: #888d96;
+    --line: #ebe9e3;
+    --line-strong: #ddd9cf;
+    --accent: #0071e3;
+    --accent-soft: #eaf2ff;
+    --accent-ink: #0058c4;
+    --warm: #e8743b;
+    --warm-soft: #fdf0e8;
+    --green: #1f9d62;
+    --green-soft: #e8f6ee;
+    --radius: 16px;
+    --maxw: 740px;
+    --shadow: 0 1px 2px rgba(24,26,31,.04), 0 8px 24px rgba(24,26,31,.05);
+    --font: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 18px;
+    line-height: 1.85;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  /* bilingual toggling */
+  html[data-lang="en"] .lang-ko { display: none !important; }
+  html[data-lang="ko"] .lang-en { display: none !important; }
+
+  /* embedded in the site reader: the parent page supplies the TOC + progress */
+  html[data-embed] #progress { display: none; }
+  html[data-embed] aside { display: none; }
+  html[data-embed] .wrap { grid-template-columns: 1fr; }
+  html[data-embed] main { padding: 0; }
+  html[data-embed] header.hero { padding-top: 8px; }
+
+  /* reading progress */
+  #progress {
+    position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+    background: var(--accent); z-index: 100;
+    transition: width .1s linear;
+  }
+
+  /* layout */
+  .wrap { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1080px) {
+    .wrap { grid-template-columns: 270px minmax(0,1fr); align-items: start; }
+  }
+
+  /* sidebar TOC */
+  aside {
+    display: none;
+  }
+  @media (min-width: 1080px) {
+    aside {
+      display: block;
+      position: sticky; top: 0;
+      height: 100vh; overflow-y: auto;
+      padding: 56px 28px 56px 40px;
+      border-right: 1px solid var(--line);
+    }
+  }
+  .toc-label {
+    font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-faint); font-weight: 700; margin-bottom: 18px;
+  }
+  .toc a {
+    display: flex; gap: 12px; align-items: baseline;
+    padding: 7px 0;
+    color: var(--ink-soft); text-decoration: none;
+    font-size: 14.5px; line-height: 1.5;
+    border-left: 2px solid transparent; padding-left: 14px; margin-left: -16px;
+    transition: color .15s, border-color .15s;
+  }
+  .toc a .n { color: var(--ink-faint); font-variant-numeric: tabular-nums; font-weight: 600; font-size: 12.5px; }
+  .toc a:hover { color: var(--ink); }
+  .toc a.active { color: var(--accent-ink); border-left-color: var(--accent); font-weight: 600; }
+  .toc a.active .n { color: var(--accent); }
+
+  /* main column */
+  main { padding: 0 22px; }
+  .col { max-width: var(--maxw); margin: 0 auto; }
+
+  /* hero */
+  header.hero { padding: 64px 0 56px; }
+  .kicker {
+    display: inline-block;
+    font-size: 13px; font-weight: 700; letter-spacing: .04em;
+    color: var(--accent-ink); background: var(--accent-soft);
+    padding: 6px 13px; border-radius: 999px; margin-bottom: 26px;
+  }
+  h1 {
+    font-size: clamp(34px, 6vw, 52px);
+    line-height: 1.2; letter-spacing: -0.02em;
+    font-weight: 800; margin: 0 0 22px;
+  }
+  h1 .hl { color: var(--accent); }
+  .lede { font-size: 20px; color: var(--ink-soft); line-height: 1.7; margin: 0 0 32px; }
+  .meta-row {
+    display: flex; flex-wrap: wrap; gap: 10px 22px;
+    font-size: 14px; color: var(--ink-faint);
+    padding-top: 26px; border-top: 1px solid var(--line);
+  }
+  .meta-row b { color: var(--ink-soft); font-weight: 600; }
+
+  /* hook quote */
+  .hook {
+    margin: 40px 0 8px; padding: 30px 32px;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+  }
+  .hook p { margin: 0; font-size: 19px; line-height: 1.7; }
+  .hook .big { font-size: 22px; font-weight: 700; letter-spacing: -.01em; margin-bottom: 10px; }
+  .hook .accent { color: var(--accent); }
+
+  /* sections */
+  section { padding: 56px 0; border-top: 1px solid var(--line); }
+  section:first-of-type { border-top: none; }
+  .sec-num {
+    font-size: 13px; font-weight: 700; letter-spacing: .12em;
+    color: var(--accent); font-variant-numeric: tabular-nums; margin-bottom: 10px;
+  }
+  h2 { font-size: clamp(26px, 4vw, 34px); line-height: 1.3; letter-spacing: -.02em; font-weight: 800; margin: 0 0 22px; }
+  h3 { font-size: 21px; line-height: 1.4; font-weight: 700; margin: 38px 0 14px; letter-spacing: -.01em; }
+  p { margin: 0 0 18px; }
+  strong { font-weight: 700; }
+  .em { color: var(--accent-ink); font-weight: 600; }
+  code { background: #f1f3f6; padding: 1px 6px; border-radius: 5px; font-size: 0.9em; }
+
+  /* callouts */
+  .box {
+    margin: 26px 0; padding: 22px 24px;
+    border-radius: 14px; border: 1px solid var(--line);
+    background: var(--surface); font-size: 16.5px; line-height: 1.72;
+  }
+  .box .tag {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 12.5px; font-weight: 700; letter-spacing: .03em;
+    margin-bottom: 10px;
+  }
+  .box p:last-child { margin-bottom: 0; }
+  .box.analogy { background: var(--warm-soft); border-color: #f4d8c6; }
+  .box.analogy .tag { color: var(--warm); }
+  .box.key { background: var(--accent-soft); border-color: #cfe0ff; }
+  .box.key .tag { color: var(--accent-ink); }
+  .box.field { background: var(--green-soft); border-color: #c7ecd6; }
+  .box.field .tag { color: var(--green); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+  /* pipeline / flow */
+  .flow {
+    display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px;
+    margin: 28px 0; padding: 0;
+  }
+  .flow .step {
+    flex: 1 1 120px; min-width: 110px;
+    background: var(--surface); border: 1px solid var(--line-strong);
+    border-radius: 12px; padding: 16px 14px; text-align: center;
+    position: relative;
+  }
+  .flow .step .s-n { font-size: 11.5px; font-weight: 700; color: var(--accent); letter-spacing: .08em; }
+  .flow .step .s-t { font-size: 16px; font-weight: 700; margin-top: 4px; }
+  .flow .step .s-d { font-size: 13px; color: var(--ink-faint); margin-top: 4px; line-height: 1.5; }
+  .flow .arrow { display: flex; align-items: center; color: var(--ink-faint); font-size: 18px; }
+  @media (max-width: 560px) { .flow .arrow { transform: rotate(90deg); } .flow .step { flex-basis: 100%; } }
+
+  /* comparison table */
+  .cmp { margin: 26px 0; border: 1px solid var(--line-strong); border-radius: 14px; overflow: hidden; }
+  .cmp table { width: 100%; border-collapse: collapse; font-size: 15.5px; }
+  .cmp th, .cmp td { padding: 14px 16px; text-align: left; vertical-align: top; line-height: 1.6; }
+  .cmp thead th { background: #f6f5f1; font-weight: 700; font-size: 14px; }
+  .cmp thead th:first-child { background: #f6f5f1; }
+  .cmp tbody th { background: #fbfaf7; font-weight: 600; color: var(--ink-soft); font-size: 14px; white-space: nowrap; }
+  .cmp tr + tr td, .cmp tr + tr th { border-top: 1px solid var(--line); }
+  .cmp td.dense { background: #fcfdff; }
+  .cmp td.sparse { background: #fffdfa; }
+  .cmp .h-dense { color: var(--accent-ink); }
+  .cmp .h-sparse { color: var(--warm); }
+
+  /* stat strip */
+  .stats { display: flex; flex-wrap: wrap; gap: 12px; margin: 26px 0; }
+  .stat {
+    flex: 1 1 150px; background: var(--surface); border: 1px solid var(--line-strong);
+    border-radius: 14px; padding: 20px; text-align: center;
+  }
+  .stat .v { font-size: 34px; font-weight: 800; letter-spacing: -.02em; color: var(--accent); line-height: 1; }
+  .stat .v small { font-size: 18px; }
+  .stat .l { font-size: 13.5px; color: var(--ink-soft); margin-top: 8px; line-height: 1.45; }
+
+  /* term chips */
+  .terms { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 8px; }
+  .terms span {
+    font-size: 13.5px; font-weight: 600; padding: 6px 12px;
+    background: var(--surface); border: 1px solid var(--line-strong);
+    border-radius: 999px; color: var(--ink-soft);
+  }
+
+  /* definition list */
+  dl.recap { margin: 8px 0; }
+  dl.recap > div { padding: 16px 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: 150px 1fr; gap: 18px; }
+  dl.recap > div:first-child { border-top: none; }
+  dl.recap dt { font-weight: 700; color: var(--accent-ink); font-size: 16px; }
+  dl.recap dd { margin: 0; color: var(--ink-soft); font-size: 16px; line-height: 1.65; }
+  @media (max-width: 560px) { dl.recap > div { grid-template-columns: 1fr; gap: 4px; } }
+
+  /* footer */
+  footer { padding: 56px 0 90px; border-top: 1px solid var(--line); color: var(--ink-faint); font-size: 14.5px; }
+  footer .src { margin-top: 14px; line-height: 1.7; }
+  footer a { color: var(--accent-ink); text-decoration: none; }
+
+  ::selection { background: #cfe0ff; }
+</style>
+</head>
+<body>
+<div id="progress"></div>
+
+<div class="wrap">
+  <aside>
+    <div class="toc-label"><span class="lang-ko">목차</span><span class="lang-en">Contents</span></div>
+    <nav class="toc" id="toc">
+      <a href="#intro"><span class="n">00</span><span class="lang-ko">들어가며</span><span class="lang-en">Intro</span></a>
+      <a href="#wall"><span class="n">01</span><span class="lang-ko">거대 모델의 벽</span><span class="lang-en">The wall</span></a>
+      <a href="#quant"><span class="n">02</span><span class="lang-ko">양자화란?</span><span class="lang-en">What is quantization</span></a>
+      <a href="#effect"><span class="n">03</span><span class="lang-ko">얼마나 줄어드나</span><span class="lang-en">How much it saves</span></a>
+      <a href="#tools"><span class="n">04</span><span class="lang-ko">도구 선택</span><span class="lang-en">Picking a tool</span></a>
+      <a href="#gptq-awq"><span class="n">05</span><span class="lang-ko">GPTQ vs AWQ</span><span class="lang-en">GPTQ vs AWQ</span></a>
+      <a href="#tradeoff"><span class="n">06</span><span class="lang-ko">공짜 점심은 없다</span><span class="lang-en">No free lunch</span></a>
+      <a href="#advanced"><span class="n">07</span><span class="lang-ko">고급 기법</span><span class="lang-en">Advanced techniques</span></a>
+      <a href="#cheatsheet"><span class="n">08</span><span class="lang-ko">치트 시트</span><span class="lang-en">Cheat sheets</span></a>
+      <a href="#recap"><span class="n">09</span><span class="lang-ko">한 장 요약</span><span class="lang-en">One-page recap</span></a>
+    </nav>
+  </aside>
+
+  <main>
+  <div class="col">
+
+    <header class="hero" id="intro">
+      <span class="kicker"><span class="lang-ko">로컬 LLM · 양자화 완전 정리</span><span class="lang-en">Local LLMs · the quantization playbook</span></span>
+      <h1 class="lang-ko">700억 파라미터 모델을<br><span class="hl">내 노트북에서</span></h1>
+      <h1 class="lang-en">Run a 70B model<br><span class="hl">on your laptop</span></h1>
+      <p class="lede lang-ko">
+        요즘 핫한 AI 모델, 직접 써보고 싶은데 너무 커서 비싼 데이터센터에만 갇혀 있죠.
+        그런데 700억 파라미터 모델을 단 4GB VRAM, 웬만한 게이밍 노트북에서 돌릴 수 있다면?
+        그 비밀은 <em>양자화(Quantization)</em>입니다. 원리부터 도구 선택까지 한 번에 정리합니다.
+      </p>
+      <p class="lede lang-en">
+        You want to run the hot new models yourself, but they're so big they're locked inside expensive data centers.
+        What if you could summon a 70-billion-parameter model onto an ordinary gaming laptop with just 4GB of VRAM?
+        The trick is <em>quantization</em>. Here's the whole thing — from the principle to which tool to pick.
+      </p>
+      <div class="meta-row">
+        <span class="lang-ko"><b>대상</b> · 로컬 LLM 입문 ~ 모델 배포 결정</span>
+        <span class="lang-en"><b>For</b> · Local-LLM beginners → deployment decisions</span>
+        <span class="lang-ko"><b>구성</b> · 9개 섹션</span>
+        <span class="lang-en"><b>Format</b> · 9 sections</span>
+        <span class="lang-ko"><b>출처</b> · 강의 정리</span>
+        <span class="lang-en"><b>Source</b> · Distilled from a lecture</span>
+      </div>
+    </header>
+
+    <div class="hook">
+      <p class="big lang-ko">700억 파라미터를, 4GB VRAM에서?</p>
+      <p class="big lang-en">70 billion parameters, on 4GB of VRAM?</p>
+      <p class="lang-ko">잘못 보신 거 아닙니다. 원래라면 최고급 서버 여러 대가 필요한 모델을
+      <span class="accent">웬만한 노트북 한 대</span>로 돌리는 게 정말 가능합니다. 핵심 키워드는 딱 하나 —
+      성능은 거의 그대로 두고 메모리만 <strong>최대 87.5%</strong> 줄이는 기술입니다.</p>
+      <p class="lang-en">You read that right. A model that would normally need several top-tier servers really can run on
+      <span class="accent">a single everyday laptop</span>. The whole story rides on one number —
+      a technique that keeps performance nearly intact while cutting memory by <strong>up to 87.5%</strong>.</p>
+    </div>
+
+    <!-- 01 -->
+    <section id="wall">
+      <div class="sec-num">SECTION 01</div>
+      <h2 class="lang-ko">왜 거대 모델은 데이터센터에 갇혀 있을까</h2>
+      <h2 class="lang-en">Why giant models are stuck in data centers</h2>
+      <p class="lang-ko">
+        AI에 조금이라도 관심을 가져본 사람이라면 누구나 한 번쯤 부딪히는 현실적인 벽이 있습니다.
+        바로 <strong>VRAM(그래픽 메모리)</strong>입니다. 모델이 커질수록 필요한 메모리가 가파르게 늘어나거든요.
+      </p>
+      <p class="lang-en">
+        Anyone who's dipped a toe into AI eventually hits a very real wall:
+        <strong>VRAM (graphics memory)</strong>. The bigger the model, the steeper the memory it demands.
+      </p>
+
+      <div class="cmp">
+        <table>
+          <thead><tr>
+            <th><span class="lang-ko">모델</span><span class="lang-en">Model</span></th>
+            <th><span class="lang-ko">대략 필요 VRAM</span><span class="lang-en">Approx. VRAM needed</span></th>
+            <th><span class="lang-ko">현실</span><span class="lang-en">Reality</span></th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <th>Llama 3 8B</th>
+              <td class="dense"><span class="lang-ko">~16GB (FP16)</span><span class="lang-en">~16GB (FP16)</span></td>
+              <td class="sparse"><span class="lang-ko">RTX 4090급 고가 그래픽카드가 있어야 겨우 돌아감</span><span class="lang-en">Needs a pricey card like an RTX 4090 just to scrape by</span></td>
+            </tr>
+            <tr>
+              <th>70B</th>
+              <td class="dense"><span class="lang-ko">~140GB</span><span class="lang-en">~140GB</span></td>
+              <td class="sparse"><span class="lang-ko">개인 PC로는 꿈도 못 꿈</span><span class="lang-en">Out of the question for a personal PC</span></td>
+            </tr>
+            <tr>
+              <th>GPT-4</th>
+              <td class="dense"><span class="lang-ko">초대형 (비공개)</span><span class="lang-en">Massive (undisclosed)</span></td>
+              <td class="sparse"><span class="lang-ko">말할 것도 없이 데이터센터 전용</span><span class="lang-en">Data-center only, no contest</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="lang-ko">
+        결국 가장 똑똑한 모델들은 전부 <strong>비싼 데이터센터에 갇힌 신세</strong>가 됩니다.
+        하지만 이 갇혀버린 거인을 풀어줄 열쇠가 있습니다 — 바로 <span class="em">양자화(Quantization)</span>입니다.
+      </p>
+      <p class="lang-en">
+        So the smartest models end up <strong>locked inside expensive data centers</strong>.
+        But there's a key that frees these captive giants — <span class="em">quantization</span>.
+      </p>
+    </section>
+
+    <!-- 02 -->
+    <section id="quant">
+      <div class="sec-num">SECTION 02</div>
+      <h2 class="lang-ko">양자화란 무엇인가</h2>
+      <h2 class="lang-en">What quantization actually is</h2>
+      <p class="lang-ko">
+        아주 쉽게 말하면, <strong>AI 모델이 계산할 때 쓰는 숫자의 정밀도(precision)를 낮추는 것</strong>입니다.
+        복잡하고 어려운 단어로 생각하다가, 쉽고 간단한 단어로 바꿔 생각하는 것과 비슷합니다.
+        정밀도를 낮추면 숫자 하나를 저장하는 데 필요한 비트 수가 줄고, 그만큼 모델 전체가 가벼워집니다.
+      </p>
+      <p class="lang-en">
+        Put simply, it's <strong>lowering the numeric precision the model uses for its calculations</strong>.
+        Like switching from thinking in long, complicated words to thinking in short, simple ones.
+        Lower precision means fewer bits per number — and the whole model gets lighter by the same measure.
+      </p>
+
+      <div class="box analogy">
+        <div class="tag"><span class="dot" style="background:var(--warm)"></span> <span class="lang-ko">비유 · 사진 압축</span><span class="lang-en">Analogy · Compressing a photo</span></div>
+        <p class="lang-ko">
+          원본(RAW) 사진은 화질이 끝내주지만 용량이 엄청 큽니다. 이걸 <strong>JPG로 바꾸면</strong>
+          화질은 아주 살짝 떨어지지만 파일 크기는 확 줄어들죠. 양자화가 바로 이 원리와 똑같습니다 —
+          <strong>품질은 거의 그대로 두고 크기만 크게 줄이는</strong> 겁니다.
+        </p>
+        <p class="lang-en">
+          A RAW photo looks gorgeous but is huge. Convert it to <strong>JPG</strong> and the quality drops just a hair
+          while the file size collapses. Quantization works on exactly the same principle —
+          <strong>keep the quality nearly intact, shrink the size dramatically.</strong>
+        </p>
+      </div>
+    </section>
+
+    <!-- 03 -->
+    <section id="effect">
+      <div class="sec-num">SECTION 03</div>
+      <h2 class="lang-ko">얼마나 줄어드나 — 87.5%의 마법</h2>
+      <h2 class="lang-en">How much it saves — the 87.5% magic</h2>
+      <p class="lang-ko">
+        숫자로 보면 효과가 분명합니다. 정밀도를 절반인 <strong>8비트</strong>로만 줄여도 메모리는 <strong>75%</strong>나 아낄 수 있고,
+        성능 손실은 고작 <strong>1~2%</strong>에 불과합니다. 여기서 한 발 더 나아가 <strong>4비트</strong>로 압축하면,
+        앞서 말한 마법의 숫자 <span class="em">87.5% 메모리 절약</span>이 가능해집니다. 그러면서도 성능은 충분히 쓸만한 수준으로 지켜집니다.
+      </p>
+      <p class="lang-en">
+        The numbers make it obvious. Halving precision to <strong>8-bit</strong> already saves <strong>75%</strong> of the memory,
+        with only a <strong>1–2%</strong> hit to performance. Go one step further to <strong>4-bit</strong> and you reach
+        that magic number — <span class="em">87.5% memory saved</span> — while keeping performance at a perfectly usable level.
+      </p>
+
+      <div class="stats">
+        <div class="stat"><div class="v">75<small>%</small></div><div class="l"><span class="lang-ko">8비트로 줄였을 때 메모리 절약</span><span class="lang-en">Memory saved at 8-bit</span></div></div>
+        <div class="stat"><div class="v">87.5<small>%</small></div><div class="l"><span class="lang-ko">4비트로 압축했을 때 메모리 절약</span><span class="lang-en">Memory saved at 4-bit</span></div></div>
+        <div class="stat"><div class="v">1–2<small>%</small></div><div class="l"><span class="lang-ko">8비트 양자화의 성능 손실</span><span class="lang-en">Performance lost at 8-bit</span></div></div>
+      </div>
+
+      <div class="box key">
+        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">핵심 한 줄</span><span class="lang-en">In one line</span></div>
+        <p class="lang-ko"><strong>정밀도를 조금 낮추면, 메모리는 크게 떨어진다.</strong> 8비트면 75%, 4비트면 87.5%. 이게 거인을 노트북으로 끌어오는 힘입니다.</p>
+        <p class="lang-en"><strong>Drop precision a little, and memory drops a lot.</strong> 75% at 8-bit, 87.5% at 4-bit. That's the force that pulls the giant onto your laptop.</p>
+      </div>
+    </section>
+
+    <!-- 04 -->
+    <section id="tools">
+      <div class="sec-num">SECTION 04</div>
+      <h2 class="lang-ko">실전 — 첫 질문은 "내게 GPU가 있는가?"</h2>
+      <h2 class="lang-en">In practice — first ask “do I have a GPU?”</h2>
+      <p class="lang-ko">
+        이론은 이쯤 하고 실전으로 가죠. 가장 먼저 스스로에게 던질 질문은 단 하나입니다 —
+        <strong>내 컴퓨터에 NVIDIA GPU가 달려 있는가?</strong> GPU를 쓰는지 일반 CPU를 쓰는지에 따라 가야 할 길이 완전히 갈립니다.
+      </p>
+      <p class="lang-en">
+        Enough theory — into the field. The very first question to ask yourself is just one:
+        <strong>does my machine have an NVIDIA GPU?</strong> Whether you're on a GPU or a plain CPU sends you down two completely different roads.
+      </p>
+
+      <div class="cmp">
+        <table>
+          <thead><tr>
+            <th></th>
+            <th class="h-dense"><span class="lang-ko">NVIDIA GPU 있음</span><span class="lang-en">Has an NVIDIA GPU</span></th>
+            <th class="h-sparse"><span class="lang-ko">GPU 없음 · Apple Silicon</span><span class="lang-en">No GPU · Apple Silicon</span></th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <th><span class="lang-ko">정답 포맷</span><span class="lang-en">Go-to format</span></th>
+              <td class="dense"><strong>GPTQ / AWQ</strong></td>
+              <td class="sparse"><strong>GGUF</strong></td>
+            </tr>
+            <tr>
+              <th><span class="lang-ko">별명</span><span class="lang-en">Nickname</span></th>
+              <td class="dense"><span class="lang-ko">GPU 속도의 제왕</span><span class="lang-en">King of GPU speed</span></td>
+              <td class="sparse"><span class="lang-ko">어디서든 도는 CPU의 제왕</span><span class="lang-en">King of CPUs — runs anywhere</span></td>
+            </tr>
+            <tr>
+              <th><span class="lang-ko">한 줄 이유</span><span class="lang-en">Why</span></th>
+              <td class="dense"><span class="lang-ko">GPU 가속에 최적화돼 추론 속도를 극한까지</span><span class="lang-en">Tuned for GPU acceleration — maximum inference speed</span></td>
+              <td class="sparse"><span class="lang-ko">CPU·맥 등 어떤 환경에서도 무난히 구동</span><span class="lang-en">Runs comfortably on CPUs, Macs, almost anything</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="lang-ko">
+        NVIDIA GPU 사용자라면 <strong>GPTQ(또는 AWQ)</strong>, GPU가 없거나 Apple Silicon 맥을 쓴다면 고민 없이 <strong>GGUF</strong>입니다.
+      </p>
+      <p class="lang-en">
+        NVIDIA GPU user? <strong>GPTQ (or AWQ)</strong>. No GPU, or on an Apple Silicon Mac? <strong>GGUF</strong>, no deliberation needed.
+      </p>
+    </section>
+
+    <!-- 05 -->
+    <section id="gptq-awq">
+      <div class="sec-num">SECTION 05</div>
+      <h2 class="lang-ko">GPU 사용자의 갈림길 — 속도냐 품질이냐</h2>
+      <h2 class="lang-en">The GPU fork — speed or quality</h2>
+      <p class="lang-ko">
+        GPU 사용자에게는 한 번 더 선택지가 있습니다. <strong>속도를 택할 것이냐, 품질을 택할 것이냐.</strong>
+        이 고전적인 질문에 따라 GPTQ와 AWQ로 갈립니다.
+      </p>
+      <p class="lang-en">
+        GPU users get one more choice: <strong>speed or quality.</strong>
+        That classic question splits the road between GPTQ and AWQ.
+      </p>
+
+      <div class="cmp">
+        <table>
+          <thead><tr>
+            <th></th>
+            <th class="h-dense">GPTQ</th>
+            <th class="h-sparse">AWQ</th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <th><span class="lang-ko">성격</span><span class="lang-en">Character</span></th>
+              <td class="dense"><span class="lang-ko">빠르고 적용이 쉬움</span><span class="lang-en">Fast and easy to apply</span></td>
+              <td class="sparse"><span class="lang-ko">조금 더 복잡하고 정교함</span><span class="lang-en">A bit more complex and refined</span></td>
+            </tr>
+            <tr>
+              <th><span class="lang-ko">초점</span><span class="lang-en">Focus</span></th>
+              <td class="dense"><span class="lang-ko">속도</span><span class="lang-en">Speed</span></td>
+              <td class="sparse"><span class="lang-ko">원본 성능 최대한 보존</span><span class="lang-en">Preserving the original performance</span></td>
+            </tr>
+            <tr>
+              <th><span class="lang-ko">이런 분께</span><span class="lang-en">Best for</span></th>
+              <td class="dense"><span class="lang-ko">이것저것 빠르게 테스트해보고 싶은 사람</span><span class="lang-en">Anyone wanting to test things quickly</span></td>
+              <td class="sparse"><span class="lang-ko">품질이 제일 중요한 사람</span><span class="lang-en">Anyone for whom quality matters most</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 06 -->
+    <section id="tradeoff">
+      <div class="sec-num">SECTION 06</div>
+      <h2 class="lang-ko">공짜 점심은 없다 — 그런데 왜 무조건 이득일까</h2>
+      <h2 class="lang-en">No free lunch — so why is it always worth it?</h2>
+      <p class="lang-ko">
+        압축을 세게 할수록 성능은 조금씩 떨어집니다. 그래프로 보면 <strong>4비트(Q4)까지는 사실상 거의 차이가 없지만,</strong>
+        그 이하 <strong>2비트 수준까지 내려가면 정확도가 눈에 띄게 뚝 떨어집니다.</strong> 그래서 실무에서는 4비트 부근이 보통 가장 좋은 균형점입니다.
+      </p>
+      <p class="lang-en">
+        Compress harder and performance does slip, bit by bit. On the curve, <strong>down to 4-bit (Q4) there's essentially no difference,</strong>
+        but go below that toward <strong>2-bit and accuracy falls off a cliff.</strong> So in practice, around 4-bit is usually the sweet spot.
+      </p>
+
+      <div class="box key">
+        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">가장 중요한 통찰</span><span class="lang-en">The most important insight</span></div>
+        <p class="lang-ko">
+          "성능이 조금이라도 떨어지면 손해 아니야?"라고 생각하기 쉽지만, 핵심은 이겁니다 —
+          <strong>완벽한 꼬마보다 살짝 다이어트한 거인이 훨씬 똑똑합니다.</strong>
+          700억 모델을 압축한 버전이, 애초에 80억으로 만든 모델보다 거의 항상 더 좋습니다.
+          기억하세요 — <span class="em">거인은 다이어트를 해도 거인입니다.</span>
+        </p>
+        <p class="lang-en">
+          It's tempting to think “if performance drops at all, I lose,” but here's the point —
+          <strong>a slightly dieted giant is far smarter than a flawless dwarf.</strong>
+          A compressed 70B almost always beats a model that was built as an 8B in the first place.
+          Remember — <span class="em">a giant on a diet is still a giant.</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- 07 -->
+    <section id="advanced">
+      <div class="sec-num">SECTION 07</div>
+      <h2 class="lang-ko">보너스 — 양자화 너머의 두 기법</h2>
+      <h2 class="lang-en">Bonus — two techniques beyond quantization</h2>
+      <p class="lang-ko">
+        양자화로 만족 못 하는 분들을 위해, 모델을 더 가볍게 만드는 고급 기법 두 가지를 맛만 보겠습니다.
+        양자화와 함께 쓰면 효과가 배가됩니다.
+      </p>
+      <p class="lang-en">
+        For those not satisfied with quantization alone, here's a taste of two advanced techniques for slimming models further.
+        Combined with quantization, their effect compounds.
+      </p>
+
+      <h3 class="lang-ko">① 가지치기 (Pruning)</h3>
+      <h3 class="lang-en">① Pruning</h3>
+      <p class="lang-ko">
+        나무의 죽은 가지를 잘라내듯, <strong>모델에서 별 쓸모없는 부분(기여도가 낮은 가중치·연결)을 싹둑 잘라내는</strong> 기법입니다.
+        덜어내도 성능 손실이 적은 부분을 제거해 크기와 연산량을 줄입니다.
+      </p>
+      <p class="lang-en">
+        Like trimming dead branches off a tree, pruning <strong>snips away the parts of a model that contribute little</strong> (low-impact weights and connections),
+        removing what can go without much loss to cut size and compute.
+      </p>
+
+      <h3 class="lang-ko">② 지식 증류 (Knowledge Distillation)</h3>
+      <h3 class="lang-en">② Knowledge Distillation</h3>
+      <p class="lang-ko">
+        똑똑한 <strong>'선생님' 모델</strong>(예: GPT-4)이 작은 <strong>'학생' 모델</strong> 옆에 붙어 족집게 과외를 해주는 방식입니다.
+        큰 모델의 지식을 작은 모델에 옮겨 담아, 작지만 똑똑한 모델을 만듭니다.
+      </p>
+      <p class="lang-en">
+        A smart <strong>“teacher” model</strong> (say GPT-4) tutors a small <strong>“student” model</strong> right beside it.
+        The big model's knowledge is transferred into the small one, producing a model that's tiny yet sharp.
+      </p>
+
+      <div class="box field">
+        <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">실제 사례</span><span class="lang-en">In the wild</span></div>
+        <p class="lang-ko">
+          네이버의 <strong>HyperCLOVA X</strong> 같은 모델들이 바로 이런 기법들을 양자화와 함께 적용해 효율을 극대화하고 있습니다.
+        </p>
+        <p class="lang-en">
+          Models like Naver's <strong>HyperCLOVA X</strong> apply exactly these techniques alongside quantization to push efficiency to the limit.
+        </p>
+      </div>
+    </section>
+
+    <!-- 08 -->
+    <section id="cheatsheet">
+      <div class="sec-num">SECTION 08</div>
+      <h2 class="lang-ko">치트 시트 — 내 상황엔 뭘 쓸까</h2>
+      <h2 class="lang-en">Cheat sheets — what should I use?</h2>
+
+      <h3 class="lang-ko">① 하드웨어 기준</h3>
+      <h3 class="lang-en">① By hardware</h3>
+      <div class="cmp">
+        <table>
+          <thead><tr>
+            <th><span class="lang-ko">내 하드웨어</span><span class="lang-en">My hardware</span></th>
+            <th><span class="lang-ko">추천</span><span class="lang-en">Pick</span></th>
+          </tr></thead>
+          <tbody>
+            <tr><th><span class="lang-ko">고사양 NVIDIA GPU (RTX 40xx)</span><span class="lang-en">High-end NVIDIA GPU (RTX 40xx)</span></th><td class="dense"><strong>AWQ</strong> <span class="lang-ko">또는</span><span class="lang-en">or</span> <strong>GPTQ</strong></td></tr>
+            <tr><th><span class="lang-ko">Apple Silicon 맥</span><span class="lang-en">Apple Silicon Mac</span></th><td class="dense"><strong>GGUF</strong></td></tr>
+            <tr><th><span class="lang-ko">GPU 없는 일반 CPU</span><span class="lang-en">Plain CPU, no GPU</span></th><td class="dense"><strong>GGUF</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="lang-ko">② 목적 기준</h3>
+      <h3 class="lang-en">② By goal</h3>
+      <div class="cmp">
+        <table>
+          <thead><tr>
+            <th><span class="lang-ko">내가 하려는 것</span><span class="lang-en">What I'm doing</span></th>
+            <th><span class="lang-ko">추천</span><span class="lang-en">Pick</span></th>
+          </tr></thead>
+          <tbody>
+            <tr><th><span class="lang-ko">상용 서비스 (품질 최우선)</span><span class="lang-en">A real product (quality first)</span></th><td class="dense"><strong>AWQ</strong></td></tr>
+            <tr><th><span class="lang-ko">빠른 개인 테스트</span><span class="lang-en">Quick personal testing</span></th><td class="dense"><strong>GPTQ</strong></td></tr>
+            <tr><th><span class="lang-ko">노트북용 간단 챗봇</span><span class="lang-en">A simple chatbot on my laptop</span></th><td class="dense"><strong>GGUF</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 09 -->
+    <section id="recap">
+      <div class="sec-num">SECTION 09</div>
+      <h2 class="lang-ko">한 장 요약</h2>
+      <h2 class="lang-en">One-page recap</h2>
+      <div class="terms">
+        <span class="lang-ko">양자화</span><span class="lang-en">Quantization</span>
+        <span class="lang-ko">VRAM</span><span class="lang-en">VRAM</span>
+        <span class="lang-ko">8비트 / 4비트</span><span class="lang-en">8-bit / 4-bit</span>
+        <span class="lang-ko">GPTQ</span><span class="lang-en">GPTQ</span>
+        <span class="lang-ko">AWQ</span><span class="lang-en">AWQ</span>
+        <span class="lang-ko">GGUF</span><span class="lang-en">GGUF</span>
+        <span class="lang-ko">가지치기</span><span class="lang-en">Pruning</span>
+        <span class="lang-ko">지식 증류</span><span class="lang-en">Distillation</span>
+      </div>
+
+      <div class="box key">
+        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">딱 네 가지만 기억하세요</span><span class="lang-en">Just remember four things</span></div>
+        <p class="lang-ko">
+          <strong>1.</strong> 양자화는 메모리를 최대 <strong>87.5%</strong>까지 아껴준다.<br>
+          <strong>2.</strong> GPU는 <strong>GPTQ / AWQ</strong>, CPU·맥은 <strong>GGUF</strong>.<br>
+          <strong>3.</strong> <strong>4비트</strong> 정도까지는 성능 손실이 거의 없다.<br>
+          <strong>4.</strong> (제일 중요) 어설픈 소형 모델보다 <strong>잘 압축한 대형 모델</strong>이 무조건 낫다.
+        </p>
+        <p class="lang-en">
+          <strong>1.</strong> Quantization saves up to <strong>87.5%</strong> of memory.<br>
+          <strong>2.</strong> GPU → <strong>GPTQ / AWQ</strong>; CPU / Mac → <strong>GGUF</strong>.<br>
+          <strong>3.</strong> Down to about <strong>4-bit</strong> there's almost no performance loss.<br>
+          <strong>4.</strong> (most important) A <strong>well-compressed large model</strong> beats a mediocre small one, every time.
+        </p>
+      </div>
+
+      <dl class="recap">
+        <div><dt><span class="lang-ko">양자화</span><span class="lang-en">Quantization</span></dt><dd><span class="lang-ko">계산에 쓰는 숫자의 정밀도를 낮춰 모델을 가볍게 만드는 기술. JPG 압축과 같은 원리</span><span class="lang-en">Lowering the precision of the numbers used in computation to slim a model — same principle as JPG compression</span></dd></div>
+        <div><dt>VRAM</dt><dd><span class="lang-ko">그래픽 메모리. 모델이 클수록 더 많이 필요해 로컬 구동의 가장 큰 벽이 됨</span><span class="lang-en">Graphics memory; the larger the model the more it needs — the main wall for running locally</span></dd></div>
+        <div><dt><span class="lang-ko">8비트 / 4비트</span><span class="lang-en">8-bit / 4-bit</span></dt><dd><span class="lang-ko">양자화 정밀도. 8비트는 메모리 75% 절약, 4비트는 87.5% 절약</span><span class="lang-en">Quantization precision — 8-bit saves 75% of memory, 4-bit saves 87.5%</span></dd></div>
+        <div><dt>GPTQ</dt><dd><span class="lang-ko">NVIDIA GPU용. 빠르고 적용이 쉬워 빠른 테스트에 적합</span><span class="lang-en">For NVIDIA GPUs; fast and easy to apply — great for quick testing</span></dd></div>
+        <div><dt>AWQ</dt><dd><span class="lang-ko">GPU용. 더 정교하며 원본 성능 보존에 초점 — 품질 최우선 상용 서비스용</span><span class="lang-en">For GPUs; more refined, focused on preserving original performance — for quality-first products</span></dd></div>
+        <div><dt>GGUF</dt><dd><span class="lang-ko">CPU·Apple Silicon용 범용 포맷. 어디서든 잘 돌아감</span><span class="lang-en">A general-purpose format for CPUs and Apple Silicon; runs well anywhere</span></dd></div>
+        <div><dt><span class="lang-ko">가지치기</span><span class="lang-en">Pruning</span></dt><dd><span class="lang-ko">모델에서 기여도 낮은 부분을 잘라내 크기·연산을 줄이는 기법</span><span class="lang-en">Cutting away low-impact parts of a model to reduce size and compute</span></dd></div>
+        <div><dt><span class="lang-ko">지식 증류</span><span class="lang-en">Distillation</span></dt><dd><span class="lang-ko">큰 '선생님' 모델의 지식을 작은 '학생' 모델로 옮겨 담는 기법</span><span class="lang-en">Transferring a large “teacher” model's knowledge into a small “student” model</span></dd></div>
+      </dl>
+
+      <div class="box field" style="margin-top:30px">
+        <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">마무리</span><span class="lang-en">Closing</span></div>
+        <p class="lang-ko">
+          거대 모델을 데이터센터에 가둬두던 자물쇠의 열쇠가 이제 여러분 손에 있습니다.
+          어떤 모델부터 잠금을 풀어볼까요? 여러분의 노트북이 곧 여러분만의 AI 연구소가 됩니다.
+        </p>
+        <p class="lang-en">
+          The key to the lock that kept giant models inside data centers is now in your hands.
+          Which model will you unlock first? Your laptop is about to become your own AI lab.
+        </p>
+      </div>
+    </section>
+
+
+    <footer>
+      <div class="lang-ko">로컬 LLM · 양자화 핵심 정리 · 입문부터 배포 결정까지</div>
+      <div class="lang-en">Local LLMs · quantization essentials · from beginner to deployment decisions</div>
+      <div class="src lang-ko">
+        본문: 강의 트랜스크립트를 토대로 재구성<br>
+        언급된 기법·도구: 양자화(8/4비트) · GPTQ · AWQ · GGUF · 프루닝 · 지식 증류 · Naver HyperCLOVA X<br>
+        한글자막: 한효정
+      </div>
+      <div class="src lang-en">
+        Body: reconstructed from a lecture transcript.<br>
+        Techniques & tools referenced: quantization (8/4-bit) · GPTQ · AWQ · GGUF · pruning · knowledge distillation · Naver HyperCLOVA X<br>
+        Korean subtitles: Han Hyo-jung
+      </div>
+    </footer>
+
+  </div>
+  </main>
+</div>
+
+<script>
+  // reading progress bar (active only when this document scrolls standalone)
+  const bar = document.getElementById('progress');
+  const onScroll = () => {
+    const h = document.documentElement;
+    const denom = h.scrollHeight - h.clientHeight;
+    const scrolled = denom > 0 ? h.scrollTop / denom : 0;
+    bar.style.width = (scrolled * 100) + '%';
+  };
+  document.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  // active TOC highlight
+  const links = Array.from(document.querySelectorAll('#toc a'));
+  const map = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(a => a.classList.remove('active'));
+        const a = map.get(e.target.id);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+  document.querySelectorAll('section, header.hero').forEach(s => io.observe(s));
+</script>
+</body>
+</html>

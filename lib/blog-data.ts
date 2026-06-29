@@ -7,6 +7,7 @@ export interface BlogPost {
   content: string; // Markdown content
   image?: string;
   htmlSource?: string;
+  bilingual?: boolean;
   certification?: {
     title?: string;
     issuer: string;
@@ -17,6 +18,26 @@ export interface BlogPost {
 }
 
 export const blogPosts: BlogPost[] = [
+  {
+    slug: "llm-quantization-guide",
+    title: "Run a 70B Model on Your Laptop: The Quantization Playbook",
+    description: "How quantization shrinks giant LLMs to fit on a laptop — 8-bit vs 4-bit, GPTQ vs AWQ vs GGUF, plus pruning and knowledge distillation, with a hardware-to-tool cheat sheet. Readable in English and Korean.",
+    date: "2026-06-29",
+    tags: ["LLM", "Quantization", "GPTQ", "AWQ", "GGUF", "On-device AI"],
+    content: `A practical guide to running large language models locally through quantization — why giant models are stuck in data centers, how lowering numeric precision (8-bit, 4-bit) saves up to 87.5% of memory, and how to pick between GPTQ, AWQ and GGUF for your hardware. Bonus: pruning and knowledge distillation. Use the EN / 한국어 toggle to read it in either language.`,
+    htmlSource: "/blog-html/llm-quantization-guide.html?v=2",
+    bilingual: true,
+  },
+  {
+    slug: "rag-concepts-guide",
+    title: "RAG, Properly: From Embeddings to Late Chunking",
+    description: "Embeddings, chunking, vector DBs, hybrid search, rerankers, contextual retrieval and late chunking — the core concepts wired into one pipeline, distilled from three years of RAG projects. Readable in English and Korean.",
+    date: "2026-06-29",
+    tags: ["RAG", "LLM", "Embeddings", "Vector Search", "AI Engineering"],
+    content: `A core-concepts guide to RAG — what it is, why retrieval (not generation) is where things break, and how embeddings, chunking, vector databases, hybrid search, rerankers, contextual retrieval and late chunking fit into a single pipeline. Use the EN / 한국어 toggle to read it in either language.`,
+    htmlSource: "/blog-html/rag-concepts-guide.html?v=2",
+    bilingual: true,
+  },
   {
     slug: "aws-ai-practitioner",
     title: "Achieving AWS Certified AI Practitioner",
@@ -212,7 +233,7 @@ A well-structured prompt typically includes:
 
 Passing the AIF-C01 requires a solid understanding of "which service fits this specific constraint" (cost, latency, security). I hope these notes help you in your certification journey!
     `,
-    htmlSource: "/blog-html/aws-ai-practitioner.html?v=1",
+    htmlSource: "/blog-html/aws-ai-practitioner.html?v=2",
     certification: {
       title: "AWS Certified AI Practitioner",
       issuer: "Amazon Web Services (AWS)",

@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { CustomCursor } from "@/components/ui/CustomCursor";
 
 // Initialize Inter
 const inter = Inter({
@@ -62,13 +61,16 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // suppressHydrationWarning: browser extensions (e.g. Scribe, password
+  // managers) inject attributes onto <html>/<body> before React hydrates,
+  // which would otherwise trigger a hydration mismatch warning.
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
+        suppressHydrationWarning
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased overflow-x-hidden`}
       >
         {children}
-        <CustomCursor />
       </body>
     </html>
   );

@@ -37,7 +37,8 @@ export type NodeType =
     | "school"
     | "document"
     | "location"
-    | "conference";
+    | "conference"
+    | "article";
 
 export interface GraphNode {
     id: string;

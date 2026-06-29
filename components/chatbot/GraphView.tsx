@@ -40,6 +40,7 @@ const NODE_COLORS: Record<NodeType, string> = {
     document: "#ff9500",
     location: "#a1a1a6",
     conference: "#ff375f",
+    article: "#30b0c7",
 };
 
 const NODE_RADIUS_BASE: Record<NodeType, number> = {
@@ -52,6 +53,7 @@ const NODE_RADIUS_BASE: Record<NodeType, number> = {
     document: 6,
     location: 4,
     conference: 6,
+    article: 6,
 };
 
 export function GraphView({ activeIds, onNodeClick }: GraphViewProps) {

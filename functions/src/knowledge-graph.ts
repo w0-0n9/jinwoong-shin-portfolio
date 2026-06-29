@@ -4,7 +4,7 @@
  * Run `npm run sync:graph` (or just `npm run build` / `firebase deploy`)
  * to regenerate this file. Any manual edits here will be overwritten.
  *
- * Last generated: 2026-05-11T14:01:28.602Z
+ * Last generated: 2026-06-29T13:54:39.116Z
  */
 
 export type NodeType =
@@ -16,7 +16,8 @@ export type NodeType =
     | "school"
     | "document"
     | "location"
-    | "conference";
+    | "conference"
+    | "article";
 
 export interface GraphNode {
     id: string;
@@ -42,7 +43,11 @@ export const nodes: GraphNode[] = [
         "id": "jinwoong",
         "type": "person",
         "label": "Jinwoong Shin",
-        "description": "LLM Engineer with 1.5+ years at LG CNS America. Ships enterprise GenAI across cloud and on-premises stacks. Incoming OMSCS at Georgia Tech, Fall 2026."
+        "description": "LLM Engineer with 2+ years at LG CNS America. Ships enterprise GenAI across cloud and on-premises stacks. Incoming OMSCS at Georgia Tech, Fall 2026.",
+        "meta": {
+            "linkedin": "https://www.linkedin.com/in/w0-0n9/",
+            "github": "https://github.com/w0-0n9"
+        }
     },
     {
         "id": "loc-little-ferry",
@@ -206,7 +211,8 @@ export const nodes: GraphNode[] = [
         "label": "AWS Certified AI Practitioner",
         "description": "Issued Feb 2026 by Amazon Web Services.",
         "meta": {
-            "date": "Feb 2026"
+            "date": "Feb 2026",
+            "url": "https://www.linkedin.com/in/w0-0n9/details/certifications/"
         }
     },
     {
@@ -215,7 +221,8 @@ export const nodes: GraphNode[] = [
         "label": "Foundry & AIP Builder Foundations",
         "description": "Issued Dec 2025 by Palantir Technologies.",
         "meta": {
-            "date": "Dec 2025"
+            "date": "Dec 2025",
+            "url": "https://www.linkedin.com/in/w0-0n9/details/certifications/"
         }
     },
     {
@@ -224,7 +231,18 @@ export const nodes: GraphNode[] = [
         "label": "Speedrun: Your First AIP Workflow",
         "description": "Issued Dec 2025 by Palantir Technologies.",
         "meta": {
-            "date": "Dec 2025"
+            "date": "Dec 2025",
+            "url": "https://www.linkedin.com/in/w0-0n9/details/certifications/"
+        }
+    },
+    {
+        "id": "cert-palantir-foundry-aware",
+        "type": "certification",
+        "label": "Certified Palantir Foundry Aware Professional",
+        "description": "Issued Jun 2026 by Palantir Technologies (valid through Jun 2028). Credential ID szjtnp62cpnt.",
+        "meta": {
+            "date": "Jun 2026",
+            "url": "https://www.linkedin.com/in/w0-0n9/details/certifications/"
         }
     },
     {
@@ -236,6 +254,42 @@ export const nodes: GraphNode[] = [
         "id": "issuer-palantir",
         "type": "company",
         "label": "Palantir Technologies"
+    },
+    {
+        "id": "article-rag-guide",
+        "type": "article",
+        "label": "RAG, Properly: From Embeddings to Late Chunking",
+        "description": "Blog writeup. A core-concepts guide to Retrieval-Augmented Generation: why retrieval (not generation) is where RAG breaks, and how embeddings, chunking, vector databases, dense vs sparse, hybrid search, rerankers, contextual retrieval and late chunking fit into one pipeline. Bilingual (English / Korean).",
+        "meta": {
+            "url": "/blog/rag-concepts-guide",
+            "date": "Jun 2026",
+            "languages": "EN / KO",
+            "kind": "writeup"
+        }
+    },
+    {
+        "id": "article-quantization",
+        "type": "article",
+        "label": "Run a 70B Model on Your Laptop: The Quantization Playbook",
+        "description": "Blog writeup. How quantization shrinks giant LLMs to run locally — 8-bit vs 4-bit precision (up to ~87.5% memory saved), choosing between GPTQ, AWQ and GGUF by hardware, plus pruning and knowledge distillation, with a hardware-to-tool cheat sheet. Bilingual (English / Korean).",
+        "meta": {
+            "url": "/blog/llm-quantization-guide",
+            "date": "Jun 2026",
+            "languages": "EN / KO",
+            "kind": "writeup"
+        }
+    },
+    {
+        "id": "article-aws-cert",
+        "type": "article",
+        "label": "Passing the AWS Certified AI Practitioner (AIF-C01)",
+        "description": "Blog writeup. Study notes and decision patterns for the AWS Certified AI Practitioner exam: SageMaker tools, inference options, Bedrock customization/throughput, RAG Knowledge Bases, prompts, generation parameters, evaluation metrics and core ML concepts. English only.",
+        "meta": {
+            "url": "/blog/aws-ai-practitioner",
+            "date": "Jan 2026",
+            "languages": "EN",
+            "kind": "writeup"
+        }
     },
     {
         "id": "skill-python",
@@ -466,6 +520,11 @@ export const edges: GraphEdge[] = [
     },
     {
         "source": "jinwoong",
+        "target": "cert-palantir-foundry-aware",
+        "relation": "holds"
+    },
+    {
+        "source": "jinwoong",
         "target": "proj-olin-bike",
         "relation": "built"
     },
@@ -568,6 +627,61 @@ export const edges: GraphEdge[] = [
         "source": "cert-palantir-speedrun",
         "target": "issuer-palantir",
         "relation": "issued_by"
+    },
+    {
+        "source": "cert-palantir-foundry-aware",
+        "target": "issuer-palantir",
+        "relation": "issued_by"
+    },
+    {
+        "source": "jinwoong",
+        "target": "article-rag-guide",
+        "relation": "wrote"
+    },
+    {
+        "source": "jinwoong",
+        "target": "article-quantization",
+        "relation": "wrote"
+    },
+    {
+        "source": "jinwoong",
+        "target": "article-aws-cert",
+        "relation": "wrote"
+    },
+    {
+        "source": "article-rag-guide",
+        "target": "skill-rag",
+        "relation": "covers"
+    },
+    {
+        "source": "article-rag-guide",
+        "target": "skill-embeddings",
+        "relation": "covers"
+    },
+    {
+        "source": "article-quantization",
+        "target": "skill-on-prem-llm",
+        "relation": "covers"
+    },
+    {
+        "source": "article-quantization",
+        "target": "skill-ollama",
+        "relation": "covers"
+    },
+    {
+        "source": "article-quantization",
+        "target": "skill-mlx",
+        "relation": "covers"
+    },
+    {
+        "source": "article-aws-cert",
+        "target": "cert-aws-ai",
+        "relation": "covers"
+    },
+    {
+        "source": "article-aws-cert",
+        "target": "skill-model-eval",
+        "relation": "covers"
     },
     {
         "source": "proj-return-analysis",

@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ko" data-lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Smaller, Smarter · A Deep Dive into Pruning &amp; Knowledge Distillation</title>
+<meta name="description" content="Beyond quantization — a deep dive into the other two model-compression levers: pruning (unstructured, structured, N:M, SparseGPT/Wanda) and knowledge distillation (dark knowledge, temperature, DistilBERT, white-box vs black-box), and how to combine all three." />
+<script>try{var l=localStorage.getItem('blog-lang');document.documentElement.setAttribute('data-lang',(l==='ko'||l==='en')?l:'en');}catch(e){document.documentElement.setAttribute('data-lang','en');}</script>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/blog-html/_shared.css?v=2" />
+</head>
+<body>
+<div id="progress"></div>
+
+<div class="wrap">
+  <aside>
+    <div class="toc-label"><span class="lang-ko">목차</span><span class="lang-en">Contents</span></div>
+    <nav class="toc" id="toc">
+      <a href="#intro"><span class="n">00</span><span class="lang-ko">들어가며</span><span class="lang-en">Intro</span></a>
+      <a href="#why"><span class="n">01</span><span class="lang-ko">왜 줄이나</span><span class="lang-en">Why compress</span></a>
+      <a href="#pruning"><span class="n">02</span><span class="lang-ko">가지치기란</span><span class="lang-en">What pruning is</span></a>
+      <a href="#prune-types"><span class="n">03</span><span class="lang-ko">비정형·정형·N:M</span><span class="lang-en">Unstructured · structured · N:M</span></a>
+      <a href="#prune-how"><span class="n">04</span><span class="lang-ko">어떻게 자르나</span><span class="lang-en">How to prune</span></a>
+      <a href="#prune-llm"><span class="n">05</span><span class="lang-ko">재학습 없이 LLM</span><span class="lang-en">Pruning LLMs, no retrain</span></a>
+      <a href="#distill"><span class="n">06</span><span class="lang-ko">지식 증류란</span><span class="lang-en">What distillation is</span></a>
+      <a href="#distill-kinds"><span class="n">07</span><span class="lang-ko">세 가지 지식</span><span class="lang-en">Three kinds of knowledge</span></a>
+      <a href="#distill-llm"><span class="n">08</span><span class="lang-ko">LLM 증류</span><span class="lang-en">Distilling LLMs</span></a>
+      <a href="#combine"><span class="n">09</span><span class="lang-ko">셋을 합치기</span><span class="lang-en">Combining all three</span></a>
+      <a href="#recap"><span class="n">10</span><span class="lang-ko">한 장 요약</span><span class="lang-en">One-page recap</span></a>
+    </nav>
+  </aside>
+
+  <main>
+  <div class="col">
+
+    <header class="hero" id="intro">
+      <span class="kicker"><span class="lang-ko">모델 압축 심화 · 가지치기 &amp; 증류</span><span class="lang-en">Model compression deep dive</span></span>
+      <h1 class="lang-ko">더 작게,<br><span class="hl">더 똑똑하게</span></h1>
+      <h1 class="lang-en">Smaller,<br><span class="hl">smarter</span></h1>
+      <p class="lede lang-ko">
+        <a href="/blog/llm-quantization-guide">양자화(Quantization)</a>가 "숫자를 가볍게"라면, 모델을 줄이는 레버는 두 개가 더 있습니다 —
+        <strong>가지치기(Pruning)</strong>와 <strong>지식 증류(Knowledge Distillation)</strong>. 이전 글에서 맛만 봤던 이 두 기법을,
+        종류·구체적 방법·LLM 적용·언제 무엇을 쓸지까지 한 번에 깊게 파봅니다.
+      </p>
+      <p class="lede lang-en">
+        If <a href="/blog/llm-quantization-guide">quantization</a> is “make the numbers lighter,” there are two more levers for shrinking a model:
+        <strong>pruning</strong> and <strong>knowledge distillation</strong>. This is the deep dive into the two I only sampled in the earlier post —
+        their flavors, the concrete methods, how they apply to LLMs, and when to reach for which.
+      </p>
+      <div class="meta-row">
+        <span class="lang-ko"><b>대상</b> · 양자화는 봤고, 더 깊이 가고 싶은 분</span>
+        <span class="lang-en"><b>For</b> · You've seen quantization, you want to go deeper</span>
+        <span class="lang-ko"><b>구성</b> · 11개 섹션 (가지치기 + 증류)</span>
+        <span class="lang-en"><b>Format</b> · 11 sections (pruning + distillation)</span>
+        <span class="lang-ko"><b>방식</b> · 논문 직접 조사 + 정리</span>
+        <span class="lang-en"><b>Method</b> · Researched from papers</span>
+      </div>
+    </header>
+
+    <div class="hook">
+      <p class="big lang-ko">압축의 세 레버: 양자화 · 가지치기 · 증류</p>
+      <p class="big lang-en">Three levers: quantize · prune · distill</p>
+      <p class="lang-ko">양자화가 <strong>비트 수를 줄인다</strong>면, 가지치기는 <strong>연결을 잘라내고</strong>, 증류는 <strong>작은 모델에게 지식을 옮겨 담습니다.</strong>
+      셋은 경쟁이 아니라 <span class="accent">함께 쓰는 도구</span>예요. 이 글은 뒤의 두 개를 제대로 다룹니다.</p>
+      <p class="lang-en">Quantization <strong>cuts the bit-width</strong>, pruning <strong>removes connections</strong>, and distillation <strong>transfers knowledge into a smaller model.</strong>
+      They aren't rivals — they're <span class="accent">tools you combine.</span> This post does the last two properly.</p>
+    </div>
+
+    <!-- 01 -->
+    <section id="why">
+      <div class="sec-num">SECTION 01</div>
+      <h2 class="lang-ko">왜 줄여도 되나 — 과매개변수화</h2>
+      <h2 class="lang-en">Why you can shrink at all — over-parameterization</h2>
+      <p class="lang-ko">
+        딥러닝 모델은 보통 <strong>필요 이상으로 매개변수가 많습니다(over-parameterized).</strong> 학습을 쉽게 하려고 일부러 크게 만들죠.
+        그 결과 <strong>기여도가 거의 0인 가중치</strong>가 수두룩하고, 비슷한 일을 하는 <strong>중복 뉴런</strong>도 많습니다.
+        가지치기는 그 군더더기를 <em>잘라내는</em> 접근이고, 증류는 큰 모델이 배운 핵심을 <em>작은 모델로 옮기는</em> 접근입니다.
+      </p>
+      <p class="lang-en">
+        Deep models are usually <strong>over-parameterized</strong> — deliberately made bigger to make training easier.
+        The result is a sea of <strong>near-zero-impact weights</strong> and plenty of <strong>redundant neurons</strong> doing similar work.
+        Pruning <em>cuts away</em> that excess; distillation <em>transfers</em> what the big model learned into a smaller one.
+      </p>
+    </section>
+
+    <!-- 02 -->
+    <section id="pruning">
+      <div class="sec-num">SECTION 02</div>
+      <h2 class="lang-ko">가지치기(Pruning)란 무엇인가</h2>
+      <h2 class="lang-en">What pruning actually is</h2>
+      <p class="lang-ko">
+        <strong>가지치기</strong>는 모델에서 <strong>기여도가 낮은 가중치·연결·뉴런을 제거</strong>해 크기와 연산을 줄이는 기법입니다.
+        나무의 죽은 가지를 잘라도 나무가 사는 것처럼, 덜 중요한 부분을 덜어내도 성능은 거의 유지됩니다.
+      </p>
+      <p class="lang-en">
+        <strong>Pruning</strong> removes the <strong>low-impact weights, connections or neurons</strong> from a model to cut its size and compute.
+        Like trimming dead branches without killing the tree, you can drop the less-important parts and keep accuracy nearly intact.
+      </p>
+      <div class="box analogy">
+        <div class="tag"><span class="dot" style="background:var(--warm)"></span> <span class="lang-ko">비유 · 원고 다듬기</span><span class="lang-en">Analogy · editing a draft</span></div>
+        <p class="lang-ko">
+          초고는 군더더기 문장으로 가득합니다. 의미를 거의 안 바꾸는 단어·문장을 덜어내면 글은 <strong>짧아지지만 메시지는 그대로</strong>죠.
+          가지치기가 딱 이겁니다 — 출력에 거의 영향 없는 가중치를 0으로 만들어 모델을 <strong>희소(sparse)</strong>하게 만듭니다.
+        </p>
+        <p class="lang-en">
+          A first draft is full of filler. Cut the words and sentences that barely change the meaning and it gets <strong>shorter while the message stays.</strong>
+          That's pruning — zero out the weights that barely affect the output, making the model <strong>sparse.</strong>
+        </p>
+      </div>
+    </section>
+
+    <!-- 03 -->
+    <section id="prune-types">
+      <div class="sec-num">SECTION 03</div>
+      <h2 class="lang-ko">비정형 · 정형 · N:M — 무엇을 자르나</h2>
+      <h2 class="lang-en">Unstructured · structured · N:M — what you cut</h2>
+      <p class="lang-ko">가지치기의 핵심 갈림길은 "<strong>개별 가중치를 띄엄띄엄 자르냐, 구조 단위로 통째 자르냐</strong>"입니다. 여기서 실제 속도 향상 여부가 갈립니다.</p>
+      <p class="lang-en">The key fork in pruning is “<strong>cut individual weights here and there, or remove whole structures.</strong>” That's what decides whether you actually get faster.</p>
+      <div class="cmp">
+        <table>
+          <thead><tr>
+            <th><span class="lang-ko">방식</span><span class="lang-en">Type</span></th>
+            <th><span class="lang-ko">무엇을 제거</span><span class="lang-en">What is removed</span></th>
+            <th><span class="lang-ko">실제 속도↑?</span><span class="lang-en">Real speedup?</span></th>
+            <th><span class="lang-ko">특징</span><span class="lang-en">Notes</span></th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <th><span class="lang-ko">비정형 (Unstructured)</span><span class="lang-en">Unstructured</span></th>
+              <td><span class="lang-ko">개별 가중치를 0으로</span><span class="lang-en">individual weights → 0</span></td>
+              <td class="dense"><span class="lang-ko">조건부 (희소 커널 필요)</span><span class="lang-en">conditional (needs sparse kernels)</span></td>
+              <td><span class="lang-ko">압축률 최고, 그러나 일반 GPU에선 메모리만 절약</span><span class="lang-en">highest sparsity, but on normal GPUs it only saves memory</span></td>
+            </tr>
+            <tr>
+              <th><span class="lang-ko">정형 (Structured)</span><span class="lang-en">Structured</span></th>
+              <td><span class="lang-ko">뉴런·채널·어텐션 헤드·층 통째로</span><span class="lang-en">whole neurons, channels, heads, layers</span></td>
+              <td class="dense"><strong><span class="lang-ko">예 (밀집 연산)</span><span class="lang-en">yes (dense ops)</span></strong></td>
+              <td><span class="lang-ko">작아진 행렬로 바로 빨라짐. 단 과하게 자르면 정확도↓</span><span class="lang-en">smaller matrices run faster directly; over-cut and accuracy drops</span></td>
+            </tr>
+            <tr>
+              <th><span class="lang-ko">N:M 반정형 (예 2:4)</span><span class="lang-en">N:M semi-structured (e.g. 2:4)</span></th>
+              <td><span class="lang-ko">4개 중 2개는 반드시 0</span><span class="lang-en">2 of every 4 must be zero</span></td>
+              <td class="dense"><strong><span class="lang-ko">예 (전용 HW)</span><span class="lang-en">yes (HW support)</span></strong></td>
+              <td><span class="lang-ko">NVIDIA Ampere+의 희소 텐서 코어가 ~2배 가속</span><span class="lang-en">NVIDIA Ampere+ sparse Tensor Cores give ~2× speedup</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="box key">
+        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">함정 · "희소 ≠ 빠름"</span><span class="lang-en">Gotcha · sparse ≠ fast</span></div>
+        <p class="lang-ko">
+          비정형으로 90%를 0으로 만들어도, 일반 GPU는 그 0들을 <strong>여전히 곱셈</strong>합니다(밀집 연산). 실제 속도를 얻으려면
+          <strong>희소 연산을 지원하는 커널·하드웨어</strong>가 필요해요. 그래서 실무에선 정형(구조 제거)이나 2:4 같은 <strong>하드웨어가 가속하는 패턴</strong>을 선호합니다.
+        </p>
+        <p class="lang-en">
+          Zero out 90% with unstructured pruning and a normal GPU <strong>still multiplies those zeros</strong> (dense math). To actually go faster you need
+          <strong>kernels/hardware that exploit sparsity.</strong> So in practice people prefer structured pruning or hardware-accelerated patterns like 2:4.
+        </p>
+      </div>
+    </section>
+
+    <!-- 04 -->
+    <section id="prune-how">
+      <div class="sec-num">SECTION 04</div>
+      <h2 class="lang-ko">어떻게 자를까 — 기준과 절차</h2>
+      <h2 class="lang-en">How you actually prune — criteria & procedure</h2>
+      <h3 class="lang-ko">① 무엇을 자를지 (기준)</h3>
+      <h3 class="lang-en">① Deciding what to cut (the criterion)</h3>
+      <ul class="clean">
+        <li><span class="lang-ko"><b>크기(Magnitude)</b> — 절댓값이 작은 가중치부터 제거. 가장 단순하고 강력한 기본기.</span><span class="lang-en"><b>Magnitude</b> — drop the smallest-|weight| first. The simple, strong baseline.</span></li>
+        <li><span class="lang-ko"><b>민감도(Gradient/Taylor)</b> — 제거 시 손실이 얼마나 늘지를 추정해 영향 적은 것부터.</span><span class="lang-en"><b>Sensitivity (gradient/Taylor)</b> — estimate how much loss would rise if removed, cut the least-impactful.</span></li>
+        <li><span class="lang-ko"><b>이동(Movement) 프루닝</b> — 파인튜닝 중 0으로 "이동하는" 가중치를 제거. 전이학습에 강함.</span><span class="lang-en"><b>Movement pruning</b> — remove weights that “move toward zero” during fine-tuning; strong for transfer.</span></li>
+      </ul>
+      <h3 class="lang-ko">② 언제 자를지 (절차)</h3>
+      <h3 class="lang-en">② When to cut (the procedure)</h3>
+      <p class="lang-ko">
+        <strong>원샷</strong>(한 번에 자르고 끝)은 빠르지만 정확도 손실이 큽니다. 보통은 <strong>반복(iterative) 가지치기 + 미세조정</strong>을 씁니다 —
+        조금 자르고 → 재학습으로 회복 → 또 자르고… 이렇게 점진적으로 가면 같은 희소도에서 정확도가 훨씬 잘 유지됩니다.
+        고전 레시피 <strong>Deep Compression</strong>은 <em>가지치기 → 양자화 → 허프만 부호화</em>를 묶어 큰 압축을 달성했죠.
+      </p>
+      <p class="lang-en">
+        <strong>One-shot</strong> (cut once, done) is fast but hurts accuracy. The usual recipe is <strong>iterative pruning + fine-tuning</strong> —
+        cut a little → recover by retraining → cut again… Going gradually keeps accuracy much better at the same sparsity.
+        The classic <strong>Deep Compression</strong> pipeline chained <em>pruning → quantization → Huffman coding</em> for large compression.
+      </p>
+      <div class="box field">
+        <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">짚고 갈 이론 · 로터리 티켓 가설</span><span class="lang-en">Theory worth knowing · the Lottery Ticket Hypothesis</span></div>
+        <p class="lang-ko">
+          Frankle &amp; Carbin(2019)은 큰 네트워크 안에 <strong>처음부터 잘 학습되는 작은 부분망("당첨 티켓")</strong>이 존재한다고 주장했습니다.
+          그 희소 부분망만 같은 초기값으로 다시 학습하면 원본에 맞먹는 정확도가 나온다는 거죠. "왜 가지치기가 통하는가"에 대한 깊은 단서입니다.
+        </p>
+        <p class="lang-en">
+          Frankle &amp; Carbin (2019) argued that inside a big network there exist <strong>small subnetworks (“winning tickets”) that train well from the start.</strong>
+          Re-train just that sparse subnetwork from the same initialization and it matches the original's accuracy — a deep hint at why pruning works at all.
+        </p>
+      </div>
+    </section>
+
+    <!-- 05 -->
+    <section id="prune-llm">
+      <div class="sec-num">SECTION 05</div>
+      <h2 class="lang-ko">LLM을 재학습 없이 가지치기</h2>
+      <h2 class="lang-en">Pruning LLMs without retraining</h2>
+      <p class="lang-ko">
+        문제는 LLM은 너무 커서 <strong>"자르고 재학습"이 비현실적</strong>이라는 점입니다. 그래서 <strong>재학습 없이 한 번에</strong> 가지치는 기법들이 나왔습니다.
+      </p>
+      <p class="lang-en">
+        The catch is that LLMs are so large that <strong>“cut then retrain” is impractical.</strong> So methods emerged to prune them <strong>one-shot, without retraining.</strong>
+      </p>
+      <ul class="clean">
+        <li><span class="lang-ko"><b>SparseGPT</b> (Frantar &amp; Alistarh, 2023) — 거대한 LLM을 재학습 없이 <strong>~50% 희소</strong>까지 자르면서 정확도 손실을 작게. 가중치 제거 후 남은 가중치를 보정하는 방식.</span><span class="lang-en"><b>SparseGPT</b> (Frantar &amp; Alistarh, 2023) — prune a massive LLM to <strong>~50% sparsity</strong> with little accuracy loss and no retraining, by reconstructing the remaining weights after removal.</span></li>
+        <li><span class="lang-ko"><b>Wanda</b> (Sun et al., 2023) — 가중치 크기 × 입력 활성값을 기준으로 잘라, <strong>재학습도 가중치 보정도 없이</strong> 아주 싸게. 단순하지만 효과적.</span><span class="lang-en"><b>Wanda</b> (Sun et al., 2023) — prune by weight magnitude × input activation, <strong>no retraining, no weight update</strong> — dead cheap and surprisingly effective.</span></li>
+        <li><span class="lang-ko"><b>LLM-Pruner</b> — 구조적(정형)으로 잘라 실제 속도 향상을 노리는 계열.</span><span class="lang-en"><b>LLM-Pruner</b> — structured pruning aimed at real speedups.</span></li>
+      </ul>
+      <p class="lang-ko">
+        포인트: LLM 가지치기는 <strong>"어떤 가중치가 출력에 중요한가"를 (재학습 없이) 추정하는 게임</strong>입니다. 활성값을 보는 Wanda가 단순 크기보다 잘 통하는 이유죠.
+      </p>
+      <p class="lang-en">
+        The point: pruning LLMs is the game of <strong>estimating which weights matter for the output — without retraining.</strong> That's why activation-aware Wanda beats plain magnitude.
+      </p>
+    </section>
+
+    <!-- 06 -->
+    <section id="distill">
+      <div class="sec-num">SECTION 06</div>
+      <h2 class="lang-ko">지식 증류(Distillation)란 — '다크 널리지'</h2>
+      <h2 class="lang-en">What distillation is — “dark knowledge”</h2>
+      <p class="lang-ko">
+        <strong>지식 증류</strong>는 똑똑한 <strong>선생(teacher) 모델</strong>의 행동을 작은 <strong>학생(student) 모델</strong>이 따라 배우게 하는 기법입니다(Hinton et al., 2015).
+        핵심은 "정답 라벨"이 아니라 <strong>선생의 확률 분포 전체</strong>를 베끼게 한다는 점이에요.
+      </p>
+      <p class="lang-en">
+        <strong>Knowledge distillation</strong> trains a small <strong>student</strong> model to imitate a smart <strong>teacher</strong> (Hinton et al., 2015).
+        The key is that the student copies the teacher's <strong>full probability distribution</strong> — not just the hard label.
+      </p>
+      <div class="box key">
+        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">왜 분포가 더 좋은가 · 다크 널리지</span><span class="lang-en">Why the distribution helps · dark knowledge</span></div>
+        <p class="lang-ko">
+          "개" 사진의 정답 라벨은 <code>[고양이 0, 개 1, 자동차 0]</code>뿐입니다. 그런데 선생의 출력은
+          <code>[고양이 0.25, 개 0.7, 자동차 0.001]</code>처럼 나와요 — "개지만 고양이와는 헷갈릴 만하고, 자동차와는 전혀 다르다"는 <strong>풍부한 정보</strong>가 담겨 있죠.
+          이 부가 정보를 <span class="em">다크 널리지(dark knowledge)</span>라 부르고, 학생은 이걸 배우며 훨씬 효율적으로 똑똑해집니다.
+        </p>
+        <p class="lang-en">
+          The hard label for a dog photo is only <code>[cat 0, dog 1, car 0]</code>. But the teacher outputs something like
+          <code>[cat 0.25, dog 0.7, car 0.001]</code> — carrying the <strong>rich signal</strong> “it's a dog, but cat-confusable, and nothing like a car.”
+          That extra signal is <span class="em">dark knowledge</span>, and learning it makes the student far more efficient.
+        </p>
+      </div>
+      <div class="box field">
+        <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">수학 한 스푼 · 온도(Temperature)</span><span class="lang-en">A spoonful of math · temperature</span></div>
+        <p class="lang-ko">
+          작은 확률(0.001 같은)은 너무 작아서 신호가 묻힙니다. 그래서 소프트맥스 전에 로짓을 <strong>온도 T로 나눠</strong> 분포를 <em>부드럽게(soft)</em> 펴줍니다(T↑ = 더 부드럽게).
+          최종 손실은 보통 <strong>① 정답에 대한 일반 교차엔트로피</strong> + <strong>② 선생-학생의 부드러운 분포 간 KL 발산</strong>을 섞어 씁니다. ②가 다크 널리지를 전달하는 통로예요.
+        </p>
+        <p class="lang-en">
+          Tiny probabilities (like 0.001) are too small to carry signal, so before softmax you <strong>divide the logits by a temperature T</strong> to <em>soften</em> the distribution (higher T = softer).
+          The final loss usually mixes <strong>① ordinary cross-entropy on the true label</strong> + <strong>② KL divergence between the softened teacher and student.</strong> Term ② is the channel that carries dark knowledge.
+        </p>
+      </div>
+    </section>
+
+    <!-- 07 -->
+    <section id="distill-kinds">
+      <div class="sec-num">SECTION 07</div>
+      <h2 class="lang-ko">세 가지 지식 — 무엇을 베끼나</h2>
+      <h2 class="lang-en">Three kinds of knowledge — what you copy</h2>
+      <div class="cmp">
+        <table>
+          <thead><tr>
+            <th><span class="lang-ko">종류</span><span class="lang-en">Kind</span></th>
+            <th><span class="lang-ko">학생이 따라하는 것</span><span class="lang-en">What the student matches</span></th>
+            <th><span class="lang-ko">대표 기법</span><span class="lang-en">Representative</span></th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <th><span class="lang-ko">응답 기반 (Response)</span><span class="lang-en">Response-based</span></th>
+              <td><span class="lang-ko">최종 출력(로짓/확률 분포)</span><span class="lang-en">final output (logits / probabilities)</span></td>
+              <td><span class="lang-ko">고전 Hinton 증류</span><span class="lang-en">classic Hinton KD</span></td>
+            </tr>
+            <tr>
+              <th><span class="lang-ko">특징 기반 (Feature)</span><span class="lang-en">Feature-based</span></th>
+              <td><span class="lang-ko">중간층의 표현(은닉 상태)</span><span class="lang-en">intermediate representations (hidden states)</span></td>
+              <td>FitNets (hints)</td>
+            </tr>
+            <tr>
+              <th><span class="lang-ko">관계 기반 (Relation)</span><span class="lang-en">Relation-based</span></th>
+              <td><span class="lang-ko">층·샘플 간의 '관계' 구조</span><span class="lang-en">relationships between layers / samples</span></td>
+              <td><span class="lang-ko">관계 증류 계열</span><span class="lang-en">relational KD</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="lang-ko">
+        실무에선 응답 기반(출력 베끼기)이 가장 흔하고, 특징 기반(중간층까지 맞추기)을 더하면 작은 학생도 더 깊은 표현을 흡수합니다.
+        학습 방식으로는 선생을 고정하는 <strong>오프라인</strong>, 둘이 같이 크는 <strong>온라인</strong>, 자기 자신을 가르치는 <strong>셀프 증류</strong>가 있습니다.
+      </p>
+      <p class="lang-en">
+        In practice, response-based (copy the output) is most common; add feature-based (match intermediate layers) and a small student absorbs deeper representations.
+        As schemes: <strong>offline</strong> (fixed teacher), <strong>online</strong> (both train together), and <strong>self-distillation</strong> (a model teaches itself).
+      </p>
+    </section>
+
+    <!-- 08 -->
+    <section id="distill-llm">
+      <div class="sec-num">SECTION 08</div>
+      <h2 class="lang-ko">LLM 증류 — 화이트박스 vs 블랙박스</h2>
+      <h2 class="lang-en">Distilling LLMs — white-box vs black-box</h2>
+      <p class="lang-ko">
+        고전 사례 <strong>DistilBERT</strong>(2019)는 BERT를 증류해 <strong>크기 40%↓, 속도 60%↑, 성능은 약 97% 유지</strong>했습니다. 생성 모델에는
+        토큰 분포 대신 <strong>선생이 만든 출력 시퀀스</strong>를 학생이 따라 배우는 <strong>시퀀스 레벨 증류</strong>(Kim &amp; Rush, 2016)를 씁니다.
+      </p>
+      <p class="lang-en">
+        The classic <strong>DistilBERT</strong> (2019) distilled BERT to <strong>40% smaller, 60% faster, ~97% of the performance.</strong> For generative models you use
+        <strong>sequence-level distillation</strong> (Kim &amp; Rush, 2016), where the student learns from the teacher's <strong>generated output sequences</strong> rather than token distributions.
+      </p>
+      <div class="box key">
+        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">요즘 LLM의 핵심 구분</span><span class="lang-en">The key modern distinction</span></div>
+        <p class="lang-ko">
+          <strong>화이트박스 증류</strong> — 선생의 <strong>로짓/내부 상태</strong>에 접근(가중치를 가진 오픈 모델). 신호가 풍부해 효율적.<br>
+          <strong>블랙박스 증류</strong> — 선생의 <strong>출력 텍스트만</strong> 접근(API만 열린 폐쇄 모델). 큰 모델로 대량의 <strong>합성 데이터</strong>를 만들어 작은 모델을 학습 — 이른바 "데이터 증류". 최근 소형 오픈 모델 다수가 이 방식으로 성능을 끌어올렸습니다.
+        </p>
+        <p class="lang-en">
+          <strong>White-box distillation</strong> — access the teacher's <strong>logits/internal states</strong> (an open model with weights). Richer signal, more efficient.<br>
+          <strong>Black-box distillation</strong> — access only the teacher's <strong>output text</strong> (a closed, API-only model). Generate lots of <strong>synthetic data</strong> with the big model to train the small one — “data distillation.” Many recent small open models leveled up this way.
+        </p>
+      </div>
+    </section>
+
+    <!-- 09 -->
+    <section id="combine">
+      <div class="sec-num">SECTION 09</div>
+      <h2 class="lang-ko">셋을 합치기 — 무엇을 언제 쓸까</h2>
+      <h2 class="lang-en">Combining all three — what to use when</h2>
+      <p class="lang-ko">
+        양자화·가지치기·증류는 <strong>곱해서</strong> 효과가 납니다. 전형적 순서는 — 먼저 <strong>증류</strong>로 더 작은 구조를 얻고,
+        <strong>가지치기</strong>로 군더더기를 덜어낸 뒤(하드웨어가 받쳐주면 2:4), 마지막에 <strong>양자화</strong>로 비트를 낮춰 배포합니다.
+      </p>
+      <p class="lang-en">
+        Quantization, pruning and distillation <strong>compound.</strong> A typical order: first <strong>distill</strong> into a smaller architecture,
+        then <strong>prune</strong> the excess (2:4 if the hardware supports it), and finally <strong>quantize</strong> the bits down for deployment.
+      </p>
+      <div class="cmp">
+        <table>
+          <thead><tr>
+            <th><span class="lang-ko">상황</span><span class="lang-en">Situation</span></th>
+            <th><span class="lang-ko">우선 레버</span><span class="lang-en">Reach for</span></th>
+          </tr></thead>
+          <tbody>
+            <tr><th><span class="lang-ko">메모리에 안 들어감 (가장 흔함)</span><span class="lang-en">Won't fit in memory (most common)</span></th><td class="dense"><span class="lang-ko"><b>양자화</b> (가장 싸고 효과 즉시) → <a href="/blog/llm-quantization-guide">이전 글</a></span><span class="lang-en"><b>Quantization</b> (cheapest, immediate) → <a href="/blog/llm-quantization-guide">earlier post</a></span></td></tr>
+            <tr><th><span class="lang-ko">하드웨어가 2:4 희소 지원</span><span class="lang-en">Hardware supports 2:4 sparsity</span></th><td class="dense"><span class="lang-ko"><b>정형/N:M 가지치기</b>로 실제 속도↑</span><span class="lang-en"><b>Structured / N:M pruning</b> for real speedup</span></td></tr>
+            <tr><th><span class="lang-ko">아예 작은 전용 모델이 필요</span><span class="lang-en">You need a genuinely small dedicated model</span></th><td class="dense"><span class="lang-ko"><b>증류</b> (작지만 똑똑한 학생)</span><span class="lang-en"><b>Distillation</b> (small but sharp student)</span></td></tr>
+            <tr><th><span class="lang-ko">최대 효율 (배포용)</span><span class="lang-en">Maximum efficiency (for shipping)</span></th><td class="dense"><span class="lang-ko">증류 → 가지치기 → 양자화 <b>조합</b></span><span class="lang-en"><b>Combine</b>: distill → prune → quantize</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="box field">
+        <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">실제 사례</span><span class="lang-en">In the wild</span></div>
+        <p class="lang-ko">
+          네이버 <strong>HyperCLOVA X</strong>를 비롯한 여러 모델이 이 세 레버를 <strong>함께</strong> 적용해 효율을 끌어올립니다.
+          "어떤 한 가지가 정답"이 아니라, 제약(메모리·속도·하드웨어·데이터)에 맞춰 <strong>조합</strong>하는 게 실무의 핵심입니다.
+        </p>
+        <p class="lang-en">
+          Models like Naver's <strong>HyperCLOVA X</strong> apply all three levers <strong>together</strong> to push efficiency.
+          There's no single “right” one — the real skill is <strong>combining</strong> them to fit your constraints (memory, speed, hardware, data).
+        </p>
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section id="recap">
+      <div class="sec-num">SECTION 10</div>
+      <h2 class="lang-ko">한 장 요약</h2>
+      <h2 class="lang-en">One-page recap</h2>
+      <div class="terms">
+        <span class="lang-ko">가지치기</span><span class="lang-en">Pruning</span>
+        <span class="lang-ko">비정형/정형</span><span class="lang-en">Unstructured/structured</span>
+        <span class="lang-ko">N:M (2:4)</span><span class="lang-en">N:M (2:4)</span>
+        <span class="lang-ko">로터리 티켓</span><span class="lang-en">Lottery ticket</span>
+        <span class="lang-ko">SparseGPT/Wanda</span><span class="lang-en">SparseGPT/Wanda</span>
+        <span class="lang-ko">지식 증류</span><span class="lang-en">Distillation</span>
+        <span class="lang-ko">다크 널리지</span><span class="lang-en">Dark knowledge</span>
+        <span class="lang-ko">온도</span><span class="lang-en">Temperature</span>
+        <span class="lang-ko">화이트/블랙박스</span><span class="lang-en">White/black-box</span>
+      </div>
+      <dl class="recap">
+        <div><dt><span class="lang-ko">가지치기</span><span class="lang-en">Pruning</span></dt><dd><span class="lang-ko">기여도 낮은 가중치·구조를 제거해 모델을 희소하게. 실제 속도는 정형/N:M에서</span><span class="lang-en">remove low-impact weights/structures to make the model sparse; real speed comes from structured/N:M</span></dd></div>
+        <div><dt><span class="lang-ko">희소 ≠ 빠름</span><span class="lang-en">Sparse ≠ fast</span></dt><dd><span class="lang-ko">0을 만들어도 일반 GPU는 곱한다. 속도엔 희소 커널/HW가 필요</span><span class="lang-en">zeros still get multiplied on a normal GPU; speed needs sparse kernels/HW</span></dd></div>
+        <div><dt><span class="lang-ko">SparseGPT / Wanda</span><span class="lang-en">SparseGPT / Wanda</span></dt><dd><span class="lang-ko">LLM을 재학습 없이 한 번에 가지치는 대표 기법</span><span class="lang-en">prune LLMs one-shot, no retraining</span></dd></div>
+        <div><dt><span class="lang-ko">지식 증류</span><span class="lang-en">Distillation</span></dt><dd><span class="lang-ko">선생의 분포(다크 널리지)를 학생이 배움. 온도로 분포를 부드럽게</span><span class="lang-en">student learns the teacher's distribution (dark knowledge); temperature softens it</span></dd></div>
+        <div><dt><span class="lang-ko">화이트/블랙박스</span><span class="lang-en">White/black-box</span></dt><dd><span class="lang-ko">로짓 접근(오픈) vs 출력 텍스트만(폐쇄, 합성 데이터)</span><span class="lang-en">access logits (open) vs output text only (closed, synthetic data)</span></dd></div>
+        <div><dt><span class="lang-ko">조합</span><span class="lang-en">Combine</span></dt><dd><span class="lang-ko">증류 → 가지치기 → 양자화. 셋은 곱해서 효과</span><span class="lang-en">distill → prune → quantize; the three compound</span></dd></div>
+      </dl>
+      <div class="box key" style="margin-top:30px">
+        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">결론</span><span class="lang-en">Bottom line</span></div>
+        <p class="lang-ko">
+          양자화가 "숫자를 가볍게"라면, 가지치기는 "군더더기를 잘라", 증류는 "지식을 옮겨 담아"입니다.
+          하나만 고르는 게 아니라 <strong>제약에 맞춰 조합</strong>하는 눈 — 그게 모델을 작게, 그러나 똑똑하게 유지하는 실력입니다.
+        </p>
+        <p class="lang-en">
+          Quantization makes the numbers lighter, pruning cuts the excess, distillation transfers the knowledge.
+          You don't pick one — the skill is the <strong>eye for combining them to your constraints.</strong> That's how you keep a model small, yet smart.
+        </p>
+      </div>
+    </section>
+
+
+    <footer>
+      <div class="lang-ko">모델 압축 심화 · 가지치기 &amp; 지식 증류</div>
+      <div class="lang-en">Model compression deep dive · pruning &amp; knowledge distillation</div>
+      <div class="src lang-ko">
+        <strong style="color:var(--ink-soft)">직접 조사·작성한 글입니다.</strong> 아래 논문을 토대로 정리했습니다.<br><br>
+        <strong style="color:var(--ink-soft)">References</strong><br>
+        · 가지치기: Han et al., NeurIPS 2015 (<a href="https://arxiv.org/abs/1506.02626" target="_blank" rel="noopener noreferrer">arXiv:1506.02626</a>) · Deep Compression, ICLR 2016 (<a href="https://arxiv.org/abs/1510.00149" target="_blank" rel="noopener noreferrer">arXiv:1510.00149</a>)<br>
+        · 로터리 티켓: Frankle &amp; Carbin, ICLR 2019 (<a href="https://arxiv.org/abs/1803.03635" target="_blank" rel="noopener noreferrer">arXiv:1803.03635</a>)<br>
+        · LLM 가지치기: SparseGPT, ICML 2023 (<a href="https://arxiv.org/abs/2301.00774" target="_blank" rel="noopener noreferrer">arXiv:2301.00774</a>) · Wanda, 2023 (<a href="https://arxiv.org/abs/2306.11695" target="_blank" rel="noopener noreferrer">arXiv:2306.11695</a>)<br>
+        · 증류: Hinton et al., 2015 (<a href="https://arxiv.org/abs/1503.02531" target="_blank" rel="noopener noreferrer">arXiv:1503.02531</a>) · FitNets (<a href="https://arxiv.org/abs/1412.6550" target="_blank" rel="noopener noreferrer">arXiv:1412.6550</a>) · DistilBERT (<a href="https://arxiv.org/abs/1910.01108" target="_blank" rel="noopener noreferrer">arXiv:1910.01108</a>) · Sequence-level KD (<a href="https://arxiv.org/abs/1606.07947" target="_blank" rel="noopener noreferrer">arXiv:1606.07947</a>)
+      </div>
+      <div class="src lang-en">
+        <strong style="color:var(--ink-soft)">Researched and written from scratch</strong>, compiled from the papers below.<br><br>
+        <strong style="color:var(--ink-soft)">References</strong><br>
+        · Pruning: Han et al., NeurIPS 2015 (<a href="https://arxiv.org/abs/1506.02626" target="_blank" rel="noopener noreferrer">arXiv:1506.02626</a>) · Deep Compression, ICLR 2016 (<a href="https://arxiv.org/abs/1510.00149" target="_blank" rel="noopener noreferrer">arXiv:1510.00149</a>)<br>
+        · Lottery ticket: Frankle &amp; Carbin, ICLR 2019 (<a href="https://arxiv.org/abs/1803.03635" target="_blank" rel="noopener noreferrer">arXiv:1803.03635</a>)<br>
+        · Pruning LLMs: SparseGPT, ICML 2023 (<a href="https://arxiv.org/abs/2301.00774" target="_blank" rel="noopener noreferrer">arXiv:2301.00774</a>) · Wanda, 2023 (<a href="https://arxiv.org/abs/2306.11695" target="_blank" rel="noopener noreferrer">arXiv:2306.11695</a>)<br>
+        · Distillation: Hinton et al., 2015 (<a href="https://arxiv.org/abs/1503.02531" target="_blank" rel="noopener noreferrer">arXiv:1503.02531</a>) · FitNets (<a href="https://arxiv.org/abs/1412.6550" target="_blank" rel="noopener noreferrer">arXiv:1412.6550</a>) · DistilBERT (<a href="https://arxiv.org/abs/1910.01108" target="_blank" rel="noopener noreferrer">arXiv:1910.01108</a>) · Sequence-level KD (<a href="https://arxiv.org/abs/1606.07947" target="_blank" rel="noopener noreferrer">arXiv:1606.07947</a>)
+      </div>
+    </footer>
+
+  </div>
+  </main>
+</div>
+
+<script>
+  const bar = document.getElementById('progress');
+  const onScroll = () => {
+    const h = document.documentElement;
+    const denom = h.scrollHeight - h.clientHeight;
+    const scrolled = denom > 0 ? h.scrollTop / denom : 0;
+    bar.style.width = (scrolled * 100) + '%';
+  };
+  document.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  const links = Array.from(document.querySelectorAll('#toc a'));
+  const map = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(a => a.classList.remove('active'));
+        const a = map.get(e.target.id);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+  document.querySelectorAll('section, header.hero').forEach(s => io.observe(s));
+</script>
+</body>
+</html>

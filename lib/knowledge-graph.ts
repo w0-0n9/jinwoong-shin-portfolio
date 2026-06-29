@@ -270,6 +270,14 @@ export const nodes: GraphNode[] = [
         meta: { url: "/blog/aws-ai-practitioner", date: "Jan 2026", languages: "EN", kind: "writeup" },
     },
     {
+        id: "article-pruning-distillation",
+        type: "article",
+        label: "Smaller, Smarter: A Deep Dive into Pruning & Knowledge Distillation",
+        description:
+            "Blog writeup / deep dive. The two model-compression levers beyond quantization — pruning (unstructured vs structured vs N:M/2:4 sparsity, magnitude & iterative pruning, the Lottery Ticket Hypothesis, one-shot LLM pruning with SparseGPT and Wanda) and knowledge distillation (dark knowledge, temperature, response/feature/relation-based, DistilBERT, sequence-level, white-box vs black-box data distillation) — plus how to combine distill → prune → quantize. Bilingual (English / Korean).",
+        meta: { url: "/blog/pruning-and-distillation", date: "Jun 2026", languages: "EN / KO", kind: "writeup" },
+    },
+    {
         id: "article-gb10",
         type: "article",
         label: "A Data Center on Your Desk: Dell Pro Max with GB10 for On-Prem & Edge AI",
@@ -410,6 +418,9 @@ export const edges: GraphEdge[] = [
     { source: "article-quantization", target: "skill-mlx", relation: "covers" },
     { source: "article-aws-cert", target: "cert-aws-ai", relation: "covers" },
     { source: "article-aws-cert", target: "skill-model-eval", relation: "covers" },
+    { source: "jinwoong", target: "article-pruning-distillation", relation: "wrote" },
+    { source: "article-pruning-distillation", target: "skill-model-eval", relation: "covers" },
+    { source: "article-pruning-distillation", target: "skill-on-prem-llm", relation: "covers" },
     { source: "jinwoong", target: "article-gb10", relation: "wrote" },
     { source: "article-gb10", target: "skill-on-prem-llm", relation: "covers" },
     { source: "article-gb10", target: "skill-multi-agent", relation: "covers" },

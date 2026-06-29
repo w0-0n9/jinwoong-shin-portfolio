@@ -19,6 +19,16 @@ export interface BlogPost {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "pruning-and-distillation",
+    title: "Smaller, Smarter: A Deep Dive into Pruning & Knowledge Distillation",
+    description: "Beyond quantization — a deep dive into the other two model-compression levers: pruning (unstructured, structured, N:M, SparseGPT/Wanda) and knowledge distillation (dark knowledge, temperature, DistilBERT, white-box vs black-box), and how to combine all three. Readable in English and Korean.",
+    date: "2026-06-29",
+    tags: ["Model Compression", "Pruning", "Knowledge Distillation", "LLM", "On-device AI"],
+    content: `A deep dive into the two model-compression levers beyond quantization. Pruning: why over-parameterization lets you cut, unstructured vs structured vs N:M (2:4) sparsity, magnitude/iterative pruning, the Lottery Ticket Hypothesis, and one-shot LLM pruning (SparseGPT, Wanda). Knowledge distillation: dark knowledge and temperature, response/feature/relation-based knowledge, DistilBERT and sequence-level KD, white-box vs black-box (data) distillation. Plus how to combine distill → prune → quantize. Use the EN / 한국어 toggle to read it in either language.`,
+    htmlSource: "/blog-html/pruning-and-distillation.html?v=1",
+    bilingual: true,
+  },
+  {
     slug: "dell-gb10-edge-ai",
     title: "A Data Center on Your Desk: Dell Pro Max with GB10 for On-Prem & Edge AI",
     description: "What NVIDIA's GB10 Grace Blackwell superchip (Dell Pro Max with GB10 / DGX Spark) really is — unified memory, FP4, the CUDA stack — explained in plain language, then an analysis of how to put it to work on real industrial projects. Readable in English and Korean.",
@@ -35,7 +45,7 @@ export const blogPosts: BlogPost[] = [
     date: "2026-06-29",
     tags: ["LLM", "Quantization", "GPTQ", "AWQ", "GGUF", "On-device AI"],
     content: `A practical guide to running large language models locally through quantization — why giant models are stuck in data centers, how lowering numeric precision (8-bit, 4-bit) saves up to 87.5% of memory, and how to pick between GPTQ, AWQ and GGUF for your hardware. Bonus: pruning and knowledge distillation. Use the EN / 한국어 toggle to read it in either language.`,
-    htmlSource: "/blog-html/llm-quantization-guide.html?v=4",
+    htmlSource: "/blog-html/llm-quantization-guide.html?v=5",
     bilingual: true,
   },
   {

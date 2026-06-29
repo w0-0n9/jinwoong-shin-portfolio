@@ -4,7 +4,7 @@
  * Run `npm run sync:graph` (or just `npm run build` / `firebase deploy`)
  * to regenerate this file. Any manual edits here will be overwritten.
  *
- * Last generated: 2026-06-29T14:57:52.150Z
+ * Last generated: 2026-06-29T15:24:13.386Z
  */
 
 export type NodeType =
@@ -288,6 +288,18 @@ export const nodes: GraphNode[] = [
             "url": "/blog/aws-ai-practitioner",
             "date": "Jan 2026",
             "languages": "EN",
+            "kind": "writeup"
+        }
+    },
+    {
+        "id": "article-pruning-distillation",
+        "type": "article",
+        "label": "Smaller, Smarter: A Deep Dive into Pruning & Knowledge Distillation",
+        "description": "Blog writeup / deep dive. The two model-compression levers beyond quantization — pruning (unstructured vs structured vs N:M/2:4 sparsity, magnitude & iterative pruning, the Lottery Ticket Hypothesis, one-shot LLM pruning with SparseGPT and Wanda) and knowledge distillation (dark knowledge, temperature, response/feature/relation-based, DistilBERT, sequence-level, white-box vs black-box data distillation) — plus how to combine distill → prune → quantize. Bilingual (English / Korean).",
+        "meta": {
+            "url": "/blog/pruning-and-distillation",
+            "date": "Jun 2026",
+            "languages": "EN / KO",
             "kind": "writeup"
         }
     },
@@ -693,6 +705,21 @@ export const edges: GraphEdge[] = [
     {
         "source": "article-aws-cert",
         "target": "skill-model-eval",
+        "relation": "covers"
+    },
+    {
+        "source": "jinwoong",
+        "target": "article-pruning-distillation",
+        "relation": "wrote"
+    },
+    {
+        "source": "article-pruning-distillation",
+        "target": "skill-model-eval",
+        "relation": "covers"
+    },
+    {
+        "source": "article-pruning-distillation",
+        "target": "skill-on-prem-llm",
         "relation": "covers"
     },
     {

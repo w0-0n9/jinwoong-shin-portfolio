@@ -4,7 +4,7 @@
  * Run `npm run sync:graph` (or just `npm run build` / `firebase deploy`)
  * to regenerate this file. Any manual edits here will be overwritten.
  *
- * Last generated: 2026-06-29T15:24:13.386Z
+ * Last generated: 2026-06-30T13:49:54.181Z
  */
 
 export type NodeType =
@@ -310,6 +310,30 @@ export const nodes: GraphNode[] = [
         "description": "Blog writeup / analysis. Decodes the NVIDIA GB10 Grace Blackwell superchip (Dell Pro Max with GB10 / DGX Spark) in plain language — unified coherent memory, NVLink-C2C, FP4/NVFP4, the CUDA stack, sprinter-vs-decathlete trade-off, NCCL scale-out — then analyzes real industrial uses: on-prem LLM/RAG with data residency, edge multimodal vision, PoC→production portability. Bilingual (English / Korean).",
         "meta": {
             "url": "/blog/dell-gb10-edge-ai",
+            "date": "Jun 2026",
+            "languages": "EN / KO",
+            "kind": "writeup"
+        }
+    },
+    {
+        "id": "article-quantization-deep",
+        "type": "article",
+        "label": "Quantization, Under the Hood: Scale, Zero-Point & Integer Math",
+        "description": "Blog writeup / deep dive. The internals of quantization one layer below the playbook: why integers beat floats for on-device inference, PTQ vs QAT, how scale and zero-point map floats to int8 (symmetric and asymmetric, with worked numeric examples), two's complement and IEEE 754 / BF16, fixed-point arithmetic and how integer matrix multiplication actually runs, plus quantization granularity (per-tensor, per-channel, per-group). Bilingual (English / Korean).",
+        "meta": {
+            "url": "/blog/quantization-under-the-hood",
+            "date": "Jun 2026",
+            "languages": "EN / KO",
+            "kind": "writeup"
+        }
+    },
+    {
+        "id": "article-distillation-deep",
+        "type": "article",
+        "label": "Knowledge Distillation, In Depth: From 2006 Ensembles to LLM Codistillation",
+        "description": "Blog writeup / deep dive. What knowledge distillation really is — the 2006 model-compression roots (ensembles vs MoE, soft labels), Hinton & Dean's 2015 naming with dark knowledge and the origin of temperature, where modern LLMs apply it in the training pipeline, the crucial difference between proper distillation and behavioral cloning (DeepSeek), and the white-box requirement and cost (Gemma's 256-token sampling) plus Meta's codistillation. Bilingual (English / Korean).",
+        "meta": {
+            "url": "/blog/knowledge-distillation-in-depth",
             "date": "Jun 2026",
             "languages": "EN / KO",
             "kind": "writeup"
@@ -740,6 +764,36 @@ export const edges: GraphEdge[] = [
     {
         "source": "article-gb10",
         "target": "skill-rag",
+        "relation": "covers"
+    },
+    {
+        "source": "jinwoong",
+        "target": "article-quantization-deep",
+        "relation": "wrote"
+    },
+    {
+        "source": "article-quantization-deep",
+        "target": "skill-on-prem-llm",
+        "relation": "covers"
+    },
+    {
+        "source": "article-quantization-deep",
+        "target": "skill-mlx",
+        "relation": "covers"
+    },
+    {
+        "source": "jinwoong",
+        "target": "article-distillation-deep",
+        "relation": "wrote"
+    },
+    {
+        "source": "article-distillation-deep",
+        "target": "skill-on-prem-llm",
+        "relation": "covers"
+    },
+    {
+        "source": "article-distillation-deep",
+        "target": "skill-model-eval",
         "relation": "covers"
     },
     {

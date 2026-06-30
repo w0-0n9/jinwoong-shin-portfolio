@@ -19,6 +19,26 @@ export interface BlogPost {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "quantization-under-the-hood",
+    title: "Quantization, Under the Hood: Scale, Zero-Point & Integer Math",
+    description: "Beyond the playbook — what actually happens when you quantize a model: scale and zero-point, calibration, two's complement, IEEE 754 vs BF16, fixed-point arithmetic, integer matrix multiplication and granularity. Worked numeric examples throughout. Readable in English and Korean.",
+    date: "2026-06-30",
+    tags: ["Quantization", "LLM", "Fixed-point", "INT8", "Model Compression"],
+    content: `The internals of quantization, one layer below the playbook. Why integers beat floats for on-device inference, PTQ vs QAT with analogies, how scale and zero-point map floats to int8 (symmetric and asymmetric, with worked examples), two's complement and IEEE 754 / BF16, fixed-point arithmetic and how integer matrix multiplication actually runs, plus quantization granularity (per-tensor, per-channel, per-group). Use the EN / 한국어 toggle to read it in either language.`,
+    htmlSource: "/blog-html/quantization-under-the-hood.html?v=1",
+    bilingual: true,
+  },
+  {
+    slug: "knowledge-distillation-in-depth",
+    title: "Knowledge Distillation, In Depth: From 2006 Ensembles to LLM Codistillation",
+    description: "What knowledge distillation really is — the 2006 model-compression roots, Hinton & Dean's 2015 dark knowledge and temperature, and how modern LLMs (Gemma, Llama 4, DeepSeek) really do it: proper distillation vs behavioral cloning, codistillation, and the white-box requirement and cost. With examples. Readable in English and Korean.",
+    date: "2026-06-30",
+    tags: ["Knowledge Distillation", "LLM", "Dark Knowledge", "Codistillation", "Model Compression"],
+    content: `The deep version of knowledge distillation. Why scale drives it, the 2006 model-compression roots (ensembles vs MoE, soft labels), Hinton & Dean's 2015 naming with dark knowledge and the origin of temperature, where modern LLMs apply it in the training pipeline, the crucial difference between proper distillation and behavioral cloning (DeepSeek), why white-box access and cost matter (Gemma's 256-token sampling), and Meta's codistillation. Use the EN / 한국어 toggle to read it in either language.`,
+    htmlSource: "/blog-html/knowledge-distillation-in-depth.html?v=1",
+    bilingual: true,
+  },
+  {
     slug: "pruning-and-distillation",
     title: "Smaller, Smarter: A Deep Dive into Pruning & Knowledge Distillation",
     description: "Beyond quantization — a deep dive into the other two model-compression levers: pruning (unstructured, structured, N:M, SparseGPT/Wanda) and knowledge distillation (dark knowledge, temperature, DistilBERT, white-box vs black-box), and how to combine all three. Readable in English and Korean.",

@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ko" data-lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Knowledge Distillation, In Depth · From 2006 Ensembles to LLM Codistillation</title>
+<meta name="description" content="What knowledge distillation really is — the 2006 model-compression roots, Hinton & Dean's 2015 dark knowledge and temperature, and how modern LLMs (Gemma, Llama 4, DeepSeek) really do it: proper distillation vs behavioral cloning, codistillation, white-box requirements and cost." />
+<script>try{var l=localStorage.getItem('blog-lang');document.documentElement.setAttribute('data-lang',(l==='ko'||l==='en')?l:'en');}catch(e){document.documentElement.setAttribute('data-lang','en');}</script>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/blog-html/_shared.css?v=6" />
+</head>
+<body>
+<div id="progress"></div>
+
+<div class="wrap">
+  <aside>
+    <div class="toc-label"><span class="lang-ko">목차</span><span class="lang-en">Contents</span></div>
+    <nav class="toc" id="toc">
+      <a href="#intro"><span class="n">00</span><span class="lang-ko">들어가며</span><span class="lang-en">Intro</span></a>
+      <a href="#why"><span class="n">01</span><span class="lang-ko">왜 다들 열광하나</span><span class="lang-en">Why everyone cares</span></a>
+      <a href="#history"><span class="n">02</span><span class="lang-ko">2006년의 뿌리</span><span class="lang-en">The 2006 roots</span></a>
+      <a href="#2015"><span class="n">03</span><span class="lang-ko">2015: 이름을 얻다</span><span class="lang-en">2015: it gets a name</span></a>
+      <a href="#dark"><span class="n">04</span><span class="lang-ko">다크 널리지</span><span class="lang-en">Dark knowledge</span></a>
+      <a href="#temperature"><span class="n">05</span><span class="lang-ko">온도의 기원</span><span class="lang-en">Where temperature came from</span></a>
+      <a href="#modern"><span class="n">06</span><span class="lang-ko">최신 LLM 증류</span><span class="lang-en">Modern LLM distillation</span></a>
+      <a href="#cloning"><span class="n">07</span><span class="lang-ko">진짜 증류 vs 모방</span><span class="lang-en">Distillation vs cloning</span></a>
+      <a href="#cost"><span class="n">08</span><span class="lang-ko">왜 다 안 하나</span><span class="lang-en">Why not always</span></a>
+      <a href="#codistill"><span class="n">09</span><span class="lang-ko">코디스틸레이션</span><span class="lang-en">Codistillation</span></a>
+      <a href="#recap"><span class="n">10</span><span class="lang-ko">한 장 요약</span><span class="lang-en">One-page recap</span></a>
+    </nav>
+  </aside>
+
+  <main>
+  <div class="col">
+
+    <header class="hero" id="intro">
+      <span class="kicker"><span class="lang-ko">지식 증류 심화 · 역사부터 최신 LLM까지</span><span class="lang-en">Knowledge distillation · history to LLMs</span></span>
+      <h1 class="lang-ko">모델이<br><span class="hl">서로에게 배운다</span></h1>
+      <h1 class="lang-en">Models that<br><span class="hl">learn from each other</span></h1>
+      <p class="lede lang-ko">
+        오늘날 LLM은 날것의 텍스트뿐 아니라 <strong>서로에게서</strong> 배웁니다. 구글 Gemma 3는 Gemini가 가르쳤고, Meta의 Llama 4 Scout·Maverick은 거대 모델 Behemoth가 가르쳤죠.
+        이게 <strong>지식 증류(Knowledge Distillation)</strong>입니다. 흔히 오해받는 이 개념을, <a href="/blog/pruning-and-distillation">이전 글</a>보다 깊게 — 2006년 뿌리부터 최신 LLM 실무까지 — 풀어봅니다.
+      </p>
+      <p class="lede lang-en">
+        Today's LLMs learn not just from raw text but <strong>from each other.</strong> Google's Gemma 3 was taught by Gemini; Meta's Llama 4 Scout and Maverick by the giant Behemoth.
+        This is <strong>knowledge distillation</strong> — a concept that's often misunderstood. Here's the deep version, beyond my <a href="/blog/pruning-and-distillation">earlier post</a> — from its 2006 roots to how modern LLMs really do it.
+      </p>
+      <div class="meta-row">
+        <span class="lang-ko"><b>대상</b> · 증류를 "합성 데이터 만들기"로만 아는 분</span>
+        <span class="lang-en"><b>For</b> · Anyone who thinks distillation = “make synthetic data”</span>
+        <span class="lang-ko"><b>구성</b> · 11개 섹션 (역사 + 예시 + 최신 사례)</span>
+        <span class="lang-en"><b>Format</b> · 11 sections (history + examples + modern cases)</span>
+        <span class="lang-ko"><b>방식</b> · 논문 직접 조사 + 정리</span>
+        <span class="lang-en"><b>Method</b> · Researched from papers</span>
+      </div>
+    </header>
+
+    <div class="hook">
+      <p class="big lang-ko">증류는 "합성 데이터 만들기"가 아닙니다</p>
+      <p class="big lang-en">Distillation isn't “making synthetic data”</p>
+      <p class="lang-ko">버즈는 많은데 정작 자주 오해됩니다. 핵심은 <strong>큰 '선생'이 작은 '학생'에게 정답뿐 아니라
+      <span class="accent">'확신의 분포'까지 통째로 넘겨주는</span></strong> 것 — 거의 20년 된 아이디어이고, 구현 디테일이 성패를 가릅니다.</p>
+      <p class="lang-en">Lots of buzz, lots of confusion. The heart of it: a big <strong>“teacher” hands a small “student” not just the answer but
+      <span class="accent">its whole distribution of confidence</span></strong> — an idea nearly 20 years old, where the implementation details make or break it.</p>
+    </div>
+
+    <!-- 01 -->
+    <section id="why">
+      <div class="sec-num">SECTION 01</div>
+      <h2 class="lang-ko">왜 다들 열광하나 — 스케일</h2>
+      <h2 class="lang-en">Why everyone cares — scale</h2>
+      <p class="lang-ko">
+        2020년 한 기념비적 논문이 모두가 짐작하던 걸 확인했습니다 — <strong>모델을 더 좋게 하려면 더 키워야 한다.</strong>
+        스케일의 축은 셋입니다: <strong>연산(compute) · 데이터셋 크기 · 파라미터 수.</strong> 증류는 이 중 <strong>데이터와 파라미터</strong>를 도와줍니다.
+      </p>
+      <p class="lang-en">
+        A landmark 2020 paper confirmed what we suspected — <strong>to make models better, go bigger.</strong>
+        There are three axes of scale: <strong>compute, dataset size, and parameter count.</strong> Distillation helps with two of them — <strong>data and parameters.</strong>
+      </p>
+      <ul class="clean">
+        <li><span class="lang-ko"><b>데이터:</b> 우린 이미 인터넷을 거의 다 긁었습니다(벽에 부딪힘). 증류는 <strong>강력한 LLM이 새 데이터를 생성</strong>하게 해 이 한계를 넘습니다.</span><span class="lang-en"><b>Data:</b> we've basically scraped the whole internet (a wall). Distillation lets a <strong>powerful LLM generate more data</strong> to push past it.</span></li>
+        <li><span class="lang-ko"><b>파라미터:</b> 큰 모델은 추론이 느립니다(지연 병목). 증류는 <strong>학습과 추론을 분리</strong> — 학습엔 거대 모델을 쓰되 <strong>배포는 작고 빠른 모델</strong>로.</span><span class="lang-en"><b>Parameters:</b> big models are slow at inference (latency). Distillation <strong>decouples training from inference</strong> — train with a giant, deploy a <strong>small, fast</strong> model.</span></li>
+      </ul>
+      <p class="lang-ko">그래서 모든 LLM 제공자가 증류를 끌어안습니다 — 구글(Gemma 2·3), Meta(Llama 4), 그리고 DeepSeek. 단, 셋의 "증류"는 결이 좀 다릅니다. (뒤에서 다룹니다.)</p>
+      <p class="lang-en">No wonder every LLM provider embraces it — Google (Gemma 2/3), Meta (Llama 4), and DeepSeek. Though their “distillation” differs in kind. (More on that later.)</p>
+    </section>
+
+    <!-- 02 -->
+    <section id="history">
+      <div class="sec-num">SECTION 02</div>
+      <h2 class="lang-ko">2006년의 뿌리 — 모델 압축</h2>
+      <h2 class="lang-en">The 2006 roots — model compression</h2>
+      <p class="lang-ko">
+        때는 2006년. 트위터가 막 출시되고, 구글이 유튜브를 16억 달러에 인수하던 해. 코넬의 연구자들이 조용히 <strong>'모델 압축(model compression)'</strong>이라는 아이디어를 발표합니다.
+        당시 모델은 500MB~1GB로 작았는데, 왜 압축이 필요했을까요? <strong>PDA</strong>(개인용 디지털 단말기)처럼 저장공간이 빠듯한 기기에 올리려고요.
+      </p>
+      <p class="lang-en">
+        The year is 2006. Twitter just launched; Google buys YouTube for $1.6B. Researchers at Cornell quietly publish an idea: <strong>model compression.</strong>
+        Models were small then (500 MB–1 GB), so why compress? To fit them on storage-starved devices like <strong>PDAs.</strong>
+      </p>
+      <div class="box analogy">
+        <div class="tag"><span class="dot" style="background:var(--warm)"></span> <span class="lang-ko">반전 · 당시 최강은 '앙상블'</span><span class="lang-en">Twist · the best models were ensembles</span></div>
+        <p class="lang-ko">
+          그때 최고 성능은 단일 모델이 아니라 <strong>앙상블</strong> — 수천 개 모델의 예측을 평균낸 것이었습니다. 스팸 분류라면 1,000개 분류기를 훈련해 출력 확률을 평균내 최종 판정.
+          왜? 당시 학습은 <strong>노이즈가 심해</strong>(초기값·셔플에 민감) 어떤 런은 대박, 어떤 런은 쪽박이라, 앙상블은 그 복권을 수천 번 긁는 셈이었죠.<br><br>
+          <strong>"이거 MoE 아냐?"</strong> — 아닙니다. 앙상블은 모델들을 <strong>완전히 따로</strong> 훈련해 서로 복제본이 되지만, MoE의 전문가들은 게이팅 네트워크와 <strong>함께</strong> 훈련돼 서로 보완적인 전문성을 갖습니다.
+        </p>
+        <p class="lang-en">
+          Back then the best performers weren't single models but <strong>ensembles</strong> — thousands of models whose predictions are averaged. For spam, train 1,000 classifiers and average their output probabilities for the verdict.
+          Why? Training was <strong>noisy</strong> (sensitive to init and shuffling), so some runs were great and others flopped — an ensemble plays that lottery thousands of times.<br><br>
+          <strong>“Isn't that mixture-of-experts?”</strong> No. Ensembles are trained <strong>completely separately</strong> and become replicas of each other; in MoE the experts are trained <strong>jointly</strong> with a gating network and become complementary specialists.
+        </p>
+      </div>
+      <p class="lang-ko">
+        1,000개 모델을 PDA에 욱여넣는 건 비현실적이죠. 2006 논문의 영리한 제안: <strong>그 평균 출력을 곧바로 예측하는, 압축된 모델 하나를 훈련하자.</strong> 두 단계로:
+      </p>
+      <p class="lang-en">
+        Cramming 1,000 models onto a PDA is impractical. The 2006 paper's clever move: <strong>train one compressed model that predicts that average output directly.</strong> Two steps:
+      </p>
+      <ul class="clean">
+        <li><span class="lang-ko"><b>1단계:</b> 1,000개 분류기를 <strong>진짜 정답(하드 라벨)</strong>에 맞춰 훈련 → 학습이 끝나면 동결(freeze).</span><span class="lang-en"><b>Step 1:</b> train 1,000 classifiers against the <strong>true (hard) labels</strong> → then freeze them.</span></li>
+        <li><span class="lang-ko"><b>2단계:</b> 압축 모델은 정답이 아니라, 1,000개의 출력을 평균낸 <strong>소프트 라벨(soft label)</strong>에 맞춰 훈련. '소프트'인 이유 — 단순 yes/no가 아니라 <strong>확률 분포 전체</strong>라서.</span><span class="lang-en"><b>Step 2:</b> train the compressed model not on the true label but on the <strong>average of those outputs — a soft label.</strong> “Soft” because it's not a hard yes/no but a <strong>full probability distribution.</strong></span></li>
+      </ul>
+      <p class="lang-ko">이제 원본 1,000개는 버리고 작은 모델만 기기에 올립니다 — <strong>천 개의 지혜는 보존하되 추론 비용은 작게.</strong> 사실 이게 바로 지식 증류입니다. 다만 그 멋진 이름은 9년 뒤에 붙죠.</p>
+      <p class="lang-en">Throw away the 1,000 originals and ship just the small model — <strong>the wisdom of a thousand models, tiny inference cost.</strong> This already <em>is</em> knowledge distillation; the catchy name just came 9 years later.</p>
+    </section>
+
+    <!-- 03 -->
+    <section id="2015">
+      <div class="sec-num">SECTION 03</div>
+      <h2 class="lang-ko">2015 — 이름을 얻다 (Hinton &amp; Dean)</h2>
+      <h2 class="lang-en">2015 — it gets a name (Hinton &amp; Dean)</h2>
+      <p class="lang-ko">
+        2015년, 구글의 <strong>제프리 힌튼</strong>과 <strong>제프 딘</strong>이 이 2006 아이디어를 손글씨 숫자 분류(MNIST, 28×28, 0~9)에 다시 적용하며 <strong>'distillation'</strong>이라 명명합니다.
+        (재미: 힌튼은 2019 튜링상, 딘은 2023 구글 수석과학자.) 같은 레시피지만 출력 분포가 yes/no가 아니라 <strong>10개 숫자</strong>에 대한 것이라는 점만 다릅니다.
+      </p>
+      <p class="lang-en">
+        In 2015, Google's <strong>Geoffrey Hinton</strong> and <strong>Jeff Dean</strong> revisited the 2006 idea on handwritten-digit classification (MNIST, 28×28, 0–9) and coined the name <strong>“distillation.”</strong>
+        (Fun: Hinton won the 2019 Turing Award; Dean became Google's chief scientist in 2023.) Same recipe, except the output distribution is over <strong>10 digits</strong>, not a yes/no.
+      </p>
+      <div class="box key">
+        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">새 발견 · 앙상블이 없어도 통한다</span><span class="lang-en">New finding · works without an ensemble</span></div>
+        <p class="lang-ko">
+          이 논문의 핵심 발견: <strong>앙상블이 없어도 증류는 유용하다.</strong> 단일 모델을 작게 압축할 때도, 압축 모델을 <strong>원-핫 정답</strong>이 아니라 <strong>소프트 라벨</strong>에 훈련하는 게 더 낫다는 것.
+          그리고 이 관계를 절묘하게 표현한 용어 — <strong>선생(teacher)과 학생(student)</strong> — 도 여기서 나왔습니다.
+        </p>
+        <p class="lang-en">
+          The key finding: <strong>distillation helps even without an ensemble.</strong> When compressing a single model, training the small one on <strong>soft labels</strong> beats training on the <strong>one-hot true label.</strong>
+          And the now-iconic terminology — <strong>teacher and student</strong> — comes from this paper.
+        </p>
+      </div>
+    </section>
+
+    <!-- 04 -->
+    <section id="dark">
+      <div class="sec-num">SECTION 04</div>
+      <h2 class="lang-ko">다크 널리지 — "무엇이 아닌지"의 정보</h2>
+      <h2 class="lang-en">Dark knowledge — what the input is NOT</h2>
+      <p class="lang-ko">
+        소프트 라벨이 왜 특별할까요? <strong>하드 라벨보다 정보가 더 많기 때문</strong>입니다.
+      </p>
+      <p class="lang-en">
+        Why are soft labels special? Because they <strong>carry more information than hard labels.</strong>
+      </p>
+      <div class="box key">
+        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">예시 · 삐뚤어진 5</span><span class="lang-en">Example · a messy 5</span></div>
+        <p class="lang-ko">
+          지저분하게 쓴 <strong>5</strong>를 보면 <strong>3</strong>처럼 보이기도 하죠. 하드 라벨 <code>[…, 5: 100%, …]</code>은 이 정보를 전혀 안 담습니다.
+          하지만 선생의 소프트 라벨은 <strong>3에 두 번째로 높은 확률</strong>을 줍니다 — "이건 5지만, 3과 헷갈릴 만하다"는 정보. 이 부가 정보를 논문은 <strong>다크 널리지(dark knowledge)</strong> = <em>입력이 '무엇이 아닌지'에 대한 지식</em>이라 부릅니다.
+          선생이 이 힘든 일을 해서 학생에게 명시적으로 건네니, 학생은 <strong>더 적은 파라미터로 더 쉽게</strong> 학습합니다.
+        </p>
+        <p class="lang-en">
+          Squint at a sloppy <strong>5</strong> and it can look like a <strong>3.</strong> A hard label <code>[…, 5: 100%, …]</code> captures none of that.
+          But the teacher's soft label gives the <strong>second-highest probability to 3</strong> — “this is a 5, but it's 3-confusable.” The paper calls this extra signal <strong>dark knowledge</strong> = <em>knowledge about what the input is NOT.</em>
+          The teacher does that hard work and hands it over, so the student learns <strong>more easily, with fewer parameters.</strong>
+        </p>
+      </div>
+      <div class="box analogy">
+        <div class="tag"><span class="dot" style="background:var(--warm)"></span> <span class="lang-ko">비유 · 나비의 일생</span><span class="lang-en">Analogy · a butterfly's life</span></div>
+        <p class="lang-ko">
+          힌튼은 <strong>나비</strong> 비유를 씁니다. 애벌레와 성충은 완전히 다른 몸 — 필요가 다르니까요. 모델도 똑같습니다:
+          <strong>학습 때는 큰 파라미터 공간</strong>이 필요하지만, <strong>추론 때는 빠르고 가벼워야</strong> 합니다. 증류는 이 둘을 분리해줍니다.
+        </p>
+        <p class="lang-en">
+          Hinton uses a <strong>butterfly</strong> analogy: larva and adult are completely different bodies because their needs differ. Same for a model —
+          it wants a <strong>large parameter space during training</strong>, but to be <strong>fast and light at inference.</strong> Distillation splits the two.
+        </p>
+      </div>
+    </section>
+
+    <!-- 05 -->
+    <section id="temperature">
+      <div class="sec-num">SECTION 05</div>
+      <h2 class="lang-ko">온도의 기원 — 사실 증류에서 왔다</h2>
+      <h2 class="lang-en">Where temperature came from — distillation</h2>
+      <p class="lang-ko">
+        지금은 <strong>온도(temperature)</strong>를 'LLM 창의성 손잡이'(높을수록 더 의외의 출력)로 쓰지만, 원래는 <strong>증류를 위해 도입</strong>됐습니다.
+        목적은 <strong>다크 널리지를 증폭</strong>하는 것. 틀린 라벨의 확률이 <code>1e-8</code>처럼 너무 작으면 그래디언트가 거의 0이라 학생이 못 배웁니다. 이걸 <code>1e-3</code> 정도로 끌어올리면 갑자기 빨리 배우죠.
+      </p>
+      <p class="lang-en">
+        We now use <strong>temperature</strong> as an LLM “creativity knob” (higher = more surprising outputs), but it was originally introduced <strong>for distillation.</strong>
+        The goal: <strong>amplify dark knowledge.</strong> When wrong-label probabilities are tiny like <code>1e-8</code>, gradients are ~zero and the student learns little. Boost them to ~<code>1e-3</code> and it suddenly learns faster.
+      </p>
+      <div class="box field">
+        <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">수학 한 스푼</span><span class="lang-en">A spoonful of math</span></div>
+        <p class="lang-ko">
+          선생은 먼저 <strong>로짓(logits)</strong>(소프트맥스 전 원점수)을 냅니다. 온도는 단순히 <strong>소프트맥스 전에 로짓을 상수 T로 나누는 것</strong>이에요.
+          <strong>T가 높으면 분포가 부드러워지고(smooth), 낮으면 뾰족해집니다(peaky).</strong> 부드러워지면 작던 확률들이 살아나 다크 널리지가 학생에게 전달됩니다.
+        </p>
+        <p class="lang-en">
+          The teacher first emits <strong>logits</strong> (raw pre-softmax scores). Temperature simply means <strong>divide the logits by a constant T before softmax.</strong>
+          <strong>Higher T smooths the distribution; lower T makes it peaky.</strong> Smoothing revives the tiny probabilities so dark knowledge reaches the student.
+        </p>
+      </div>
+    </section>
+
+    <!-- 06 -->
+    <section id="modern">
+      <div class="sec-num">SECTION 06</div>
+      <h2 class="lang-ko">최신 LLM 증류 — 어느 단계에서?</h2>
+      <h2 class="lang-en">Modern LLM distillation — at which stage?</h2>
+      <p class="lang-ko">
+        오픈소스 생태계에서 증류를 끌어안은 대표 3사: <strong>Gemini → Gemma 2·3</strong>, <strong>Llama 4 Behemoth → Scout·Maverick</strong>, 그리고 MoE인 <strong>DeepSeek → 더 작은 dense 학생</strong>(Llama 3.1, Qwen 2.5 등 다른 아키텍처로).
+        첫 질문은 "<strong>훈련 파이프라인의 어느 단계에서</strong> 증류하나?"입니다.
+      </p>
+      <p class="lang-en">
+        Three prominent providers embrace it: <strong>Gemini → Gemma 2/3</strong>, <strong>Llama 4 Behemoth → Scout/Maverick</strong>, and the MoE <strong>DeepSeek → smaller dense students</strong> (a different architecture, e.g. Llama 3.1, Qwen 2.5).
+        The first question: “<strong>at what stage of the training pipeline</strong> do we distill?”
+      </p>
+      <div class="cmp">
+        <table>
+          <thead><tr>
+            <th><span class="lang-ko">단계</span><span class="lang-en">Stage</span></th>
+            <th><span class="lang-ko">무엇</span><span class="lang-en">What</span></th>
+            <th><span class="lang-ko">누가</span><span class="lang-en">Who</span></th>
+          </tr></thead>
+          <tbody>
+            <tr><th><span class="lang-ko">사전학습</span><span class="lang-en">Pre-training</span></th><td><span class="lang-ko">인터넷 대규모 데이터에 다음 단어 예측</span><span class="lang-en">next-word prediction on a huge web corpus</span></td><td><span class="lang-ko">Llama 4</span><span class="lang-en">Llama 4</span></td></tr>
+            <tr><th><span class="lang-ko">사후학습</span><span class="lang-en">Post-training</span></th><td><span class="lang-ko">Q&amp;A 쌍으로 파인튜닝(정렬·추론 강화)</span><span class="lang-en">fine-tune on Q&amp;A pairs (alignment, reasoning)</span></td><td><span class="lang-ko">DeepSeek</span><span class="lang-en">DeepSeek</span></td></tr>
+            <tr><th><span class="lang-ko">둘 다</span><span class="lang-en">Both</span></th><td><span class="lang-ko">사전 + 사후학습 모두에 적용</span><span class="lang-en">applied during both stages</span></td><td><span class="lang-ko">Gemma 3</span><span class="lang-en">Gemma 3</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 07 -->
+    <section id="cloning">
+      <div class="sec-num">SECTION 07</div>
+      <h2 class="lang-ko">진짜 증류 vs 행동 복제(behavioral cloning)</h2>
+      <h2 class="lang-en">Proper distillation vs behavioral cloning</h2>
+      <p class="lang-ko">
+        두 번째 질문은 "<strong>정보가 선생→학생으로 정확히 어떻게 전달되나</strong>?"입니다. 구현을 들여다보면, 제 생각엔 <strong>구글·Meta는 '진짜 증류'</strong>를 하지만 <strong>DeepSeek의 기법은 '행동 복제(behavioral cloning)'</strong>라 부르는 게 더 정확합니다.
+      </p>
+      <p class="lang-en">
+        The second question: “<strong>how exactly does information transfer from teacher to student?</strong>” Looking at the implementations, my take: <strong>Google and Meta do “proper distillation,”</strong> but <strong>DeepSeek's technique is more accurately “behavioral cloning.”</strong>
+      </p>
+      <div class="cmp">
+        <table>
+          <thead><tr>
+            <th></th>
+            <th class="h-dense"><span class="lang-ko">진짜 증류</span><span class="lang-en">Proper distillation</span></th>
+            <th class="h-sparse"><span class="lang-ko">행동 복제</span><span class="lang-en">Behavioral cloning</span></th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <th><span class="lang-ko">라벨</span><span class="lang-en">Labels</span></th>
+              <td class="dense"><span class="lang-ko">선생의 전체 확률 분포 (소프트)</span><span class="lang-en">teacher's full distribution (soft)</span></td>
+              <td class="sparse"><span class="lang-ko">원-핫 (예: "Matt"에 100%)</span><span class="lang-en">one-hot (e.g. 100% on “Matt”)</span></td>
+            </tr>
+            <tr>
+              <th><span class="lang-ko">데이터</span><span class="lang-en">Data</span></th>
+              <td class="dense"><span class="lang-ko">기존 코퍼스, 선생·학생 둘 다 분포 출력</span><span class="lang-en">existing corpus; both output distributions</span></td>
+              <td class="sparse"><span class="lang-ko">선생이 데이터를 생성, 학생은 다음단어 예측</span><span class="lang-en">teacher generates data; student does next-word</span></td>
+            </tr>
+            <tr>
+              <th><span class="lang-ko">다크 널리지</span><span class="lang-en">Dark knowledge</span></th>
+              <td class="dense"><span class="lang-ko">전달됨 ✓</span><span class="lang-en">transferred ✓</span></td>
+              <td class="sparse"><span class="lang-ko">전달 안 됨 (최종 출력만 모방)</span><span class="lang-en">none (imitates final outputs only)</span></td>
+            </tr>
+            <tr>
+              <th><span class="lang-ko">사례</span><span class="lang-en">Used by</span></th>
+              <td class="dense"><span class="lang-ko">Google, Meta</span><span class="lang-en">Google, Meta</span></td>
+              <td class="sparse"><span class="lang-ko">DeepSeek R1</span><span class="lang-en">DeepSeek R1</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="lang-ko">
+        <strong>진짜 증류:</strong> 미완성 문장을 선생·학생 <strong>둘 다</strong>에 넣어 각각 전체 어휘에 대한 분포를 내고, 학생이 <strong>선생의 분포에 가까워지도록</strong> 가중치를 조정합니다.<br>
+        <strong>행동 복제(DeepSeek):</strong> 선생이 만든 데이터에, 라벨은 <strong>원-핫</strong>으로 다음 단어 예측을 학습. "Matt"가 100% — 다크 널리지가 없으니, 학생은 <strong>최종 출력을 흉내</strong>낼 뿐 그 뒤의 추론은 못 배웁니다. 그래서 저는 이걸 '복제'라 부릅니다.
+      </p>
+      <p class="lang-en">
+        <strong>Proper distillation:</strong> feed an incomplete sentence to <strong>both</strong> teacher and student, each outputs a full-vocabulary distribution, and the student's weights move <strong>toward the teacher's distribution.</strong><br>
+        <strong>Behavioral cloning (DeepSeek):</strong> on teacher-generated data, the labels are <strong>one-hot</strong> next-word targets. “Matt” is 100% — no dark knowledge, so the student <strong>mimics the final outputs</strong>, not the reasoning behind them. That's why I'd call it cloning.
+      </p>
+    </section>
+
+    <!-- 08 -->
+    <section id="cost">
+      <div class="sec-num">SECTION 08</div>
+      <h2 class="lang-ko">왜 다들 진짜 증류를 안 하나</h2>
+      <h2 class="lang-en">Why not always do proper distillation</h2>
+      <p class="lang-ko">진짜 증류가 정보를 더 주는데도 다들 안 하는 이유는 둘입니다.</p>
+      <p class="lang-en">If proper distillation gives the student more, why doesn't everyone do it? Two reasons.</p>
+      <ul class="clean">
+        <li><span class="lang-ko"><b>① 선생이 화이트박스여야 함.</b> 확률 분포에 접근하려면 선생을 <strong>소유</strong>해야 합니다. OpenAI 밖에서 GPT를 증류하려는 누군가(이름은 생략)는 결국 <strong>행동 복제</strong>에 갇히죠.</span><span class="lang-en"><b>① The teacher must be a white box.</b> You need to <strong>own</strong> the teacher to access its distributions. Anyone (no names) distilling a GPT outside OpenAI is stuck with <strong>behavioral cloning.</strong></span></li>
+        <li><span class="lang-ko"><b>② 비용이 천문학적.</b> 모든 토큰마다 <strong>전체 어휘에 대한 분포</strong>가 필요합니다.</span><span class="lang-en"><b>② It's astronomically expensive.</b> Every training token needs a <strong>full distribution over the entire vocabulary.</strong></span></li>
+      </ul>
+      <div class="box field">
+        <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">냅킨 계산</span><span class="lang-en">Napkin math</span></div>
+        <p class="lang-ko">
+          학습셋 <strong>8조 토큰</strong> × 어휘 <strong>12.8만</strong> ≈ <strong>10<sup>18</sup>개</strong>의 소프트 라벨 값. 이걸 FP8로 저장하면 <strong>유튜브 전체 콘텐츠</strong>만큼의 용량이 필요합니다(챗GPT 추산). 구글조차 한 번의 증류엔 과하죠.
+          그래서 Gemma는 전체 분포 대신 선생 분포에서 <strong>256개 토큰만 샘플링</strong>하고 나머지는 0으로 둡니다 → 그래도 ~10<sup>15</sup>개. 결국 소프트 라벨은 <strong>즉석에서 계산하고 바로 버리는</strong> 식. 8조 번의 선생 추론, 만만치 않습니다.
+        </p>
+        <p class="lang-en">
+          A <strong>8-trillion-token</strong> training set × a <strong>128K</strong> vocabulary ≈ <strong>10<sup>18</sup></strong> soft-label values. Stored in FP8, that's roughly the storage of <strong>all of YouTube</strong> (per ChatGPT's estimate) — too much for one distillation run, even for Google.
+          So Gemma samples just <strong>256 tokens</strong> from the teacher's distribution and zeroes the rest → still ~10<sup>15</sup> values. The soft labels are likely <strong>computed on the fly and immediately discarded.</strong> Eight trillion teacher inferences is no joke.
+        </p>
+      </div>
+    </section>
+
+    <!-- 09 -->
+    <section id="codistill">
+      <div class="sec-num">SECTION 09</div>
+      <h2 class="lang-ko">코디스틸레이션 — 두 단계를 하나로</h2>
+      <h2 class="lang-en">Codistillation — merging the two passes</h2>
+      <p class="lang-ko">
+        Meta는 비용을 줄이려 <strong>코디스틸레이션(codistillation)</strong>이라는 트릭을 씁니다. 보통 증류는 선생 통과(forward pass)가 <strong>두 번</strong> 필요해요 —
+        (1) 선생 학습 때 한 번, (2) 선생을 동결하고 학생용 소프트 라벨을 만들 때 또 한 번. 코디스틸레이션은 이 둘을 <strong>하나로 합칩니다.</strong>
+      </p>
+      <p class="lang-en">
+        To cut cost, Meta uses a trick called <strong>codistillation.</strong> Regular distillation needs <strong>two</strong> forward passes through the teacher —
+        (1) while training the teacher, and (2) once it's frozen, to generate the student's soft labels. Codistillation <strong>merges them into one.</strong>
+      </p>
+      <div class="box key">
+        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">동시에 키우기 · 단점도</span><span class="lang-en">Train them together · the catch</span></div>
+        <p class="lang-ko">
+          선생과 학생을 <strong>동시에</strong> 훈련합니다. 선생은 자기 분포를 내며 하드 라벨로 스스로 업데이트하고, 학생은 <strong>바로 그 분포를 소프트 라벨로</strong> 즉시 씁니다.
+          단점: 선생이 아직 학습 중이라 <strong>소프트 라벨이 다소 틀릴 수</strong> 있어요(초반엔 "장님이 장님을 인도"하는 격). 그래서 학생은 <strong>소프트 라벨 + 하드 라벨을 섞어</strong> 학습해 이를 보완합니다.
+        </p>
+        <p class="lang-en">
+          Train teacher and student <strong>at the same time.</strong> The teacher emits its distribution and updates itself on hard labels; the student <strong>immediately uses that distribution as a soft label.</strong>
+          The catch: the teacher isn't fully trained, so its <strong>soft labels may be somewhat wrong</strong> (early on, a bit like the blind leading the blind). To compensate, the student trains on a <strong>mix of soft and hard labels.</strong>
+        </p>
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section id="recap">
+      <div class="sec-num">SECTION 10</div>
+      <h2 class="lang-ko">한 장 요약</h2>
+      <h2 class="lang-en">One-page recap</h2>
+      <div class="terms">
+        <span class="lang-ko">지식 증류</span><span class="lang-en">Distillation</span>
+        <span class="lang-ko">앙상블 vs MoE</span><span class="lang-en">Ensemble vs MoE</span>
+        <span class="lang-ko">소프트 라벨</span><span class="lang-en">Soft labels</span>
+        <span class="lang-ko">다크 널리지</span><span class="lang-en">Dark knowledge</span>
+        <span class="lang-ko">온도</span><span class="lang-en">Temperature</span>
+        <span class="lang-ko">행동 복제</span><span class="lang-en">Behavioral cloning</span>
+        <span class="lang-ko">화이트박스</span><span class="lang-en">White-box</span>
+        <span class="lang-ko">코디스틸레이션</span><span class="lang-en">Codistillation</span>
+      </div>
+      <dl class="recap">
+        <div><dt><span class="lang-ko">증류</span><span class="lang-en">Distillation</span></dt><dd><span class="lang-ko">큰 선생의 '확신 분포'를 작은 학생에 전달. 2006 모델압축 → 2015 명명</span><span class="lang-en">transfer a big teacher's confidence distribution to a small student; 2006 model compression → named 2015</span></dd></div>
+        <div><dt><span class="lang-ko">소프트 라벨</span><span class="lang-en">Soft labels</span></dt><dd><span class="lang-ko">하드 정답 대신 전체 확률 분포. 더 많은 정보를 담음</span><span class="lang-en">a full distribution instead of a hard answer; carries more information</span></dd></div>
+        <div><dt><span class="lang-ko">다크 널리지</span><span class="lang-en">Dark knowledge</span></dt><dd><span class="lang-ko">"입력이 무엇이 아닌지"의 정보(삐뚠 5 ↔ 3). 온도로 증폭</span><span class="lang-en">info about what the input is NOT (messy 5 ↔ 3); amplified by temperature</span></dd></div>
+        <div><dt><span class="lang-ko">진짜 vs 복제</span><span class="lang-en">Proper vs cloning</span></dt><dd><span class="lang-ko">분포를 전달하면 진짜 증류, 원-핫 모방이면 행동 복제(DeepSeek)</span><span class="lang-en">transfer the distribution = proper; one-hot mimicry = behavioral cloning (DeepSeek)</span></dd></div>
+        <div><dt><span class="lang-ko">제약</span><span class="lang-en">Constraints</span></dt><dd><span class="lang-ko">화이트박스 필요 + 전체 어휘 분포 비용(유튜브급) → Gemma는 256토큰 샘플</span><span class="lang-en">needs white-box + full-vocab cost (YouTube-scale) → Gemma samples 256 tokens</span></dd></div>
+        <div><dt><span class="lang-ko">코디스틸레이션</span><span class="lang-en">Codistillation</span></dt><dd><span class="lang-ko">선생·학생 동시 학습으로 두 forward pass를 하나로(Meta)</span><span class="lang-en">train teacher & student together, merging the two forward passes (Meta)</span></dd></div>
+      </dl>
+      <div class="box field" style="margin-top:30px">
+        <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">이어 읽기</span><span class="lang-en">Read next</span></div>
+        <p class="lang-ko">
+          증류·가지치기 개괄과 PyTorch 코드 예시는 <a href="/blog/pruning-and-distillation">Smaller, Smarter</a>에서, 또 다른 압축 레버 양자화의 내부 원리는 <a href="/blog/quantization-under-the-hood">Quantization, Under the Hood</a>에서.
+        </p>
+        <p class="lang-en">
+          For the pruning/distillation overview with PyTorch code, see <a href="/blog/pruning-and-distillation">Smaller, Smarter</a>; for the mechanics of the other compression lever, see <a href="/blog/quantization-under-the-hood">Quantization, Under the Hood</a>.
+        </p>
+      </div>
+    </section>
+
+
+    <footer>
+      <div class="lang-ko">지식 증류 심화 · 역사부터 최신 LLM까지</div>
+      <div class="lang-en">Knowledge distillation in depth · history to modern LLMs</div>
+      <div class="src lang-ko">
+        <strong style="color:var(--ink-soft)">직접 조사·작성한 글입니다.</strong> 아래 자료를 토대로 정리했습니다.<br><br>
+        <strong style="color:var(--ink-soft)">References</strong><br>
+        · Buciluǎ, Caruana &amp; Niculescu-Mizil, “Model Compression,” KDD 2006 — 증류의 뿌리<br>
+        · Hinton, Vinyals &amp; Dean, “Distilling the Knowledge in a Neural Network,” 2015 (<a href="https://arxiv.org/abs/1503.02531" target="_blank" rel="noopener noreferrer">arXiv:1503.02531</a>) — 다크 널리지·온도·teacher/student<br>
+        · Kaplan et al., “Scaling Laws for Neural Language Models,” 2020 (<a href="https://arxiv.org/abs/2001.08361" target="_blank" rel="noopener noreferrer">arXiv:2001.08361</a>)<br>
+        · Anil et al., “Large scale distributed neural network training through online distillation (codistillation),” 2018 (<a href="https://arxiv.org/abs/1804.03235" target="_blank" rel="noopener noreferrer">arXiv:1804.03235</a>)<br>
+        · DeepSeek-R1, 2025 (<a href="https://arxiv.org/abs/2501.12948" target="_blank" rel="noopener noreferrer">arXiv:2501.12948</a>) · Gemma / Llama 4 technical reports
+      </div>
+      <div class="src lang-en">
+        <strong style="color:var(--ink-soft)">Researched and written from scratch</strong>, compiled from the sources below.<br><br>
+        <strong style="color:var(--ink-soft)">References</strong><br>
+        · Buciluǎ, Caruana &amp; Niculescu-Mizil, “Model Compression,” KDD 2006 — the roots of distillation<br>
+        · Hinton, Vinyals &amp; Dean, “Distilling the Knowledge in a Neural Network,” 2015 (<a href="https://arxiv.org/abs/1503.02531" target="_blank" rel="noopener noreferrer">arXiv:1503.02531</a>) — dark knowledge, temperature, teacher/student<br>
+        · Kaplan et al., “Scaling Laws for Neural Language Models,” 2020 (<a href="https://arxiv.org/abs/2001.08361" target="_blank" rel="noopener noreferrer">arXiv:2001.08361</a>)<br>
+        · Anil et al., “Large scale distributed neural network training through online distillation (codistillation),” 2018 (<a href="https://arxiv.org/abs/1804.03235" target="_blank" rel="noopener noreferrer">arXiv:1804.03235</a>)<br>
+        · DeepSeek-R1, 2025 (<a href="https://arxiv.org/abs/2501.12948" target="_blank" rel="noopener noreferrer">arXiv:2501.12948</a>) · Gemma / Llama 4 technical reports
+      </div>
+    </footer>
+
+  </div>
+  </main>
+</div>
+
+<script>
+  const bar = document.getElementById('progress');
+  const onScroll = () => {
+    const h = document.documentElement;
+    const denom = h.scrollHeight - h.clientHeight;
+    const scrolled = denom > 0 ? h.scrollTop / denom : 0;
+    bar.style.width = (scrolled * 100) + '%';
+  };
+  document.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+  const links = Array.from(document.querySelectorAll('#toc a'));
+  const map = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(a => a.classList.remove('active'));
+        const a = map.get(e.target.id);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+  document.querySelectorAll('section, header.hero').forEach(s => io.observe(s));
+</script>
+</body>
+</html>

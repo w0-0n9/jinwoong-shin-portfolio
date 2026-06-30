@@ -288,17 +288,17 @@ export const nodes: GraphNode[] = [
     {
         id: "article-quantization-deep",
         type: "article",
-        label: "Quantization, Under the Hood: Scale, Zero-Point & Integer Math",
+        label: "Quantization, Made Simple: How AI Models Go on a Diet",
         description:
-            "Blog writeup / deep dive. The internals of quantization one layer below the playbook: why integers beat floats for on-device inference, PTQ vs QAT, how scale and zero-point map floats to int8 (symmetric and asymmetric, with worked numeric examples), two's complement and IEEE 754 / BF16, fixed-point arithmetic and how integer matrix multiplication actually runs, plus quantization granularity (per-tensor, per-channel, per-group). Bilingual (English / Korean).",
+            "Blog writeup / beginner-friendly explainer (no heavy math). Why big AI models are heavy, how rounding their precise decimals to simple whole numbers makes them light and fast, why integers beat decimals (mental-math analogy), what scale and zero-point mean (a ruler and a thermometer), PTQ vs QAT (the exam analogy), and quantization granularity (the clothing-size analogy). Bilingual (English / Korean).",
         meta: { url: "/blog/quantization-under-the-hood", date: "Jun 2026", languages: "EN / KO", kind: "writeup" },
     },
     {
         id: "article-distillation-deep",
         type: "article",
-        label: "Knowledge Distillation, In Depth: From 2006 Ensembles to LLM Codistillation",
+        label: "Knowledge Distillation, Made Simple: How AI Teaches AI",
         description:
-            "Blog writeup / deep dive. What knowledge distillation really is — the 2006 model-compression roots (ensembles vs MoE, soft labels), Hinton & Dean's 2015 naming with dark knowledge and the origin of temperature, where modern LLMs apply it in the training pipeline, the crucial difference between proper distillation and behavioral cloning (DeepSeek), and the white-box requirement and cost (Gemma's 256-token sampling) plus Meta's codistillation. Bilingual (English / Korean).",
+            "Blog writeup / beginner-friendly explainer (no heavy math). How a big smart 'teacher' model trains a small fast 'student' by sharing not just the answer but how sure it is — soft labels and dark knowledge (the multiple-choice analogy), temperature turning up the hints (the volume analogy), real distilling vs just copying (the cooking analogy, DeepSeek), why you must own the teacher, and Meta's codistillation. Bilingual (English / Korean).",
         meta: { url: "/blog/knowledge-distillation-in-depth", date: "Jun 2026", languages: "EN / KO", kind: "writeup" },
     },
 

@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Quantization, Under the Hood · From Floats to Integers</title>
-<meta name="description" content="How quantization actually turns floats into integers — buckets, scale and zero-point, calibration, symmetric vs asymmetric, dequantization, fixed-point arithmetic and integer matrix multiplication — explained with concrete numeric examples." />
+<title>Quantization, Made Simple · How AI Models Go on a Diet</title>
+<meta name="description" content="Quantization explained for anyone — no heavy math. Why big AI models are heavy, how rounding their numbers to simpler ones makes them light and fast, what scale and zero-point really mean, and when it's done. With everyday analogies and tiny examples." />
 <script>try{var l=localStorage.getItem('blog-lang');document.documentElement.setAttribute('data-lang',(l==='ko'||l==='en')?l:'en');}catch(e){document.documentElement.setAttribute('data-lang','en');}</script>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" />
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
@@ -18,14 +18,13 @@
     <div class="toc-label"><span class="lang-ko">목차</span><span class="lang-en">Contents</span></div>
     <nav class="toc" id="toc">
       <a href="#intro"><span class="n">00</span><span class="lang-ko">들어가며</span><span class="lang-en">Intro</span></a>
-      <a href="#what"><span class="n">01</span><span class="lang-ko">양자화란</span><span class="lang-en">What it is</span></a>
-      <a href="#why"><span class="n">02</span><span class="lang-ko">왜 정수인가</span><span class="lang-en">Why integers</span></a>
-      <a href="#when"><span class="n">03</span><span class="lang-ko">언제 하나</span><span class="lang-en">When</span></a>
-      <a href="#scheme"><span class="n">04</span><span class="lang-ko">스케일 &amp; 제로포인트</span><span class="lang-en">Scale & zero-point</span></a>
-      <a href="#arith"><span class="n">05</span><span class="lang-ko">정수 연산의 트릭</span><span class="lang-en">Integer arithmetic</span></a>
-      <a href="#granularity"><span class="n">06</span><span class="lang-ko">그래뉼래리티</span><span class="lang-en">Granularity</span></a>
-      <a href="#practice"><span class="n">07</span><span class="lang-ko">실무 도구</span><span class="lang-en">In practice</span></a>
-      <a href="#recap"><span class="n">08</span><span class="lang-ko">한 장 요약</span><span class="lang-en">One-page recap</span></a>
+      <a href="#what"><span class="n">01</span><span class="lang-ko">양자화가 뭐야?</span><span class="lang-en">What is it?</span></a>
+      <a href="#why"><span class="n">02</span><span class="lang-ko">왜 정수로 바꿔?</span><span class="lang-en">Why integers?</span></a>
+      <a href="#scale"><span class="n">03</span><span class="lang-ko">바꾸는 방법 — 자(ruler)</span><span class="lang-en">How — a ruler</span></a>
+      <a href="#zero"><span class="n">04</span><span class="lang-ko">기준점 옮기기</span><span class="lang-en">Shifting the zero</span></a>
+      <a href="#when"><span class="n">05</span><span class="lang-ko">언제 줄여?</span><span class="lang-en">When to do it</span></a>
+      <a href="#grain"><span class="n">06</span><span class="lang-ko">얼마나 잘게?</span><span class="lang-en">How finely?</span></a>
+      <a href="#recap"><span class="n">07</span><span class="lang-ko">한 장 요약</span><span class="lang-en">One-page recap</span></a>
     </nav>
   </aside>
 
@@ -33,64 +32,60 @@
   <div class="col">
 
     <header class="hero" id="intro">
-      <span class="kicker"><span class="lang-ko">양자화 심화 · 내부 작동 원리</span><span class="lang-en">Quantization · under the hood</span></span>
-      <h1 class="lang-ko">실수를<br><span class="hl">정수로 바꾸는 법</span></h1>
-      <h1 class="lang-en">How floats<br><span class="hl">become integers</span></h1>
+      <span class="kicker"><span class="lang-ko">양자화 · 수학 없이 쉽게</span><span class="lang-en">Quantization · no heavy math</span></span>
+      <h1 class="lang-ko">무거운 AI를<br><span class="hl">가볍게 만드는 법</span></h1>
+      <h1 class="lang-en">Putting a heavy<br><span class="hl">AI model on a diet</span></h1>
       <p class="lede lang-ko">
-        제 <a href="/blog/llm-quantization-guide">양자화 플레이북</a>이 "어떤 포맷·하드웨어를 고를까"였다면, 이 글은 그 아래 —
-        <strong>실제로 어떻게</strong> 실수를 정수로 바꾸고, 정수만으로 행렬곱을 하면서도 모델이 망가지지 않는지를
-        <strong>숫자 예시</strong>로 풀어봅니다. 스케일·제로포인트·캘리브레이션·고정소수점까지.
+        똑똑한 AI 모델은 무겁습니다. 그래서 보통은 거대한 데이터센터 컴퓨터에서만 돌아가죠.
+        그런데 <strong>'양자화(Quantization)'</strong>라는 간단한 아이디어를 쓰면, 같은 모델을 <strong>노트북이나 휴대폰</strong>에서도 돌릴 수 있을 만큼 가볍게 만들 수 있어요.
+        어려운 수식 없이, 비유와 작은 예시로 풀어봅니다.
       </p>
       <p class="lede lang-en">
-        If my <a href="/blog/llm-quantization-guide">quantization playbook</a> was “which format and hardware to pick,” this is the layer beneath —
-        <strong>how it actually works</strong>: turning floats into integers and doing matrix multiplication in integer space without breaking the model,
-        explained with <strong>concrete numbers</strong>. Scale, zero-point, calibration, fixed-point and all.
+        Smart AI models are heavy, so they usually run only on giant data-center computers.
+        But a simple idea called <strong>quantization</strong> can shrink the very same model until it's light enough to run on <strong>a laptop or even a phone.</strong>
+        Let's unpack it with analogies and tiny examples — no scary formulas.
       </p>
       <div class="meta-row">
-        <span class="lang-ko"><b>대상</b> · 양자화의 원리를 파고들고 싶은 분</span>
-        <span class="lang-en"><b>For</b> · Anyone who wants the mechanics, not just the recipe</span>
-        <span class="lang-ko"><b>구성</b> · 9개 섹션 (숫자 예시 포함)</span>
-        <span class="lang-en"><b>Format</b> · 9 sections (with worked examples)</span>
-        <span class="lang-ko"><b>방식</b> · 논문 직접 조사 + 정리</span>
-        <span class="lang-en"><b>Method</b> · Researched from papers</span>
+        <span class="lang-ko"><b>대상</b> · 수학 싫어해도 OK</span>
+        <span class="lang-en"><b>For</b> · Even if you hate math</span>
+        <span class="lang-ko"><b>구성</b> · 8개 섹션 · 비유 + 쉬운 예시</span>
+        <span class="lang-en"><b>Format</b> · 8 sections · analogies + easy examples</span>
+        <span class="lang-ko"><b>난이도</b> · 고등학생도 OK</span>
+        <span class="lang-en"><b>Level</b> · High-schooler friendly</span>
       </div>
     </header>
 
     <div class="hook">
-      <p class="big lang-ko">실수를 양동이에 던져 넣는 일</p>
-      <p class="big lang-en">Tossing real numbers into buckets</p>
-      <p class="lang-ko">양자화는 결국 <strong>연속적인 실수를 몇 개의 '양동이(bucket)'로 나눠 담는</strong> 일입니다.
-      이걸 잘하면 6710억 파라미터 DeepSeek R1을 <span class="accent">H100 두 장</span>에 욱여넣고, 부동소수점 연산조차 못 하는 엣지 칩에서도 AI를 돌릴 수 있습니다.
-      그 '잘하는 법'을 숫자로 봅니다.</p>
-      <p class="lang-en">Quantization is, in the end, <strong>sorting continuous real numbers into a handful of buckets.</strong>
-      Do it well and you fit a 671-billion-parameter DeepSeek R1 onto <span class="accent">two H100s</span>, and run AI on edge chips that can't even do floating-point math.
-      Let's see exactly how, with numbers.</p>
+      <p class="big lang-ko">핵심은 딱 하나 — "숫자를 반올림하기"</p>
+      <p class="big lang-en">The whole trick — “round the numbers”</p>
+      <p class="lang-ko">AI 모델은 속에 <strong>아주 정밀한 소수</strong>를 수십억 개 갖고 있어요(예: 0.4271828…). 양자화는 이걸
+      <span class="accent">간단한 정수로 반올림</span>해서 저장 공간과 계산을 확 줄입니다. 사진 화질을 살짝 낮춰도 그림이 알아볼 만한 것과 똑같아요.</p>
+      <p class="lang-en">An AI model holds <strong>billions of very precise decimals</strong> inside (like 0.4271828…). Quantization
+      <span class="accent">rounds them to simple whole numbers</span>, slashing storage and computation — just like lowering a photo's quality a little, yet you can still tell what it shows.</p>
     </div>
 
     <!-- 01 -->
     <section id="what">
       <div class="sec-num">SECTION 01</div>
-      <h2 class="lang-ko">양자화란 — 연속을 이산으로</h2>
-      <h2 class="lang-en">What quantization is — continuous → discrete</h2>
+      <h2 class="lang-ko">양자화가 뭐야?</h2>
+      <h2 class="lang-en">So what is quantization?</h2>
       <p class="lang-ko">
-        <strong>양자화(Quantization)</strong>는 <strong>연속적인 공간을 이산적인(띄엄띄엄한) 공간으로 매핑</strong>하는 것입니다.
-        0과 1 사이의 모든 실수를 <strong>10개의 동일한 양동이</strong>로 나눈다고 해봅시다. 그러면 0.4~0.5 사이 값은 전부 <strong>4번 양동이</strong>에 들어갑니다.
+        컴퓨터는 숫자를 <strong>'비트(bit)'</strong> — 0과 1 — 로 저장해요. 비트를 많이 쓸수록 더 정밀한 숫자를 담지만 그만큼 무거워집니다.
+        보통 AI 모델은 숫자 하나당 <strong>32비트</strong>(아주 정밀한 소수)를 씁니다. 양자화는 이걸 <strong>8비트</strong>나 <strong>4비트</strong>처럼 거친 숫자로 줄이는 거예요.
       </p>
       <p class="lang-en">
-        <strong>Quantization</strong> maps a <strong>continuous space onto a discrete one.</strong>
-        Split every real number between 0 and 1 into <strong>10 equal buckets</strong>, and any value from 0.4 to 0.5 lands in <strong>bucket 4.</strong>
+        Computers store numbers as <strong>bits</strong> — 0s and 1s. More bits means a more precise number, but also more weight.
+        A typical AI model uses <strong>32 bits</strong> per number (a very precise decimal). Quantization swaps that for something coarser like <strong>8 bits</strong> or <strong>4 bits.</strong>
       </p>
       <div class="box analogy">
-        <div class="tag"><span class="dot" style="background:var(--warm)"></span> <span class="lang-ko">비유 · 마이크 녹음</span><span class="lang-en">Analogy · recording sound</span></div>
+        <div class="tag"><span class="dot" style="background:var(--warm)"></span> <span class="lang-ko">비유 · 사진 용량 줄이기</span><span class="lang-en">Analogy · shrinking a photo</span></div>
         <p class="lang-ko">
-          양자화의 뿌리는 신호 처리입니다. 마이크가 소리(연속적인 파형)를 디지털로 바꿀 때 두 번 양자화해요:
-          (1) <strong>샘플링</strong> — 매 순간이 아니라 일정 간격으로 진폭을 '스냅샷' (시간의 양자화), (2) <strong>반올림</strong> — 그 진폭을 컴퓨터가 표현 가능한 가장 가까운 값으로.
-          ML에선 이걸 <strong>모델 가중치(때로 활성값)</strong>에 적용해, 예컨대 −1~1 실수를 −128~127 정수로 바꿉니다.
+          고화질 사진은 예쁘지만 용량이 큽니다. 화질을 조금 낮추면 파일이 <strong>훨씬 작아지지만</strong> 그림은 여전히 알아볼 수 있죠.
+          32비트 → 8비트 양자화도 똑같아요. 숫자 하나가 차지하는 자리를 <strong>4분의 1</strong>로 줄이니, 모델 용량도 대략 4분의 1이 됩니다. 70억 단어짜리 책을 요약본으로 만드는 셈이에요.
         </p>
         <p class="lang-en">
-          Quantization began in signal processing. When a mic turns sound (a continuous wave) into digital, it quantizes twice:
-          (1) <strong>sampling</strong> — snapshot the amplitude at regular intervals, not every infinite moment (quantizing time); (2) <strong>rounding</strong> — snap that amplitude to the nearest value a computer can store.
-          In ML we apply this to <strong>model weights (and sometimes activations)</strong> — e.g. mapping real values in −1…1 to integers in −128…127.
+          A high-res photo looks great but is big. Lower the quality a bit and the file gets <strong>far smaller</strong> while the picture is still recognizable.
+          Going from 32-bit to 8-bit is the same: each number takes <strong>a quarter</strong> of the space, so the whole model shrinks to roughly a quarter. Like turning a giant book into a pocket summary.
         </p>
       </div>
     </section>
@@ -98,279 +93,197 @@
     <!-- 02 -->
     <section id="why">
       <div class="sec-num">SECTION 02</div>
-      <h2 class="lang-ko">왜 정수인가 — 표현이 단순해서</h2>
-      <h2 class="lang-en">Why integers — because they're simple</h2>
+      <h2 class="lang-ko">왜 굳이 정수로 바꿔?</h2>
+      <h2 class="lang-en">Why turn them into whole numbers?</h2>
       <p class="lang-ko">
-        정수가 효율적인 이유는 <strong>표현이 매우 단순</strong>하기 때문입니다. 부호 없는 정수는 그냥 2진수이고,
-        부호 있는 정수도 <strong>2의 보수(two's complement)</strong> 덕에 부호 비트 하나만 더 쓸 뿐 추가 비용이 없습니다.
-        그래서 정수 덧셈은 비트 연산 한 번 — <strong>최신 CPU에서 보통 1클럭</strong>에 끝납니다.
+        용량만 줄이는 게 아니에요. 양자화의 진짜 목표는 보통 <strong>소수를 정수(예: 0, 1, 2 …)로 바꾸는 것</strong>입니다. 왜냐하면 컴퓨터는 <strong>정수 계산을 훨씬 빠르고, 전기도 덜 쓰면서</strong> 처리하거든요.
       </p>
       <p class="lang-en">
-        Integers are efficient because their <strong>representation is dead simple.</strong> An unsigned integer is just base-2;
-        a signed one costs nothing extra beyond a sign bit thanks to <strong>two's complement.</strong>
-        So adding integers is one bitwise op — typically <strong>a single clock cycle</strong> on a modern CPU.
+        It's not just about size. Quantization usually means <strong>turning decimals into whole numbers</strong> (0, 1, 2 …), because computers handle <strong>whole-number math much faster and with far less power.</strong>
       </p>
-      <p class="lang-ko">
-        반면 <strong>부동소수점(float)</strong>은 <strong>부호 · 지수(exponent) · 가수(mantissa)</strong>로 쪼개 저장해, 과학적 표기법 비슷하지만 더 복잡합니다.
-        비트를 어떻게 나누냐에 따라 표준도 여럿이에요 — 범용 <strong>IEEE 754</strong>, 그리고 구글 브레인의 <strong>BF16</strong>(지수에 비트를 더 줘서 <span class="em">동적 범위</span>를 넓힘 → 0 근처 아주 작은 수까지 표현 → 학습에 유리). 그래서 float 덧셈은 지수 정렬·정규화 등 여러 단계라 <strong>3~4클럭</strong>이 걸립니다.
-      </p>
-      <p class="lang-en">
-        A <strong>float</strong>, by contrast, splits into <strong>sign · exponent · mantissa</strong> — like scientific notation but with quirks, and more complex.
-        How you divide the bits gives several standards — general-purpose <strong>IEEE 754</strong>, and Google Brain's <strong>BF16</strong> (more exponent bits → wider <span class="em">dynamic range</span> → represents tiny near-zero values → great for training). Adding floats means aligning exponents, normalizing, etc. — <strong>three or four clock cycles.</strong>
-      </p>
-      <div class="box key">
-        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">왜 이게 돈이 되나</span><span class="lang-en">Why this pays off</span></div>
+      <div class="box analogy">
+        <div class="tag"><span class="dot" style="background:var(--warm)"></span> <span class="lang-ko">비유 · 암산</span><span class="lang-en">Analogy · mental math</span></div>
         <p class="lang-ko">
-          <strong>큰 모델:</strong> DeepSeek R1(6710억 파라미터)은 원본 정밀도로 약 <strong>720GB</strong> → 양자화로 <strong>80% 넘게 줄여 131GB</strong> → <strong>H100 두 장</strong>에 적재 가능.<br>
-          <strong>엣지:</strong> 구글 Coral Edge TPU 같은 IoT 칩은 <strong>부동소수점 연산을 아예 지원 안 함</strong> → 모델을 <strong>8비트 정수</strong>로 양자화해야만 올릴 수 있습니다. 공짜는 없어요 — 대가는 <strong>정밀도 손실</strong>이지만, 모델엔 중복(redundancy)이 있어 어느 정도는 버립니다.
+          머릿속으로 <strong>"7 × 8"</strong>은 금방 풀죠. 하지만 <strong>"7.3841 × 8.2716"</strong>은 종이와 시간이 필요합니다.
+          컴퓨터도 똑같아요. 소수 계산은 느리고 전기를 많이 먹지만, 정수 계산은 순식간이에요. AI 모델은 이런 곱셈을 <strong>수십억 번</strong> 하니, 정수로 바꾸면 속도와 배터리에서 엄청난 차이가 납니다.
         </p>
         <p class="lang-en">
-          <strong>Big models:</strong> DeepSeek R1 (671B params) is ~<strong>720 GB</strong> in full precision → quantization cuts it <strong>over 80% to 131 GB</strong> → fits across <strong>two H100s.</strong><br>
-          <strong>Edge:</strong> IoT chips like Google's Coral Edge TPU <strong>don't support floating-point at all</strong> → you must quantize to <strong>8-bit integers</strong> to deploy. No free lunch — the cost is <strong>lost precision</strong> — but models carry redundancy, so some loss is fine.
+          You can do <strong>“7 × 8”</strong> in your head instantly. But <strong>“7.3841 × 8.2716”</strong> needs paper and time.
+          Computers feel the same: decimal math is slow and power-hungry, whole-number math is instant. An AI model does these multiplications <strong>billions of times</strong>, so switching to integers is a huge win in speed and battery.
         </p>
       </div>
     </section>
 
     <!-- 03 -->
-    <section id="when">
+    <section id="scale">
       <div class="sec-num">SECTION 03</div>
-      <h2 class="lang-ko">언제 하나 — 학습 vs 추론</h2>
-      <h2 class="lang-en">When — training vs inference</h2>
+      <h2 class="lang-ko">바꾸는 방법 — 자(ruler) 하나면 돼</h2>
+      <h2 class="lang-en">How it's done — just a ruler</h2>
       <p class="lang-ko">
-        <strong>학습(training)</strong>은 그래디언트·가중치 업데이트에 정밀도가 필요해 실수를 피할 수 없습니다. 다만 그 정밀도를 계속 낮춰왔어요 —
-        과거 FP32 → 오늘날 <strong>FP16/BF16</strong> → 최근 DeepSeek R1·Llama 4는 <strong>FP8</strong>까지. (더 낮추긴 어렵습니다 — 경사하강의 한계.)
-        반면 <strong>추론(inference)</strong>은 순전파뿐이라 정밀도 손실에 강해, <strong>int8·4·1비트</strong>까지도 성공합니다.
+        소수를 정수로 어떻게 바꿀까요? <strong>눈금자(ruler)</strong>를 떠올리면 쉽습니다. 모델 속 숫자들이 보통 <strong>-1 ~ +1</strong> 사이에 있다고 해볼게요.
+        이 범위를 <strong>-127 ~ +127</strong>의 정수 눈금으로 펴주는 거예요. 이때 "정수 1칸이 실제로 얼마인지"를 알려주는 값을 <strong>스케일(scale)</strong>이라고 부릅니다.
       </p>
       <p class="lang-en">
-        <strong>Training</strong> needs precision for gradients and weight updates, so you can't avoid real values — though we keep lowering it:
-        FP32 → today's <strong>FP16/BF16</strong> → recently FP8 (DeepSeek R1, Llama 4). (Going much lower is hard — a natural limit of gradient descent.)
-        <strong>Inference</strong>, being just a forward pass, is far more resilient — people run it at <strong>int8, 4, even 1 bit.</strong>
+        How do you turn a decimal into a whole number? Picture a <strong>ruler.</strong> Say the model's numbers mostly sit between <strong>-1 and +1.</strong>
+        We stretch that range onto an integer ruler from <strong>-127 to +127.</strong> The value that tells you “how much one integer step is really worth” is called the <strong>scale.</strong>
       </p>
+      <div class="box key">
+        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">쉬운 예시</span><span class="lang-en">Easy example</span></div>
+        <p class="lang-ko">
+          범위 -1~1을 127칸으로 나누면, <strong>한 칸 ≈ 0.008</strong>(이게 스케일이에요). 이제 실제 숫자 <strong>0.42</strong>를 바꿔봅시다:<br><br>
+          <strong>0.42 ÷ 0.008 ≈ 53</strong> → 그냥 <strong>정수 53</strong>으로 저장!<br><br>
+          나중에 다시 쓸 땐 거꾸로 <strong>53 × 0.008 ≈ 0.42</strong>로 되돌립니다. 원래 0.42였고 돌아온 값도 거의 0.42 — 약간의 반올림 오차만 있을 뿐, 거의 똑같죠. 이게 양자화의 전부예요.
+        </p>
+        <p class="lang-en">
+          Split -1…1 into 127 steps and <strong>one step ≈ 0.008</strong> (that's the scale). Now convert the real number <strong>0.42</strong>:<br><br>
+          <strong>0.42 ÷ 0.008 ≈ 53</strong> → just store the <strong>whole number 53!</strong><br><br>
+          To use it again, reverse it: <strong>53 × 0.008 ≈ 0.42.</strong> Started at 0.42, came back to ~0.42 — only a tiny rounding error, basically the same. That's the whole idea.
+        </p>
+      </div>
+    </section>
+
+    <!-- 04 -->
+    <section id="zero">
+      <div class="sec-num">SECTION 04</div>
+      <h2 class="lang-ko">기준점 옮기기 (zero-point)</h2>
+      <h2 class="lang-en">Shifting the zero (zero-point)</h2>
+      <p class="lang-ko">
+        방금 예시는 <strong>0을 가운데 두고</strong> 좌우 대칭(-1~1)이라 깔끔했어요. 그런데 숫자들이 한쪽으로 쏠려 있으면요? 예를 들어 전부 <strong>0 ~ 6</strong> 사이에만 있다면 음수 칸이 통째로 낭비됩니다.
+      </p>
+      <p class="lang-en">
+        That example was tidy because it was <strong>centered on zero</strong> (-1…1). But what if the numbers are lopsided — say they all live between <strong>0 and 6?</strong> Then the negative half of the ruler is wasted.
+      </p>
+      <div class="box analogy">
+        <div class="tag"><span class="dot" style="background:var(--warm)"></span> <span class="lang-ko">비유 · 온도계 눈금</span><span class="lang-en">Analogy · a thermometer</span></div>
+        <p class="lang-ko">
+          온도계를 떠올려 보세요. 섭씨는 물이 어는 점을 <strong>0도</strong>로 잡지만, 화씨는 같은 점을 <strong>32도</strong>로 잡습니다 — 그냥 <strong>'0의 위치'를 옮긴</strong> 거예요.
+          양자화도 똑같이, 눈금자의 <strong>0을 어디에 둘지</strong> 정해줍니다. 이 '옮긴 기준점'을 <strong>제로포인트(zero-point)</strong>라고 불러요. 덕분에 0~6처럼 쏠린 숫자도 눈금을 꽉 채워 쓸 수 있어 더 정확해집니다.
+        </p>
+        <p class="lang-en">
+          Think of a thermometer. Celsius calls freezing <strong>0°</strong>, Fahrenheit calls the same point <strong>32°</strong> — they just <strong>put “zero” in a different place.</strong>
+          Quantization does the same: it picks <strong>where zero sits</strong> on the ruler. That shifted reference is the <strong>zero-point.</strong> It lets lopsided numbers like 0–6 fill the whole ruler, so they stay more accurate.
+        </p>
+      </div>
+      <p class="lang-ko">정리하면 양자화에 필요한 건 딱 두 가지예요: <strong>① 한 칸이 얼마인지(스케일) ② 0이 어디인지(제로포인트).</strong> 이 둘만 알면 정수 ↔ 원래 소수를 자유롭게 오갈 수 있습니다.</p>
+      <p class="lang-en">So quantization needs just two things: <strong>① how big one step is (scale) and ② where zero is (zero-point).</strong> With those two, you can freely go back and forth between the integer and the original decimal.</p>
+    </section>
+
+    <!-- 05 -->
+    <section id="when">
+      <div class="sec-num">SECTION 05</div>
+      <h2 class="lang-ko">언제 줄여? — 시험 끝나고 vs 공부하면서</h2>
+      <h2 class="lang-en">When to shrink — after the exam vs while studying</h2>
+      <p class="lang-ko">모델을 가볍게 만드는 시점은 크게 두 가지예요.</p>
+      <p class="lang-en">There are two moments you can shrink a model.</p>
       <div class="cmp">
         <table>
           <thead><tr>
-            <th></th>
-            <th class="h-dense">PTQ <span class="lang-ko">(학습 후)</span><span class="lang-en">(post-training)</span></th>
-            <th class="h-sparse">QAT <span class="lang-ko">(학습 인식)</span><span class="lang-en">(quant-aware)</span></th>
+            <th><span class="lang-ko">방법</span><span class="lang-en">Method</span></th>
+            <th><span class="lang-ko">쉽게 말하면</span><span class="lang-en">In plain words</span></th>
+            <th><span class="lang-ko">특징</span><span class="lang-en">Trait</span></th>
           </tr></thead>
           <tbody>
             <tr>
-              <th><span class="lang-ko">언제</span><span class="lang-en">When</span></th>
-              <td class="dense"><span class="lang-ko">학습 끝난 뒤, 배포 직전</span><span class="lang-en">after training, before deploy</span></td>
-              <td class="sparse"><span class="lang-ko">학습 때부터 양자화를 미리 반영</span><span class="lang-en">baked in during training</span></td>
+              <th>PTQ</th>
+              <td><span class="lang-ko">다 만든 모델을 나중에 줄이기</span><span class="lang-en">shrink an already-finished model</span></td>
+              <td><span class="lang-ko">빠르고 간단, 정확도 약간 손해</span><span class="lang-en">fast & simple, slightly less accurate</span></td>
             </tr>
             <tr>
-              <th><span class="lang-ko">누가</span><span class="lang-en">Who</span></th>
-              <td class="dense"><span class="lang-ko">대부분의 오픈 LLM (Unsloth 등이 Meta·DeepSeek 모델을 양자화; Qwen은 직접 GGUF/GPTQ/AWQ 배포)</span><span class="lang-en">most open LLMs (Unsloth et al. quantize Meta/DeepSeek; Qwen ships GGUF/GPTQ/AWQ itself)</span></td>
-              <td class="sparse"><span class="lang-ko">4비트 이하·1비트 LLM처럼 손실이 큰 극단 양자화</span><span class="lang-en">extreme quant (≤4-bit, 1-bit LLMs) where loss is severe</span></td>
+              <th>QAT</th>
+              <td><span class="lang-ko">만들 때부터 "줄일 것"을 알고 훈련</span><span class="lang-en">train it knowing it'll be shrunk</span></td>
+              <td><span class="lang-ko">손이 더 가지만 정확도 잘 지킴</span><span class="lang-en">more work, keeps accuracy</span></td>
             </tr>
           </tbody>
         </table>
       </div>
-      <p class="lang-ko">
-        자연스러운 삽입 지점은 <strong>학습 직후·배포 직전</strong> — 이게 <strong>PTQ(Post-Training Quantization)</strong>. 반면 "이 모델은 결국 양자화될 것"을 알고 학습 과정을 미리 손봐 손실에 강하게 만드는 게 <strong>QAT(Quantization-Aware Training)</strong>입니다. (PTQ/QAT 개념은 <a href="/blog/llm-quantization-guide">플레이북</a>에서도 다뤘어요.)
-      </p>
-      <p class="lang-en">
-        The natural insertion point is <strong>right after training, before deploy</strong> — that's <strong>PTQ.</strong> When you instead build the model knowing it'll be quantized, tweaking training to survive the loss, that's <strong>QAT.</strong> (I also touch on PTQ/QAT in the <a href="/blog/llm-quantization-guide">playbook</a>.)
-      </p>
-    </section>
-
-    <!-- 04 -->
-    <section id="scheme">
-      <div class="sec-num">SECTION 04</div>
-      <h2 class="lang-ko">핵심 — 스케일과 제로포인트</h2>
-      <h2 class="lang-en">The heart — scale and zero-point</h2>
-      <p class="lang-ko">
-        실수를 정수로 바꾸는 정확한 공식이 <strong>양자화 스킴(scheme)</strong>입니다. 신경망의 값은 보통 좁은 범위 <strong>[α, β]</strong>(클리핑 범위)에 모여 있는데,
-        이 α·β를 데이터에서 찾는 과정이 <strong>캘리브레이션(calibration)</strong>이에요. 가중치는 쉽지만(그냥 min/max), <strong>활성값</strong>은 보정용 데이터셋으로 추론을 돌려봐야 해서 모델·하드웨어에 따라 수 분~수 시간 걸립니다.
-      </p>
-      <p class="lang-en">
-        The exact formula that turns a float into an integer is the <strong>quantization scheme.</strong> A network's values usually cluster in a narrow range <strong>[α, β]</strong> (the clipping range),
-        and finding α and β from data is <strong>calibration.</strong> Easy for weights (just min/max), but for <strong>activations</strong> you must run inference over a calibration set — minutes to hours depending on the model and hardware.
-      </p>
-      <div class="box key">
-        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">예시 ① 대칭 양자화 (가중치)</span><span class="lang-en">Example ① symmetric (weights)</span></div>
-        <p class="lang-ko">
-          가중치가 <strong>[−1, 1]</strong>에 있고 int8 <strong>[−127, 127]</strong>로 보낸다고 합시다(프레임워크는 대칭을 위해 −128 버킷 하나를 버립니다).
-          <strong>스케일</strong>은 두 범위 길이의 비 → <code>s = 1 / 127 ≈ 0.00787</code>.<br>
-          가중치 <code>w = 0.42</code>를 양자화: <code>round(0.42 / 0.00787) = round(53.3) = 53</code>.<br>
-          다시 복원(역양자화): <code>53 × 0.00787 = 0.417 ≈ 0.42</code>. 반올림 손실만큼만 어긋납니다.
-        </p>
-        <p class="lang-en">
-          Say weights live in <strong>[−1, 1]</strong> and we map to int8 <strong>[−127, 127]</strong> (frameworks drop the extra −128 bucket for symmetry).
-          The <strong>scale</strong> is the ratio of range lengths → <code>s = 1 / 127 ≈ 0.00787</code>.<br>
-          Quantize <code>w = 0.42</code>: <code>round(0.42 / 0.00787) = round(53.3) = 53</code>.<br>
-          Recover (dequantize): <code>53 × 0.00787 = 0.417 ≈ 0.42</code> — off only by the rounding loss.
-        </p>
-      </div>
-      <p class="lang-ko">
-        그런데 <strong>ReLU</strong>처럼 출력이 양수만 나오는 연산은 분포가 한쪽으로 쏠려 범위가 <strong>비대칭</strong>이 됩니다. 이땐 <strong>제로포인트(zero-point) z</strong>가 필요해요 —
-        실수 0이 어느 정수 버킷에 떨어지는지를 나타내는 <strong>오프셋</strong>입니다.
-      </p>
-      <p class="lang-en">
-        But operations like <strong>ReLU</strong> (only positive outputs) skew the distribution, making the range <strong>asymmetric.</strong> Then you need a <strong>zero-point z</strong> —
-        an <strong>offset</strong> marking which integer bucket the real value 0 lands in.
-      </p>
-      <div class="box key">
-        <div class="tag"><span class="dot" style="background:var(--accent)"></span> <span class="lang-ko">예시 ② 비대칭 양자화 (제로포인트)</span><span class="lang-en">Example ② asymmetric (zero-point)</span></div>
-        <p class="lang-ko">
-          값이 <strong>[−0.5, 1.5]</strong>에 있고 int8 <strong>[0, 255]</strong>로 보낸다고 합시다. <code>s = (1.5−(−0.5)) / 255 = 2/255 ≈ 0.00784</code>.<br>
-          제로포인트: 실수 0이 떨어지는 버킷 → <code>z = round(0 − α/s) = round(0.5 / 0.00784) ≈ 64</code>.<br>
-          <code>r = 0.42</code> 양자화: <code>q = round(r/s) + z = round(53.6) + 64 = 118</code>.<br>
-          역양자화: <code>(q − z) × s = (118 − 64) × 0.00784 ≈ 0.423</code>. 핵심은 <strong>z가 '0의 위치'를 잡아주는 오프셋</strong>이라는 점.
-        </p>
-        <p class="lang-en">
-          Say values live in <strong>[−0.5, 1.5]</strong> mapped to int8 <strong>[0, 255]</strong>. <code>s = (1.5−(−0.5)) / 255 = 2/255 ≈ 0.00784</code>.<br>
-          Zero-point: the bucket where real 0 lands → <code>z = round(0 − α/s) = round(0.5 / 0.00784) ≈ 64</code>.<br>
-          Quantize <code>r = 0.42</code>: <code>q = round(r/s) + z = round(53.6) + 64 = 118</code>.<br>
-          Dequantize: <code>(q − z) × s = (118 − 64) × 0.00784 ≈ 0.423</code>. The point: <strong>z is the offset that pins down “where zero is.”</strong>
-        </p>
-      </div>
-    </section>
-
-    <!-- 05 -->
-    <section id="arith">
-      <div class="sec-num">SECTION 05</div>
-      <h2 class="lang-ko">정수 연산의 트릭 — 고정소수점</h2>
-      <h2 class="lang-en">The integer-arithmetic trick — fixed point</h2>
-      <p class="lang-ko">
-        가중치를 정수로 바꾼 것만으론 부족합니다. 추론은 <strong>연산</strong>이고, 그 연산도 정수 공간으로 옮겨야 해요. 스칼라 곱 <code>r1 × r2 = r3</code>를 정수로 하려면,
-        역양자화 공식을 풀어 정수 <code>q3</code>를 구하는 함수가 나오는데 — 거기 <strong>스케일 s가 실수로 끼어듭니다.</strong> "실수 곱을 피하려 양자화했는데 또 실수 곱?" 이 모순을 푸는 게 <strong>고정소수점 연산</strong>입니다.
-      </p>
-      <p class="lang-en">
-        Quantizing weights isn't enough. Inference is <strong>operations</strong>, and those must move to integer space too. To do a scalar product <code>r1 × r2 = r3</code> in integers,
-        you rearrange the dequantization formula and get a function for integer <code>q3</code> — but a <strong>real-valued scale s sneaks in.</strong> “We quantized to escape float multiply, and now we float-multiply again?” <strong>Fixed-point arithmetic</strong> resolves that.
-      </p>
       <div class="box analogy">
-        <div class="tag"><span class="dot" style="background:var(--warm)"></span> <span class="lang-ko">비유 · 소수점을 '고정'하기</span><span class="lang-en">Analogy · pin the decimal point</span></div>
+        <div class="tag"><span class="dot" style="background:var(--warm)"></span> <span class="lang-ko">비유 · 시험 준비</span><span class="lang-en">Analogy · prepping for a test</span></div>
         <p class="lang-ko">
-          $12.34를 다루기 싫으면 <strong>1234로 저장하고 "100으로 나눠라"를 기억</strong>하면 됩니다. 소수점이 떠다니지(float) 않고 오른쪽에서 두 칸 <strong>고정</strong>됐죠.
-          실제로는 10진이 아니라 <strong>2의 거듭제곱</strong>을 씁니다 — 그래야 나눗셈이 <strong>비트 시프트</strong> 한 번으로 끝나거든요.
+          <strong>PTQ</strong>는 공부를 다 끝낸 뒤, 시험 직전에 노트를 <strong>요약본으로 압축</strong>하는 거예요 — 빠르지만 빠뜨리는 게 조금 생기죠.<br>
+          <strong>QAT</strong>는 처음부터 <strong>"요약본만 보고 시험 본다"</strong>는 걸 알고 공부하는 거예요 — 그래서 요약본에 맞춰 핵심을 잘 챙깁니다. 더 번거롭지만 결과가 좋아요.
         </p>
         <p class="lang-en">
-          Hate dealing with $12.34? <strong>Store 1234 and remember “divide by 100.”</strong> The decimal point doesn't float — it's <strong>fixed</strong> two places from the right.
-          In practice we use <strong>powers of two</strong>, not base 10, so the “divide” becomes a single <strong>bit shift.</strong>
-        </p>
-      </div>
-      <p class="lang-ko">
-        그럼 정수 <code>x</code>에 실수 <code>s</code>를 곱해 정수 <code>y</code>를 얻으려면? 단순히 <code>s</code>를 고정소수점으로 저장해 곱하면 <strong>정밀도가 날아갑니다</strong> — 예컨대 <code>s = 0.003</code>은 작은 비트수의 고정소수점에서 그냥 0으로 반올림돼 결과가 0이 되죠. 그래서 <code>s</code>를 <strong>2의 음의 거듭제곱 × 정규화된 수</strong>로 분해합니다:
-      </p>
-      <p class="lang-en">
-        So how do you multiply integer <code>x</code> by a real <code>s</code> to get integer <code>y</code>? Just storing <code>s</code> as fixed-point and multiplying <strong>loses too much precision</strong> — e.g. <code>s = 0.003</code> rounds to 0 in a small fixed-point, zeroing the result. So you decompose <code>s</code> into <strong>a negative power of two × a normalized number:</strong>
-      </p>
-      <pre><code><span class="cm"># Decompose the real scale s into a shift + a "big enough" multiplier</span>
-s = 0.003
-s = s0 * 2**(-n)          <span class="cm"># pick n so that s0 lands in [0.5, 1)</span>
-                          <span class="cm"># 0.003 = 0.768 * 2**(-8)   -> s0 = 0.768, n = 8</span>
-
-<span class="cm"># Now x * s  becomes:  (x * fixed_point(s0)) >> n   -- int multiply + bit shift</span>
-<span class="cm"># s0 is large (>0.5), so storing it as fixed point barely loses precision.</span>
-<span class="cm"># The decomposition is precomputed ONCE before deployment.</span></code></pre>
-      <p class="lang-ko">
-        딥러닝의 진짜 빌딩블록은 스칼라 곱이 아니라 <strong>행렬곱</strong>입니다. 원리는 똑같이 각 원소에 적용되고, 식엔 행 단위 합이 하나 더 붙을 뿐이에요.
-        Llama 4의 4000×4000 행렬이면 <strong>약 100억 번</strong>의 곱셈인데, 정수로 더 효율적으로 처리합니다. 게다가 <strong>스케일 s는 출력 행마다 한 번씩만</strong> 적용하면 돼서(원소마다 X) 비용이 작아요.
-      </p>
-      <p class="lang-en">
-        The real building block of deep learning isn't scalar multiply — it's <strong>matrix multiply.</strong> The same principles apply per element, with one extra per-row sum in the formula.
-        A 4000×4000 matrix in Llama 4 means <strong>~10 billion multiplications</strong>, done more efficiently in integers. And the <strong>scale s applies once per output row</strong> (not per entry), so it's cheap.
-      </p>
-      <div class="box field">
-        <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">현실 반전 · 진짜 병목</span><span class="lang-en">Plot twist · the real bottleneck</span></div>
-        <p class="lang-ko">
-          최신 NVIDIA GPU에선 int 곱과 float 곱 속도가 <strong>비슷</strong>합니다. 그래서 진짜 병목은 연산이 아니라 <strong>메모리 대역폭</strong>이에요 —
-          양자화의 진짜 이득은 "정수라서 빠름"이 아니라 <strong>비트 폭이 줄어 메모리를 덜 읽음</strong>인 경우가 많습니다.
-        </p>
-        <p class="lang-en">
-          On modern NVIDIA GPUs, int and float multiplies are <strong>similarly fast.</strong> So the real bottleneck isn't compute — it's <strong>memory bandwidth.</strong>
-          Quantization's true win is often not “integers are faster” but <strong>fewer bits to move through memory.</strong>
+          <strong>PTQ</strong> is finishing all your studying, then <strong>condensing your notes into a cheat sheet</strong> right before the test — fast, but you drop a few things.<br>
+          <strong>QAT</strong> is studying from the start <strong>knowing you'll only have the cheat sheet</strong> in the exam — so you make sure the essentials survive. More effort, better result.
         </p>
       </div>
     </section>
 
     <!-- 06 -->
-    <section id="granularity">
+    <section id="grain">
       <div class="sec-num">SECTION 06</div>
-      <h2 class="lang-ko">그래뉼래리티 — 상수를 몇 벌 둘까</h2>
-      <h2 class="lang-en">Granularity — how many constant sets</h2>
+      <h2 class="lang-ko">얼마나 잘게 나눌까?</h2>
+      <h2 class="lang-en">How finely do we measure?</h2>
       <p class="lang-ko">
-        지금까지는 네트워크 전체에 <strong>스케일·제로포인트(S, Z) 한 쌍</strong>을 쓴다고 가정했습니다. 하지만 실무에선 여러 벌을 둡니다 —
-        <strong>레이어별 · 행렬별 · 심지어 행(row)별</strong>로. 더 잘게 쪼갤수록 각 영역의 분포에 딱 맞춰 정밀도가 좋아지죠. 이 그래뉼래리티는 가중치와 활성값 양쪽에 적용됩니다.
+        모델 전체를 <strong>자 하나</strong>로 재면 간단하지만, 유난히 크거나 작은 숫자(이상치) 하나 때문에 눈금이 엉성해질 수 있어요.
+        그래서 보통은 부분부분 <strong>여러 개의 자</strong>를 따로 써서 더 정확하게 잽니다.
       </p>
       <p class="lang-en">
-        So far we assumed <strong>one (S, Z) pair</strong> for the whole network. In practice you keep several —
-        <strong>per layer, per matrix, even per matrix row.</strong> Finer granularity fits each region's distribution better, improving accuracy. It applies to both weights and activations.
+        Measuring the whole model with <strong>one ruler</strong> is simple, but a single unusually big or small number (an outlier) can make the steps too coarse.
+        So we often use <strong>several rulers</strong> for different parts, measuring each more precisely.
       </p>
+      <div class="box analogy">
+        <div class="tag"><span class="dot" style="background:var(--warm)"></span> <span class="lang-ko">비유 · 옷 사이즈</span><span class="lang-en">Analogy · clothing sizes</span></div>
+        <p class="lang-ko">
+          반에 옷을 맞춘다고 해봐요. <strong>전체에 'M 한 사이즈'</strong>만 주면 빠르지만 안 맞는 사람이 많죠. <strong>그룹별로(키 큰 팀, 작은 팀) 사이즈를 따로</strong> 재면 훨씬 잘 맞습니다.
+          양자화도 똑같아요 — 모델 전체에 자 하나(per-tensor)보다, <strong>줄(채널)별로 자를 따로 두면(per-channel)</strong> 정확도가 올라갑니다. 대신 관리할 자가 늘어나니 살짝 무거워지죠. 보통은 그 사이 어디쯤(그룹별)에서 타협합니다.
+        </p>
+        <p class="lang-en">
+          Imagine fitting clothes for a class. <strong>One “size M” for everyone</strong> is fast but fits many people badly. Measuring <strong>per group (tall team, short team)</strong> fits far better.
+          Same here — instead of one ruler for the whole model (per-tensor), giving <strong>each row its own ruler (per-channel)</strong> raises accuracy. The cost is more rulers to track, so people usually settle somewhere in between (per-group).
+        </p>
+      </div>
     </section>
 
     <!-- 07 -->
-    <section id="practice">
-      <div class="sec-num">SECTION 07</div>
-      <h2 class="lang-ko">실무 — 직접 짤 필요는 없다</h2>
-      <h2 class="lang-en">In practice — you won't hand-roll this</h2>
-      <p class="lang-ko">
-        다행히 이 저수준 트릭을 직접 구현할 일은 거의 없습니다. <strong>PyTorch · TensorFlow</strong>가 양자화를 기본 지원하고,
-        배포 단계의 <strong>ONNX Runtime · NVIDIA TensorRT</strong> 같은 추론 엔진이 하드웨어별로 더 공격적인 최적화를 알아서 해줍니다. 원리를 알면 <strong>왜 어떤 설정이 빠르고 어디서 정밀도가 깨지는지</strong>를 판단할 수 있다는 게 핵심이고요.
-      </p>
-      <p class="lang-en">
-        The good news: you'll rarely implement these low-level tricks yourself. <strong>PyTorch and TensorFlow</strong> support quantization out of the box,
-        and deployment engines like <strong>ONNX Runtime and NVIDIA TensorRT</strong> apply even more aggressive, hardware-specific optimizations under the hood. Knowing the mechanics just lets you reason about <strong>why a setting is fast and where precision breaks.</strong>
-      </p>
-    </section>
-
-    <!-- 08 -->
     <section id="recap">
-      <div class="sec-num">SECTION 08</div>
+      <div class="sec-num">SECTION 07</div>
       <h2 class="lang-ko">한 장 요약</h2>
       <h2 class="lang-en">One-page recap</h2>
       <div class="terms">
         <span class="lang-ko">양자화</span><span class="lang-en">Quantization</span>
-        <span class="lang-ko">버킷</span><span class="lang-en">Buckets</span>
-        <span class="lang-ko">2의 보수</span><span class="lang-en">Two's complement</span>
-        <span class="lang-ko">IEEE 754 / BF16</span><span class="lang-en">IEEE 754 / BF16</span>
+        <span class="lang-ko">비트</span><span class="lang-en">Bits</span>
         <span class="lang-ko">스케일</span><span class="lang-en">Scale</span>
         <span class="lang-ko">제로포인트</span><span class="lang-en">Zero-point</span>
-        <span class="lang-ko">캘리브레이션</span><span class="lang-en">Calibration</span>
-        <span class="lang-ko">고정소수점</span><span class="lang-en">Fixed point</span>
         <span class="lang-ko">PTQ / QAT</span><span class="lang-en">PTQ / QAT</span>
+        <span class="lang-ko">자의 개수</span><span class="lang-en">Granularity</span>
       </div>
       <dl class="recap">
-        <div><dt><span class="lang-ko">양자화</span><span class="lang-en">Quantization</span></dt><dd><span class="lang-ko">연속 실수를 이산 버킷(정수)으로 매핑. 신호처리의 샘플링·반올림에서 유래</span><span class="lang-en">map continuous reals into discrete buckets (integers); rooted in signal-processing sampling & rounding</span></dd></div>
-        <div><dt><span class="lang-ko">왜 정수</span><span class="lang-en">Why integers</span></dt><dd><span class="lang-ko">2의 보수로 표현·연산이 단순(덧셈 1클럭). float은 sign/exp/mantissa로 복잡(3~4클럭)</span><span class="lang-en">two's complement makes them simple (add = 1 cycle); floats are sign/exp/mantissa (3–4 cycles)</span></dd></div>
-        <div><dt><span class="lang-ko">스케일 / 제로포인트</span><span class="lang-en">Scale / zero-point</span></dt><dd><span class="lang-ko">s = 범위 비, z = 실수 0의 정수 위치(오프셋, 비대칭일 때 필요)</span><span class="lang-en">s = ratio of ranges; z = where real 0 sits (offset, needed when asymmetric)</span></dd></div>
-        <div><dt><span class="lang-ko">캘리브레이션</span><span class="lang-en">Calibration</span></dt><dd><span class="lang-ko">클리핑 범위 α·β 찾기. 가중치는 쉬움, 활성값은 데이터셋 추론 필요</span><span class="lang-en">find the clipping range α, β; easy for weights, needs a calibration set for activations</span></dd></div>
-        <div><dt><span class="lang-ko">고정소수점</span><span class="lang-en">Fixed point</span></dt><dd><span class="lang-ko">실수 스케일 곱을 정수곱 + 비트시프트로. s = s0 × 2^−n 분해</span><span class="lang-en">turn a real-scale multiply into integer multiply + bit shift; decompose s = s0 × 2^−n</span></dd></div>
-        <div><dt><span class="lang-ko">진짜 이득</span><span class="lang-en">The real win</span></dt><dd><span class="lang-ko">최신 GPU에선 메모리 대역폭이 병목 → 줄어든 비트 폭이 핵심</span><span class="lang-en">on modern GPUs memory bandwidth is the bottleneck → fewer bits is the win</span></dd></div>
+        <div><dt><span class="lang-ko">양자화</span><span class="lang-en">Quantization</span></dt><dd><span class="lang-ko">정밀한 소수를 간단한 정수로 반올림 → 모델이 가볍고 빨라짐</span><span class="lang-en">round precise decimals to simple integers → lighter, faster model</span></dd></div>
+        <div><dt><span class="lang-ko">왜 정수?</span><span class="lang-en">Why integers</span></dt><dd><span class="lang-ko">컴퓨터는 정수 계산이 훨씬 빠르고 전기를 덜 씀 (암산 비유)</span><span class="lang-en">computers do whole-number math far faster, with less power (mental-math analogy)</span></dd></div>
+        <div><dt><span class="lang-ko">스케일</span><span class="lang-en">Scale</span></dt><dd><span class="lang-ko">정수 한 칸이 실제로 얼마인지 (눈금 한 칸의 크기)</span><span class="lang-en">how much one integer step is worth (the size of one tick)</span></dd></div>
+        <div><dt><span class="lang-ko">제로포인트</span><span class="lang-en">Zero-point</span></dt><dd><span class="lang-ko">눈금자에서 0이 어디인지 (섭씨↔화씨처럼 기준 옮기기)</span><span class="lang-en">where zero sits on the ruler (like Celsius↔Fahrenheit)</span></dd></div>
+        <div><dt><span class="lang-ko">PTQ vs QAT</span><span class="lang-en">PTQ vs QAT</span></dt><dd><span class="lang-ko">다 만들고 줄이기 vs 만들 때부터 대비하기 (시험 비유)</span><span class="lang-en">shrink after vs prepare from the start (the exam analogy)</span></dd></div>
+        <div><dt><span class="lang-ko">자의 개수</span><span class="lang-en">Granularity</span></dt><dd><span class="lang-ko">자 하나로 vs 부분별로 — 잘게 나눌수록 정확하지만 무거움</span><span class="lang-en">one ruler vs several — finer is more accurate but heavier</span></dd></div>
       </dl>
       <div class="box field" style="margin-top:30px">
         <div class="tag"><span class="dot" style="background:var(--green)"></span> <span class="lang-ko">이어 읽기</span><span class="lang-en">Read next</span></div>
         <p class="lang-ko">
-          "어떤 포맷·하드웨어를 고를까"는 <a href="/blog/llm-quantization-guide">양자화 플레이북</a>에서, 양자화의 사촌 격인 가지치기·증류는 <a href="/blog/pruning-and-distillation">Smaller, Smarter</a>에서 다룹니다.
+          "그래서 실제로 어떤 도구로 70억 모델을 노트북에 올리지?"가 궁금하면 <a href="/blog/llm-quantization-guide">양자화 실전 가이드</a>로, 모델을 가볍게 하는 또 다른 방법은 <a href="/blog/knowledge-distillation-in-depth">지식 증류 쉽게 이해하기</a>에서.
         </p>
         <p class="lang-en">
-          For “which format and hardware to pick,” see the <a href="/blog/llm-quantization-guide">quantization playbook</a>; for quantization's cousins, pruning and distillation, see <a href="/blog/pruning-and-distillation">Smaller, Smarter</a>.
+          Curious which tools actually put a 70B model on your laptop? See the <a href="/blog/llm-quantization-guide">hands-on quantization guide</a>. For another way to slim a model down, see <a href="/blog/knowledge-distillation-in-depth">knowledge distillation, made simple</a>.
         </p>
       </div>
     </section>
 
 
     <footer>
-      <div class="lang-ko">양자화 심화 · 내부 작동 원리</div>
-      <div class="lang-en">Quantization, under the hood · the mechanics</div>
+      <div class="lang-ko">양자화, 쉽게 이해하기 · 수학 없이</div>
+      <div class="lang-en">Quantization, made simple · no heavy math</div>
       <div class="src lang-ko">
-        <strong style="color:var(--ink-soft)">직접 조사·작성한 글입니다.</strong> 아래 자료를 토대로 정리했습니다.<br><br>
+        <strong style="color:var(--ink-soft)">직접 조사·작성한 글입니다.</strong> 더 깊은 내용(2의 보수, 고정소수점 연산, 정수 행렬곱 등)은 아래 자료를 참고했습니다.<br><br>
         <strong style="color:var(--ink-soft)">References</strong><br>
-        · Jacob et al., “Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference,” CVPR 2018 (<a href="https://arxiv.org/abs/1712.05877" target="_blank" rel="noopener noreferrer">arXiv:1712.05877</a>) — 스케일·제로포인트·정수 연산<br>
-        · Gholami et al., “A Survey of Quantization Methods for Efficient NN Inference,” 2021 (<a href="https://arxiv.org/abs/2103.13630" target="_blank" rel="noopener noreferrer">arXiv:2103.13630</a>)<br>
-        · Dettmers et al., “LLM.int8(),” NeurIPS 2022 (<a href="https://arxiv.org/abs/2208.07339" target="_blank" rel="noopener noreferrer">arXiv:2208.07339</a>)<br>
-        · IEEE 754 부동소수점 표준 · Google Brain bfloat16 · 2의 보수(two's complement)
+        · Jacob et al., “Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference,” 2017 (<a href="https://arxiv.org/abs/1712.05877" target="_blank" rel="noopener noreferrer">arXiv:1712.05877</a>)<br>
+        · Gholami et al., “A Survey of Quantization Methods for Efficient Neural Network Inference,” 2021 (<a href="https://arxiv.org/abs/2103.13630" target="_blank" rel="noopener noreferrer">arXiv:2103.13630</a>)<br>
+        · Dettmers et al., “LLM.int8(),” 2022 (<a href="https://arxiv.org/abs/2208.07339" target="_blank" rel="noopener noreferrer">arXiv:2208.07339</a>)
       </div>
       <div class="src lang-en">
-        <strong style="color:var(--ink-soft)">Researched and written from scratch</strong>, compiled from the sources below.<br><br>
+        <strong style="color:var(--ink-soft)">Researched and written from scratch.</strong> For the deeper details (two's complement, fixed-point arithmetic, integer matmul) I drew on the sources below.<br><br>
         <strong style="color:var(--ink-soft)">References</strong><br>
-        · Jacob et al., “Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference,” CVPR 2018 (<a href="https://arxiv.org/abs/1712.05877" target="_blank" rel="noopener noreferrer">arXiv:1712.05877</a>) — scale, zero-point, integer arithmetic<br>
-        · Gholami et al., “A Survey of Quantization Methods for Efficient NN Inference,” 2021 (<a href="https://arxiv.org/abs/2103.13630" target="_blank" rel="noopener noreferrer">arXiv:2103.13630</a>)<br>
-        · Dettmers et al., “LLM.int8(),” NeurIPS 2022 (<a href="https://arxiv.org/abs/2208.07339" target="_blank" rel="noopener noreferrer">arXiv:2208.07339</a>)<br>
-        · IEEE 754 floating-point standard · Google Brain bfloat16 · two's complement
+        · Jacob et al., “Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference,” 2017 (<a href="https://arxiv.org/abs/1712.05877" target="_blank" rel="noopener noreferrer">arXiv:1712.05877</a>)<br>
+        · Gholami et al., “A Survey of Quantization Methods for Efficient Neural Network Inference,” 2021 (<a href="https://arxiv.org/abs/2103.13630" target="_blank" rel="noopener noreferrer">arXiv:2103.13630</a>)<br>
+        · Dettmers et al., “LLM.int8(),” 2022 (<a href="https://arxiv.org/abs/2208.07339" target="_blank" rel="noopener noreferrer">arXiv:2208.07339</a>)
       </div>
     </footer>
 

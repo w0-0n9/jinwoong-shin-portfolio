@@ -33,7 +33,7 @@ export function About() {
                     </h2>
                     <div className="space-y-6 text-[#424245] text-base md:text-lg leading-[1.6] break-words">
                         <p>
-                            I&apos;m an LLM Engineer who likes building production GenAI <span className="text-[#1d1d1f] font-medium">end-to-end</span> — from messy data plumbing through model selection to the surface where someone actually uses it. The work I&apos;m proudest of started as unstructured chaos and ended as something quiet that saved money or hours.
+                            I&apos;m an AI Engineer who likes building production GenAI <span className="text-[#1d1d1f] font-medium">end-to-end</span> — from messy data plumbing through model selection to the surface where someone actually uses it. The work I&apos;m proudest of started as unstructured chaos and ended as something quiet that saved money or hours.
                         </p>
                         <p>
                             At <span className="text-[#1d1d1f] font-medium">LG CNS America</span> I move between <span className="text-[#1d1d1f] font-medium">cloud and on-premises</span> stacks, picking the right tool for the actual constraint — data residency, latency, or cost. Lately I&apos;ve been deep in evaluating locally-served SLMs against frontier cloud models and shipping the ones that genuinely hold up.

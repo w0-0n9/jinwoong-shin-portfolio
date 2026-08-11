@@ -68,7 +68,7 @@ export const nodes: GraphNode[] = [
         type: "person",
         label: "Jinwoong Shin",
         description:
-            "LLM Engineer with 2+ years at LG CNS America. Ships enterprise GenAI across cloud and on-premises stacks. Incoming OMSCS at Georgia Tech, Fall 2026.",
+            "AI Engineer with 2+ years at LG CNS America. Ships enterprise GenAI across cloud and on-premises stacks. Incoming OMSCS at Georgia Tech, Fall 2026.",
         meta: {
             linkedin: "https://www.linkedin.com/in/w0-0n9/",
             github: "https://github.com/w0-0n9",
@@ -88,7 +88,7 @@ export const nodes: GraphNode[] = [
         type: "company",
         label: "LG CNS America",
         description:
-            "Current employer. Jinwoong joined June 2024 as an LLM Engineer building enterprise GenAI for LG Electronics.",
+            "Current employer. Jinwoong joined June 2024 as an AI Engineer building enterprise GenAI for LG Electronics.",
         meta: { period: "Jun 2024 – Present" },
     },
     {

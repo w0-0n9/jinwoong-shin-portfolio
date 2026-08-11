@@ -21,7 +21,7 @@ export const careerData: CareerItem[] = [
     {
         id: "lg-cns",
         logo: "/companies/lg-cns.png",
-        role: "LLM Engineer",
+        role: "AI Engineer",
         company: "LG CNS America, Inc.",
         period: "Jun 2024 – Present",
         location: "New Jersey, United States",

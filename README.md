@@ -7,7 +7,7 @@
 [![Hosting](https://img.shields.io/badge/Firebase-Hosting%20%2B%20Functions-ffca28)](https://firebase.google.com)
 [![AI](https://img.shields.io/badge/Vertex%20AI-Gemini%202.5%20Flash-4285F4)](https://cloud.google.com/vertex-ai)
 
-A personal portfolio site for **Jinwoong Shin** — LLM Engineer at LG CNS America, incoming Georgia Tech OMSCS (Fall 2026, AI & Robotics specialization).
+A personal portfolio site for **Jinwoong Shin** — AI Engineer at LG CNS America, incoming Georgia Tech OMSCS (Fall 2026, AI & Robotics specialization).
 
 > **Live**: <https://jinwoong-shin-portfolio.web.app>
 

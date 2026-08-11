@@ -29,7 +29,7 @@ export function Hero() {
                             Jinwoong Shin
                         </h1>
                         <p className="text-lg sm:text-xl lg:text-2xl text-[#6e6e73] max-w-xl leading-[1.4] tracking-tight">
-                            LLM Engineer at LG CNS America. I build production GenAI across cloud and on-premises stacks.
+                            AI Engineer at LG CNS America. I build production GenAI across cloud and on-premises stacks.
                         </p>
                     </motion.div>
 

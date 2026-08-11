@@ -4,7 +4,7 @@
  * Run `npm run sync:graph` (or just `npm run build` / `firebase deploy`)
  * to regenerate this file. Any manual edits here will be overwritten.
  *
- * Last generated: 2026-06-30T14:12:27.798Z
+ * Last generated: 2026-08-06T17:35:25.975Z
  */
 
 export type NodeType =
@@ -43,7 +43,7 @@ export const nodes: GraphNode[] = [
         "id": "jinwoong",
         "type": "person",
         "label": "Jinwoong Shin",
-        "description": "LLM Engineer with 2+ years at LG CNS America. Ships enterprise GenAI across cloud and on-premises stacks. Incoming OMSCS at Georgia Tech, Fall 2026.",
+        "description": "AI Engineer with 2+ years at LG CNS America. Ships enterprise GenAI across cloud and on-premises stacks. Incoming OMSCS at Georgia Tech, Fall 2026.",
         "meta": {
             "linkedin": "https://www.linkedin.com/in/w0-0n9/",
             "github": "https://github.com/w0-0n9"
@@ -79,7 +79,7 @@ export const nodes: GraphNode[] = [
         "id": "lg-cns",
         "type": "company",
         "label": "LG CNS America",
-        "description": "Current employer. Jinwoong joined June 2024 as an LLM Engineer building enterprise GenAI for LG Electronics.",
+        "description": "Current employer. Jinwoong joined June 2024 as an AI Engineer building enterprise GenAI for LG Electronics.",
         "meta": {
             "period": "Jun 2024 – Present"
         }

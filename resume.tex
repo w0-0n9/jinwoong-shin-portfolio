@@ -1,0 +1,92 @@
+\documentclass{resume} % Use the custom resume.cls style
+
+\usepackage[left=0.4in,top=0.3in,right=0.4in,bottom=0.3in]{geometry} % Document margins
+
+\name{Jinwoong Shin}
+
+\address{+1 (608) 556-0771 \\ Little Ferry, NJ}
+\address{\href{mailto:jinwoong7116@gmail.com}{jinwoong7116@gmail.com} \\
+\href{https://www.linkedin.com/in/w0-0n9}{linkedin.com/in/w0-0n9} \\
+\href{https://jinwoong-shin-portfolio.web.app}{jinwoong-shin-portfolio.web.app}}
+
+\begin{document}
+
+%----------------------------------------------------------------------------------------
+% SUMMARY
+%----------------------------------------------------------------------------------------
+\begin{rSection}{SUMMARY}
+AI Engineer with 2+ years shipping enterprise GenAI end-to-end, cloud to on-premises --- \textbf{\textasciitilde\$1.6M annual savings} from a \textbf{230K-record} analytics pipeline and a contact center AI platform serving \textbf{11K+ monthly calls}.
+\end{rSection}
+
+%----------------------------------------------------------------------------------------
+% SKILLS
+%----------------------------------------------------------------------------------------
+\begin{rSection}{SKILLS}
+
+\textbf{Languages:} Python, SQL, Java \\
+\textbf{AI / ML:} RAG, Multi-agent Systems, Model Evaluation, On-premises LLM Serving \\
+\textbf{Cloud:} GCP (Vertex AI, BigQuery, Cloud Composer), AWS (Bedrock, Connect) \\
+\textbf{Infrastructure:} vLLM, OpenSearch, NVIDIA GB10 GPU cluster (RoCE, NCCL)
+
+\end{rSection}
+
+%----------------------------------------------------------------------------------------
+% EXPERIENCE
+%----------------------------------------------------------------------------------------
+\begin{rSection}{EXPERIENCE}
+
+\textbf{AI Engineer} \hfill Jun 2024 -- Present\\
+LG CNS America, Inc. \hfill \textit{New Jersey, United States}
+
+\vspace{2pt}
+\hspace{2ex}\textbf{HLBMA On-Premises AI Platform}
+\begin{itemize}
+    \itemsep -3pt {}
+    \item Stood up a \textbf{2-node NVIDIA GB10 GPU cluster} for a fully \textbf{on-premises GenAI platform} at HLBMA (Hyundai--LG EV battery plant) --- root-caused a firmware defect restoring \textbf{200G RoCE} to \textbf{196 Gb/s}; served \textbf{DeepSeek-V4} and \textbf{Qwen3.5-122B} via vLLM cross-node tensor parallelism.
+    \item Built a citation-grounded \textbf{RAG engine} (Docling chunking, Contextual Retrieval, bge-m3 hybrid embeddings, OpenSearch, cross-encoder reranking) hitting \textbf{99\%} on table-consistency evals; presented a \textbf{commercialization proposal} to productize the PoC.
+\end{itemize}
+
+\vspace{4pt}
+\hspace{2ex}\textbf{Return Reason Analysis AX Project}
+\begin{itemize}
+    \itemsep -3pt {}
+    \item Owned end-to-end delivery of an LLM pipeline classifying \textbf{230K+ annual return records} across LG Electronics' U.S. retail and D2C channels, driving a \textbf{\textasciitilde2\% return-rate reduction (\textasciitilde\$1.6M annual savings)}.
+    \item Engineered the pipeline on \textbf{Cloud Composer} (Airflow), unifying OLAP, data-lake, and crawler sources into \textbf{Vertex AI (Gemini 3.5 Pro)} batch inference and embedding-driven classification.
+\end{itemize}
+
+\vspace{4pt}
+\hspace{2ex}\textbf{Contact Center AX Project}
+\begin{itemize}
+    \itemsep -3pt {}
+    \item Led architecture of a contact center AI platform for \textbf{23 agents / $\sim$11K monthly calls}, integrating real-time AWS Connect transcription with \textbf{Salesforce Agentforce}; \textbf{deployed in 2 months, 150\% faster than industry baseline}.
+    \item Designed an \textbf{Adaptive RAG multi-agent architecture} for call/email summarization, sentiment analysis, and reply recommendation; built an ingestion pipeline processing \textbf{2,082 documents (12.4GB)}.
+\end{itemize}
+
+\vspace{4pt}
+\textbf{Software Engineer Intern} \hfill Jun 2023 -- Aug 2023\\
+Samsung SDS \hfill \textit{Seoul, South Korea}
+\begin{itemize}
+    \itemsep -3pt {}
+    \item Built Salesforce CRM automations (Flow Builder) and prototyped an AI-assisted CRM feature with Apex and Lightning Web Components.
+\end{itemize}
+
+\end{rSection}
+
+%----------------------------------------------------------------------------------------
+% EDUCATION & CERTIFICATIONS
+%----------------------------------------------------------------------------------------
+\begin{rSection}{EDUCATION}
+
+\textbf{Georgia Institute of Technology} --- M.S. in Computer Science \hfill Starting Fall 2026 \\
+\textbf{University of Wisconsin--Madison} --- B.S. in Computer Science, GPA: 3.55 / 4.00 \hfill May 2024
+
+\end{rSection}
+
+\begin{rSection}{CERTIFICATIONS}
+
+\textbf{Certified Palantir Foundry Aware Professional} --- Palantir Technologies \hfill Jun 2026 \\
+\textbf{AWS Certified AI Practitioner} --- Amazon Web Services \hfill Feb 2026
+
+\end{rSection}
+
+\end{document}

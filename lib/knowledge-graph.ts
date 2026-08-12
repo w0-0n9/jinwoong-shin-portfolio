@@ -156,6 +156,14 @@ export const nodes: GraphNode[] = [
 
     // Projects (work)
     {
+        id: "proj-hlbma-onprem",
+        type: "project",
+        label: "HLBMA On-Prem AI Platform",
+        description:
+            "On-site business-development PoC at HLBMA (Hyundai–LG Energy Solution Battery Manufacturing America, an EV battery plant joint venture). Built a fully on-premises GenAI platform: a 2-node NVIDIA GB10 GPU cluster — root-caused a firmware defect restoring the 200G RoCE interconnect from 13.5 to 196 Gb/s (192 Gb/s NCCL-verified) — serving DeepSeek-V4 and Qwen3.5-122B via vLLM cross-node tensor parallelism, plus a citation-grounded RAG engine (Docling chunking, Contextual Retrieval, bge-m3 hybrid embeddings, OpenSearch, cross-encoder reranking) achieving 99% on an automated table-consistency evaluation suite. Presented a commercialization proposal to productize the PoC.",
+        meta: { type: "work", client: "HLBMA (Hyundai–LG EV battery JV)", year: "2026", evalAccuracy: "99% (113/114)" },
+    },
+    {
         id: "proj-return-analysis",
         type: "project",
         label: "Return Reason Analysis AX",
@@ -321,6 +329,7 @@ export const nodes: GraphNode[] = [
     { id: "model-gemma-4", type: "skill", label: "Gemma 4" },
     { id: "model-qwen-3-5", type: "skill", label: "Qwen 3.5" },
     { id: "model-gemini-2-5", type: "skill", label: "Gemini 2.5 Flash" },
+    { id: "model-deepseek-v4", type: "skill", label: "DeepSeek-V4" },
 
     // Skills — Platforms
     { id: "skill-vertex-ai", type: "skill", label: "Vertex AI" },
@@ -332,6 +341,9 @@ export const nodes: GraphNode[] = [
     { id: "skill-aws-connect", type: "skill", label: "AWS Connect" },
     { id: "skill-agentforce", type: "skill", label: "Salesforce Agentforce" },
     { id: "skill-salesforce-data-cloud", type: "skill", label: "Salesforce Data Cloud" },
+    { id: "skill-vllm", type: "skill", label: "vLLM" },
+    { id: "skill-opensearch", type: "skill", label: "OpenSearch" },
+    { id: "skill-nvidia-gb10", type: "skill", label: "NVIDIA GB10" },
 
     // Skills — Frameworks / Web
     { id: "skill-nextjs", type: "skill", label: "Next.js" },
@@ -406,12 +418,14 @@ export const edges: GraphEdge[] = [
     { source: "georgia-tech", target: "doc-gt-admission", relation: "documents" },
 
     // Companies → projects (employer hosted)
+    { source: "lg-cns", target: "proj-hlbma-onprem", relation: "hosted" },
     { source: "lg-cns", target: "proj-return-analysis", relation: "hosted" },
     { source: "lg-cns", target: "proj-contact-center", relation: "hosted" },
     { source: "samsung-sds", target: "proj-salesforce-crm", relation: "hosted" },
     { source: "nice-payments", target: "proj-hwahae-ar", relation: "hosted" },
 
     // Person → led / built (additional roles)
+    { source: "jinwoong", target: "proj-hlbma-onprem", relation: "led" },
     { source: "jinwoong", target: "proj-return-analysis", relation: "led" },
     { source: "jinwoong", target: "proj-contact-center", relation: "led" },
     { source: "jinwoong", target: "proj-salesforce-crm", relation: "built" },
@@ -447,6 +461,18 @@ export const edges: GraphEdge[] = [
     { source: "jinwoong", target: "article-distillation-deep", relation: "wrote" },
     { source: "article-distillation-deep", target: "skill-on-prem-llm", relation: "covers" },
     { source: "article-distillation-deep", target: "skill-model-eval", relation: "covers" },
+
+    // Project: HLBMA On-Prem AI Platform → skills
+    { source: "proj-hlbma-onprem", target: "skill-python", relation: "uses" },
+    { source: "proj-hlbma-onprem", target: "skill-rag", relation: "uses" },
+    { source: "proj-hlbma-onprem", target: "skill-on-prem-llm", relation: "uses" },
+    { source: "proj-hlbma-onprem", target: "skill-model-eval", relation: "uses" },
+    { source: "proj-hlbma-onprem", target: "skill-embeddings", relation: "uses" },
+    { source: "proj-hlbma-onprem", target: "skill-vllm", relation: "uses" },
+    { source: "proj-hlbma-onprem", target: "skill-opensearch", relation: "uses" },
+    { source: "proj-hlbma-onprem", target: "skill-nvidia-gb10", relation: "uses" },
+    { source: "proj-hlbma-onprem", target: "model-deepseek-v4", relation: "uses" },
+    { source: "proj-hlbma-onprem", target: "model-qwen-3-5", relation: "uses" },
 
     // Project: Return Reason Analysis → skills
     { source: "proj-return-analysis", target: "skill-python", relation: "uses" },

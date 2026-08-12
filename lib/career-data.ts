@@ -28,6 +28,14 @@ export const careerData: CareerItem[] = [
         description: "Shipping enterprise GenAI across cloud and on-premises stacks — leading multi-agent platforms and large-scale analytics pipelines for LG Electronics in the U.S.",
         projects: [
             {
+                name: "HLBMA On-Premises AI Platform (Business Development PoC)",
+                achievements: [
+                    "Dispatched on-site to HLBMA (Hyundai–LG Energy Solution Battery Manufacturing America, an EV battery plant joint venture) to build a fully on-premises GenAI platform in a data-restricted manufacturing environment, and presented a commercialization proposal to extend the PoC into a productized enterprise AI offering.",
+                    "Stood up a 2-node NVIDIA GB10 GPU cluster from bare metal — root-caused a firmware defect throttling the 200G RoCE interconnect (13.5 → 196 Gb/s aggregate, 192 Gb/s NCCL-verified) — serving DeepSeek-V4 and Qwen3.5-122B via vLLM cross-node tensor parallelism with FP8 KV cache.",
+                    "Built a citation-grounded RAG engine — Docling structure-aware chunking, Contextual Retrieval, bge-m3 hybrid dense+sparse embeddings, OpenSearch (HNSW + rank_features), RRF fusion + cross-encoder reranking — achieving 99% (113/114) on an automated table-consistency evaluation suite, with the LLM layer provider-switchable between Amazon Bedrock and local vLLM."
+                ]
+            },
+            {
                 name: "Return Reason Analysis AX Project",
                 achievements: [
                     "Owned end-to-end design and delivery of an LLM-powered pipeline summarizing and classifying 230K+ annual return records across LG Electronics' retail (The Home Depot) and direct-to-consumer (LG.com) channels in the U.S., replacing manual review with automated GenAI workflows that contributed to a ~2% reduction in overall return rate (~$1.6M estimated annual savings, 2025 vs. 2024).",
@@ -44,7 +52,7 @@ export const careerData: CareerItem[] = [
                 ]
             }
         ],
-        techStack: ["Python", "SQL", "Vertex AI", "Cloud Composer", "BigQuery", "Apple Silicon", "Ollama", "MLX", "Gemma 4", "AWS Connect", "Salesforce Agentforce", "RAG", "Multi-agent"]
+        techStack: ["Python", "SQL", "Vertex AI", "Cloud Composer", "BigQuery", "vLLM", "OpenSearch", "NVIDIA GB10", "Apple Silicon", "Ollama", "MLX", "Gemma 4", "AWS Connect", "Salesforce Agentforce", "RAG", "Multi-agent"]
     },
     {
         id: "samsung-sds",
